@@ -1,3 +1,7 @@
+mod error;
+
+pub use error::*;
+
 use std::iter::Peekable;
 
 use thin_vec::ThinVec;
@@ -6,24 +10,8 @@ use tracing::trace;
 use crate::ast::{Expr, ExprKind, Fn, Ident, Stmt, StmtKind};
 use crate::lexer::token::TokenKind;
 use crate::lexer::{token::Token, Lexer};
-use crate::lexer::{LexError, LexErrorKind};
 
-#[derive(Debug)]
-pub enum ParseError {
-    LexError(LexError),
-}
-
-impl std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                Self::LexError(error) => error.to_string(),
-            }
-        )
-    }
-}
+pub type ParseResult<T> = Result<T, ParseError>;
 
 pub struct Parser<'src> {
     lexer: Peekable<Lexer<'src>>,
@@ -38,13 +26,13 @@ impl<'src> Parser<'src> {
         }
     }
 
-    pub fn parse(mut self) -> Result<Vec<Stmt>, ParseError> {
+    pub fn parse(mut self) -> ParseResult<Vec<Stmt>> {
         trace!("Parsing program");
 
         let mut statements = Vec::new();
 
         while !self.is_at_end().unwrap() {
-            let fn_decl = self.parse_fn().map_err(ParseError::LexError)?;
+            let fn_decl = self.parse_fn()?;
 
             statements.push(fn_decl);
         }
@@ -52,7 +40,7 @@ impl<'src> Parser<'src> {
         Ok(statements)
     }
 
-    fn peek(&mut self) -> Result<Option<&Token>, LexError> {
+    fn peek(&mut self) -> ParseResult<Option<&Token>> {
         if let Some(token) = self.lexer.peek() {
             let next_token_kind = token
                 .as_ref()
@@ -78,14 +66,14 @@ impl<'src> Parser<'src> {
         }
     }
 
-    fn is_at_end(&mut self) -> Result<bool, LexError> {
+    fn is_at_end(&mut self) -> ParseResult<bool> {
         Ok(self.peek()?.is_none())
     }
 
-    fn advance(&mut self) -> Result<Token, LexError> {
-        let token = self.lexer.next().ok_or(LexError {
-            kind: LexErrorKind::Unknown,
-            span: 0..1,
+    fn advance(&mut self) -> ParseResult<Token> {
+        let token = self.lexer.next().ok_or(ParseError {
+            kind: ParseErrorKind::AdvancedPastEndOfInput,
+            span: 0..0,
         })?;
         let token = token?;
 
@@ -95,14 +83,14 @@ impl<'src> Parser<'src> {
         }
     }
 
-    fn check(&mut self, kind: TokenKind) -> Result<bool, LexError> {
+    fn check(&mut self, kind: TokenKind) -> ParseResult<bool> {
         Ok(self
             .peek()?
             .map(|token| token.kind == kind)
             .unwrap_or(false))
     }
 
-    fn check_and_consume(&mut self, kind: TokenKind) -> Result<bool, LexError> {
+    fn check_and_consume(&mut self, kind: TokenKind) -> ParseResult<bool> {
         if self.check(kind)? {
             self.advance()?;
 
@@ -112,18 +100,18 @@ impl<'src> Parser<'src> {
         }
     }
 
-    fn consume(&mut self, kind: TokenKind, message: &str) -> Result<Token, LexError> {
+    fn consume(&mut self, kind: TokenKind, message: &str) -> ParseResult<Token> {
         if self.check(kind)? {
             self.advance()
         } else {
-            Err(LexError {
-                kind: LexErrorKind::Unknown,
-                span: 0..1,
+            Err(ParseError {
+                kind: ParseErrorKind::Unknown,
+                span: 0..0,
             })
         }
     }
 
-    fn parse_fn(&mut self) -> Result<Stmt, LexError> {
+    fn parse_fn(&mut self) -> ParseResult<Stmt> {
         trace!("Parsing function declaration");
 
         match self.peek()? {
@@ -169,7 +157,7 @@ impl<'src> Parser<'src> {
         })
     }
 
-    fn parse_expr(&mut self) -> Result<Expr, LexError> {
+    fn parse_expr(&mut self) -> ParseResult<Expr> {
         trace!("Parsing expression");
 
         if self.check(TokenKind::String)? {
@@ -183,7 +171,7 @@ impl<'src> Parser<'src> {
         }
     }
 
-    fn parse_call_expr(&mut self) -> Result<Expr, LexError> {
+    fn parse_call_expr(&mut self) -> ParseResult<Expr> {
         trace!("Parsing call expression");
 
         let callee = self.advance()?;

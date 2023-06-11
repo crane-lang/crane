@@ -9,7 +9,7 @@ use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
 
 use crate::backend::javascript::JsBackend;
-use crate::parser::ParseError;
+use crate::parser::ParseErrorKind;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -74,18 +74,40 @@ fn compile() -> Result<(), ()> {
             Ok(())
         }
         Err(err) => {
-            let span = match &err {
-                ParseError::LexError(error) => error.span.clone(),
+            let span = err.span;
+
+            let error_report = match err.kind {
+                ParseErrorKind::LexError(lex_error) => {
+                    Report::build(ReportKind::Error, "scratch.crane", 1)
+                        .with_message("An error occurred during lexing.")
+                        .with_label(
+                            Label::new(("scratch.crane", span))
+                                .with_message(lex_error)
+                                .with_color(Color::Red),
+                        )
+                        .finish()
+                }
+                ParseErrorKind::AdvancedPastEndOfInput => {
+                    Report::build(ReportKind::Error, "scratch.crane", 1)
+                        .with_message("An error occurred during parsing.")
+                        .with_label(
+                            Label::new(("scratch.crane", span))
+                                .with_message(err.kind)
+                                .with_color(Color::Red),
+                        )
+                        .finish()
+                }
+                ParseErrorKind::Unknown => Report::build(ReportKind::Error, "scratch.crane", 1)
+                    .with_message("An error occurred during parsing.")
+                    .with_label(
+                        Label::new(("scratch.crane", span))
+                            .with_message(err.kind)
+                            .with_color(Color::Red),
+                    )
+                    .finish(),
             };
 
-            Report::build(ReportKind::Error, "scratch.crane", 1)
-                .with_message("An error occurred during lexing.")
-                .with_label(
-                    Label::new(("scratch.crane", span))
-                        .with_message("Unknown lexeme.")
-                        .with_color(Color::Red),
-                )
-                .finish()
+            error_report
                 .eprint(("scratch.crane", Source::from(source)))
                 .unwrap();
 
