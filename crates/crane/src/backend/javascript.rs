@@ -9,8 +9,12 @@ impl JsBackend {
 
     pub fn compile(&self, program: Vec<Stmt>) -> String {
         let inline_std = r#"
-function println(...args) {
-    console.log(...args);
+function print(value) {
+    process.stdout.write(value);
+}
+
+function println(value) {
+    console.log(value);
 }
         "#;
 

@@ -1,0 +1,9 @@
+// TODO: Handle imports.
+// use std::io::{print, println}
+
+pub fn main() {
+    print("Hello,")
+    print(" ")
+    print("world!")
+    println("")
+}

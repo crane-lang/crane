@@ -45,7 +45,7 @@ fn main() {
 }
 
 fn compile() {
-    let source = std::fs::read_to_string("examples/hello_world.crane").unwrap();
+    let source = std::fs::read_to_string("examples/scratch.crane").unwrap();
 
     let parser = crate::parser::Parser::new(&source);
 

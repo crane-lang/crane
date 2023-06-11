@@ -34,6 +34,8 @@ pub struct Parser<'src> {
 
 impl<'src> Parser<'src> {
     pub fn new(input: &'src str) -> Self {
+        dbg!(Lexer::new(input).collect::<Vec<_>>());
+
         Self {
             lexer: Lexer::new(input).peekable(),
         }
@@ -45,7 +47,9 @@ impl<'src> Parser<'src> {
         let mut statements = Vec::new();
 
         while !self.is_at_end().unwrap() {
-            let fn_decl = self.parse_fn().unwrap();
+            let fn_decl = self
+                .parse_fn()
+                .expect("failed to parse function declaration");
 
             statements.push(fn_decl);
         }
@@ -142,11 +146,17 @@ impl<'src> Parser<'src> {
 
         let mut body = ThinVec::new();
 
-        let fn_call = self.parse_call_expr()?;
+        loop {
+            if self.check(TokenKind::CloseBrace)? {
+                break;
+            }
 
-        body.push(Stmt {
-            kind: StmtKind::Expr(fn_call),
-        });
+            let fn_call = self.parse_call_expr()?;
+
+            body.push(Stmt {
+                kind: StmtKind::Expr(fn_call),
+            });
+        }
 
         self.consume(TokenKind::CloseBrace, "Expected '}'.")?;
 
