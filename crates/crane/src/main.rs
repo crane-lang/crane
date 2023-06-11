@@ -97,14 +97,16 @@ fn compile() -> Result<(), ()> {
                         )
                         .finish()
                 }
-                ParseErrorKind::Unknown => Report::build(ReportKind::Error, "scratch.crane", 1)
-                    .with_message("An error occurred during parsing.")
-                    .with_label(
-                        Label::new(("scratch.crane", span))
-                            .with_message(err.kind)
-                            .with_color(Color::Red),
-                    )
-                    .finish(),
+                ParseErrorKind::Error(message) => {
+                    Report::build(ReportKind::Error, "scratch.crane", 1)
+                        .with_message("An error occurred during parsing.")
+                        .with_label(
+                            Label::new(("scratch.crane", span))
+                                .with_message(message)
+                                .with_color(Color::Red),
+                        )
+                        .finish()
+                }
             };
 
             error_report

@@ -105,8 +105,11 @@ impl<'src> Parser<'src> {
             self.advance()
         } else {
             Err(ParseError {
-                kind: ParseErrorKind::Unknown,
-                span: 0..0,
+                kind: ParseErrorKind::Error(message.to_string()),
+                span: self
+                    .peek()
+                    .map(|token| token.map(|token| token.span.clone()).unwrap_or(0..0))
+                    .unwrap_or(0..0),
             })
         }
     }
@@ -121,12 +124,15 @@ impl<'src> Parser<'src> {
             _ => {}
         }
 
-        let fn_keyword = self.advance()?;
-        assert_eq!(fn_keyword.kind, TokenKind::Ident);
-        assert_eq!(fn_keyword.lexeme, "fn");
+        let fn_keyword = self.consume(TokenKind::Ident, "Expected 'fn'.")?;
+        if fn_keyword.lexeme != "fn" {
+            return Err(ParseError {
+                kind: ParseErrorKind::Error("Expected 'fn'.".to_string()),
+                span: fn_keyword.span,
+            });
+        }
 
-        let name = self.advance()?;
-        assert_eq!(name.kind, TokenKind::Ident);
+        let name = self.consume(TokenKind::Ident, "Expected a function name.")?;
 
         self.consume(TokenKind::OpenParen, "Expected '('.")?;
         self.consume(TokenKind::CloseParen, "Expected ')'.")?;
@@ -174,8 +180,7 @@ impl<'src> Parser<'src> {
     fn parse_call_expr(&mut self) -> ParseResult<Expr> {
         trace!("Parsing call expression");
 
-        let callee = self.advance()?;
-        assert_eq!(callee.kind, TokenKind::Ident);
+        let callee = self.consume(TokenKind::Ident, "Expected a function name.")?;
 
         self.consume(TokenKind::OpenParen, "Expected '('.")?;
 
