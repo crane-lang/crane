@@ -3,11 +3,13 @@ mod backend;
 mod lexer;
 mod parser;
 
+use ariadne::{Color, Label, Report, ReportKind, Source};
 use clap::{Parser, Subcommand};
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
 
 use crate::backend::javascript::JsBackend;
+use crate::parser::ParseError;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -36,15 +38,18 @@ fn main() {
         .expect("failed to set default tracing subscriber");
 
     match args.command {
-        Command::Build => compile(),
+        Command::Build => {
+            let _ = compile();
+        }
         Command::Run => {
-            compile();
-            run();
+            if let Ok(_) = compile() {
+                run();
+            }
         }
     }
 }
 
-fn compile() {
+fn compile() -> Result<(), ()> {
     let source = std::fs::read_to_string("examples/scratch.crane").unwrap();
 
     let parser = crate::parser::Parser::new(&source);
@@ -64,10 +69,27 @@ fn compile() {
 
             file.write_all(output.as_bytes()).unwrap();
 
-            println!("Compiled!")
+            println!("Compiled!");
+
+            Ok(())
         }
         Err(err) => {
-            eprintln!("{}", err)
+            let span = match &err {
+                ParseError::LexError(error) => error.span.clone(),
+            };
+
+            Report::build(ReportKind::Error, "scratch.crane", 1)
+                .with_message("An error occurred during lexing.")
+                .with_label(
+                    Label::new(("scratch.crane", span))
+                        .with_message("Unknown lexeme.")
+                        .with_color(Color::Red),
+                )
+                .finish()
+                .eprint(("scratch.crane", Source::from(source)))
+                .unwrap();
+
+            Err(())
         }
     }
 }

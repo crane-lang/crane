@@ -1,4 +1,8 @@
+mod error;
+
 pub mod token;
+
+pub use error::*;
 
 use logos::Logos;
 
@@ -17,18 +21,21 @@ impl<'src> Lexer<'src> {
 }
 
 impl<'src> Iterator for Lexer<'src> {
-    type Item = Result<Token, <TokenKind as Logos<'src>>::Error>;
+    type Item = Result<Token, LexError>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let kind = self.lexer.next()?;
         let lexeme = self.lexer.slice();
         let span = self.lexer.span();
 
-        Some(kind.map(|kind| Token {
-            kind: kind.into(),
-            lexeme: lexeme.into(),
-            span,
-        }))
+        Some(
+            kind.map(|kind| Token {
+                kind: kind.into(),
+                lexeme: lexeme.into(),
+                span: span.clone(),
+            })
+            .map_err(|kind| LexError { kind, span }),
+        )
     }
 }
 

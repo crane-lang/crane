@@ -6,10 +6,11 @@ use tracing::trace;
 use crate::ast::{Expr, ExprKind, Fn, Ident, Stmt, StmtKind};
 use crate::lexer::token::TokenKind;
 use crate::lexer::{token::Token, Lexer};
+use crate::lexer::{LexError, LexErrorKind};
 
 #[derive(Debug)]
 pub enum ParseError {
-    SyntaxError(Option<usize>, String),
+    LexError(LexError),
 }
 
 impl std::fmt::Display for ParseError {
@@ -18,11 +19,7 @@ impl std::fmt::Display for ParseError {
             f,
             "{}",
             match self {
-                Self::SyntaxError(position, reason) => match position {
-                    Some(position) =>
-                        format!("Syntax error at position {}: {}", position + 1, reason),
-                    None => format!("Syntax error: {}", reason),
-                },
+                Self::LexError(error) => error.to_string(),
             }
         )
     }
@@ -47,9 +44,7 @@ impl<'src> Parser<'src> {
         let mut statements = Vec::new();
 
         while !self.is_at_end().unwrap() {
-            let fn_decl = self
-                .parse_fn()
-                .expect("failed to parse function declaration");
+            let fn_decl = self.parse_fn().map_err(ParseError::LexError)?;
 
             statements.push(fn_decl);
         }
@@ -57,9 +52,12 @@ impl<'src> Parser<'src> {
         Ok(statements)
     }
 
-    fn peek(&mut self) -> Result<Option<&Token>, ()> {
+    fn peek(&mut self) -> Result<Option<&Token>, LexError> {
         if let Some(token) = self.lexer.peek() {
-            let next_token_kind = token.as_ref().map(|token| token.kind).map_err(|err| *err)?;
+            let next_token_kind = token
+                .as_ref()
+                .map(|token| token.kind)
+                .map_err(|err| err.clone())?;
 
             match next_token_kind {
                 TokenKind::Comment => {
@@ -72,7 +70,7 @@ impl<'src> Parser<'src> {
         }
 
         if let Some(token) = self.lexer.peek() {
-            let token = token.as_ref().map_err(|err| *err)?;
+            let token = token.as_ref().map_err(|err| err.clone())?;
 
             Ok(Some(token))
         } else {
@@ -80,12 +78,15 @@ impl<'src> Parser<'src> {
         }
     }
 
-    fn is_at_end(&mut self) -> Result<bool, ()> {
+    fn is_at_end(&mut self) -> Result<bool, LexError> {
         Ok(self.peek()?.is_none())
     }
 
-    fn advance(&mut self) -> Result<Token, ()> {
-        let token = self.lexer.next().ok_or(())?;
+    fn advance(&mut self) -> Result<Token, LexError> {
+        let token = self.lexer.next().ok_or(LexError {
+            kind: LexErrorKind::Unknown,
+            span: 0..1,
+        })?;
         let token = token?;
 
         match token.kind {
@@ -94,14 +95,14 @@ impl<'src> Parser<'src> {
         }
     }
 
-    fn check(&mut self, kind: TokenKind) -> Result<bool, ()> {
+    fn check(&mut self, kind: TokenKind) -> Result<bool, LexError> {
         Ok(self
             .peek()?
             .map(|token| token.kind == kind)
             .unwrap_or(false))
     }
 
-    fn check_and_consume(&mut self, kind: TokenKind) -> Result<bool, ()> {
+    fn check_and_consume(&mut self, kind: TokenKind) -> Result<bool, LexError> {
         if self.check(kind)? {
             self.advance()?;
 
@@ -111,18 +112,18 @@ impl<'src> Parser<'src> {
         }
     }
 
-    fn consume(&mut self, kind: TokenKind, message: &str) -> Result<Token, ()> {
+    fn consume(&mut self, kind: TokenKind, message: &str) -> Result<Token, LexError> {
         if self.check(kind)? {
             self.advance()
         } else {
-            eprintln!("{}", message);
-            let _ = dbg!(self.peek());
-
-            Err(())
+            Err(LexError {
+                kind: LexErrorKind::Unknown,
+                span: 0..1,
+            })
         }
     }
 
-    fn parse_fn(&mut self) -> Result<Stmt, ()> {
+    fn parse_fn(&mut self) -> Result<Stmt, LexError> {
         trace!("Parsing function declaration");
 
         match self.peek()? {
@@ -168,7 +169,7 @@ impl<'src> Parser<'src> {
         })
     }
 
-    fn parse_expr(&mut self) -> Result<Expr, ()> {
+    fn parse_expr(&mut self) -> Result<Expr, LexError> {
         trace!("Parsing expression");
 
         if self.check(TokenKind::String)? {
@@ -182,7 +183,7 @@ impl<'src> Parser<'src> {
         }
     }
 
-    fn parse_call_expr(&mut self) -> Result<Expr, ()> {
+    fn parse_call_expr(&mut self) -> Result<Expr, LexError> {
         trace!("Parsing call expression");
 
         let callee = self.advance()?;

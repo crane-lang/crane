@@ -3,7 +3,10 @@ use std::ops::Range;
 use logos::Logos;
 use smol_str::SmolStr;
 
+use crate::lexer::LexErrorKind;
+
 #[derive(Logos, Debug, PartialEq, Clone, Copy)]
+#[logos(error = LexErrorKind)]
 pub enum TokenKind {
     /// `(`
     #[token("(")]
