@@ -8,8 +8,8 @@ use thin_vec::ThinVec;
 use tracing::trace;
 
 use crate::ast::{Expr, ExprKind, Fn, Ident, Item, ItemKind, Stmt, StmtKind};
-use crate::lexer::token::TokenKind;
-use crate::lexer::{token::Token, Lexer};
+use crate::lexer::token::{Token, TokenKind};
+use crate::lexer::Lexer;
 
 pub type ParseResult<T> = Result<T, ParseError>;
 

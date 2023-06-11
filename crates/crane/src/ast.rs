@@ -2,7 +2,7 @@ use smol_str::SmolStr;
 use thin_vec::ThinVec;
 
 /// An identifier.
-#[derive(Debug, Clone)]
+#[derive(Debug, PartialEq, Eq,  Hash, Clone)]
 pub struct Ident(pub SmolStr);
 
 impl std::fmt::Display for Ident {

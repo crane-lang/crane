@@ -2,14 +2,18 @@ mod ast;
 mod backend;
 mod lexer;
 mod parser;
+mod typer;
 
 use ariadne::{Color, Label, Report, ReportKind, Source};
 use clap::{Parser, Subcommand};
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
+use typer::TypeErrorKind;
 
+use crate::ast::Module;
 use crate::backend::javascript::JsBackend;
 use crate::parser::ParseErrorKind;
+use crate::typer::Typer;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -55,23 +59,55 @@ fn compile() -> Result<(), ()> {
     let parser = crate::parser::Parser::new(&source);
 
     match parser.parse() {
-        Ok(statements) => {
-            use std::fs::{self, File};
-            use std::io::Write;
+        Ok(items) => {
+            let mut typer = Typer::new();
 
-            let backend = JsBackend::new();
+            let module = Module {
+                items: items.clone().into(),
+            };
 
-            let output = backend.compile(statements);
+            match typer.type_check_module(module) {
+                Ok(()) => {
+                    use std::fs::{self, File};
+                    use std::io::Write;
 
-            fs::create_dir_all("build").unwrap();
+                    let backend = JsBackend::new();
 
-            let mut file = File::create("build/main.js").unwrap();
+                    let output = backend.compile(items);
 
-            file.write_all(output.as_bytes()).unwrap();
+                    fs::create_dir_all("build").unwrap();
 
-            println!("Compiled!");
+                    let mut file = File::create("build/main.js").unwrap();
 
-            Ok(())
+                    file.write_all(output.as_bytes()).unwrap();
+
+                    println!("Compiled!");
+
+                    Ok(())
+                }
+                Err(type_error) => {
+                    let span = type_error.span;
+
+                    let error_report = match type_error.kind {
+                        TypeErrorKind::UnknownFunction { name } => {
+                            Report::build(ReportKind::Error, "scratch.crane", 1)
+                                .with_message("A type error occurred.")
+                                .with_label(
+                                    Label::new(("scratch.crane", span))
+                                        .with_message(format!("Function `{name}` does not exist."))
+                                        .with_color(Color::Red),
+                                )
+                                .finish()
+                        }
+                    };
+
+                    error_report
+                        .eprint(("scratch.crane", Source::from(source)))
+                        .unwrap();
+
+                    Err(())
+                }
+            }
         }
         Err(err) => {
             let span = err.span;
