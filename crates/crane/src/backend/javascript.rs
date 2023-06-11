@@ -8,11 +8,28 @@ impl JsBackend {
     }
 
     pub fn compile(&self, program: Vec<Stmt>) -> String {
-        program
+        let inline_std = r#"
+function println(...args) {
+    console.log(...args);
+}
+        "#;
+
+        let compiled_program = program
             .into_iter()
             .flat_map(|stmt| self.compile_stmt(stmt))
             .collect::<Vec<_>>()
-            .join("\n")
+            .join("\n");
+
+        format!(r#"
+// Begin Crane standard library.
+{inline_std}
+// End Crane standard library.
+
+{compiled_program}
+
+// Program entrypoint.
+main();
+        "#)
     }
 
     fn compile_stmt(&self, stmt: Stmt) -> Vec<String> {
