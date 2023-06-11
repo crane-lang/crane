@@ -1,0 +1,15 @@
+// TODO: Handle imports.
+// use std::io::println
+
+pub fn main() {
+    say_hello()
+    say_goodbye()
+}
+
+fn say_hello() {
+    println("Hello")
+}
+
+fn say_goodbye() {
+    println("Goodbye")
+}
