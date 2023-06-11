@@ -1,6 +1,9 @@
 use std::iter::Peekable;
 
-use crate::ast::{Fn, Stmt, StmtKind};
+use thin_vec::ThinVec;
+use tracing::trace;
+
+use crate::ast::{Expr, ExprKind, Fn, Ident, Stmt, StmtKind};
 use crate::lexer::token::TokenKind;
 use crate::lexer::{token::Token, Lexer};
 
@@ -37,6 +40,8 @@ impl<'src> Parser<'src> {
     }
 
     pub fn parse(mut self) -> Result<Vec<Stmt>, ParseError> {
+        trace!("Parsing program");
+
         let mut statements = Vec::new();
 
         while !self.is_at_end().unwrap() {
@@ -85,7 +90,24 @@ impl<'src> Parser<'src> {
         }
     }
 
+    fn check(&mut self, kind: TokenKind) -> Result<bool, ()> {
+        Ok(self
+            .peek()?
+            .map(|token| token.kind == kind)
+            .unwrap_or(false))
+    }
+
+    fn consume(&mut self, kind: TokenKind, message: &str) -> Result<Token, ()> {
+        if self.check(kind)? {
+            self.advance()
+        } else {
+            Err(())
+        }
+    }
+
     fn parse_fn(&mut self) -> Result<Stmt, ()> {
+        trace!("Parsing function declaration");
+
         match self.peek()? {
             Some(peeked) if peeked.kind == TokenKind::Ident && peeked.lexeme == "pub" => {
                 self.advance()?;
@@ -100,22 +122,49 @@ impl<'src> Parser<'src> {
         let name = self.advance()?;
         assert_eq!(name.kind, TokenKind::Ident);
 
-        let open_paren = self.advance()?;
-        assert_eq!(open_paren.kind, TokenKind::OpenParen);
+        self.consume(TokenKind::OpenParen, "Expected '('.")?;
+        self.consume(TokenKind::CloseParen, "Expected ')'.")?;
 
-        let close_paren = self.advance()?;
-        assert_eq!(close_paren.kind, TokenKind::CloseParen);
+        self.consume(TokenKind::OpenBrace, "Expected '{'.")?;
 
-        let open_brace = self.advance()?;
-        assert_eq!(open_brace.kind, TokenKind::OpenBrace);
+        let mut body = ThinVec::new();
 
-        let close_brace = self.advance()?;
-        assert_eq!(close_brace.kind, TokenKind::CloseBrace);
+        let fn_call = self.parse_call_expr()?;
+
+        body.push(Stmt {
+            kind: StmtKind::Expr(fn_call),
+        });
+
+        self.consume(TokenKind::CloseBrace, "Expected '}'.")?;
 
         Ok(Stmt {
             kind: StmtKind::Fn(Box::new(Fn {
                 name: name.lexeme.into(),
+                body,
             })),
+        })
+    }
+
+    fn parse_call_expr(&mut self) -> Result<Expr, ()> {
+        trace!("Parsing call expression");
+
+        let callee = self.advance()?;
+        assert_eq!(callee.kind, TokenKind::Ident);
+
+        self.consume(TokenKind::OpenParen, "Expected '('.")?;
+        self.consume(TokenKind::CloseParen, "Expected ')'.")?;
+
+        let callee = Expr {
+            kind: ExprKind::Variable {
+                name: Ident(callee.lexeme),
+            },
+        };
+
+        Ok(Expr {
+            kind: ExprKind::Call {
+                fun: Box::new(callee),
+                args: ThinVec::new(),
+            },
         })
     }
 }

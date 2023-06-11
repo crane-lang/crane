@@ -1,4 +1,4 @@
-use crate::ast::{Stmt, StmtKind};
+use crate::ast::{Expr, ExprKind, Stmt, StmtKind};
 
 pub struct JsBackend {}
 
@@ -17,7 +17,31 @@ impl JsBackend {
 
     fn compile_stmt(&self, stmt: Stmt) -> Vec<String> {
         match stmt.kind {
-            StmtKind::Fn(fun) => vec![format!(r#"function {name}() {{}}"#, name = fun.name)],
+            StmtKind::Fn(fun) => vec![format!(
+                r#"
+                function {name}() {{
+                    {body}
+                }}
+                "#,
+                name = fun.name,
+                body = fun
+                    .body
+                    .into_iter()
+                    .map(|stmt| self.compile_stmt(stmt).join("\n"))
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            )],
+            StmtKind::Expr(expr) => self.compile_expr(expr),
+        }
+    }
+
+    fn compile_expr(&self, expr: Expr) -> Vec<String> {
+        match expr.kind {
+            ExprKind::Variable { name } => vec![name.0.to_string()],
+            ExprKind::Call { fun, args } => vec![match fun.kind {
+                ExprKind::Variable { name } => format!("{name}()"),
+                ExprKind::Call { fun, args } => todo!(),
+            }],
         }
     }
 }

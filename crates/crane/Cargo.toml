@@ -10,3 +10,5 @@ clap = { version = "4.3.3", features = ["derive"] }
 logos = "0.13.0"
 smol_str = "0.2.0"
 thin-vec = "0.2.12"
+tracing = "0.1.37"
+tracing-subscriber = "0.3.17"
