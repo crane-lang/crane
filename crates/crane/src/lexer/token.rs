@@ -1,6 +1,7 @@
 use std::ops::Range;
 
 use logos::Logos;
+use smol_str::SmolStr;
 
 #[derive(Logos, Debug, PartialEq, Clone, Copy)]
 pub enum TokenKind {
@@ -38,8 +39,8 @@ pub enum TokenKind {
 }
 
 #[derive(Debug, Clone)]
-pub struct Token<'a> {
+pub struct Token {
     pub kind: TokenKind,
-    pub lexeme: &'a str,
+    pub lexeme: SmolStr,
     pub span: Range<usize>,
 }

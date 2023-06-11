@@ -17,7 +17,7 @@ impl<'src> Lexer<'src> {
 }
 
 impl<'src> Iterator for Lexer<'src> {
-    type Item = Result<Token<'src>, <TokenKind as Logos<'src>>::Error>;
+    type Item = Result<Token, <TokenKind as Logos<'src>>::Error>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let kind = self.lexer.next()?;
@@ -26,7 +26,7 @@ impl<'src> Iterator for Lexer<'src> {
 
         Some(kind.map(|kind| Token {
             kind: kind.into(),
-            lexeme,
+            lexeme: lexeme.into(),
             span,
         }))
     }

@@ -1,3 +1,4 @@
+use smol_str::SmolStr;
 use thin_vec::ThinVec;
 
 /// The kind of a Crane expression.
@@ -25,7 +26,9 @@ pub enum StmtKind {
 
 /// A function definition.
 #[derive(Debug, Clone)]
-pub struct Fn {}
+pub struct Fn {
+    pub name: SmolStr,
+}
 
 /// A Crane statement.
 #[derive(Debug, Clone)]

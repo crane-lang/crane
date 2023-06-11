@@ -1,8 +1,11 @@
 mod ast;
+mod backend;
 mod lexer;
 mod parser;
 
 use clap::{Parser, Subcommand};
+
+use crate::backend::javascript::JsBackend;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -28,6 +31,19 @@ fn main() {
 
             match parser.parse() {
                 Ok(statements) => {
+                    use std::fs::{self, File};
+                    use std::io::Write;
+
+                    let backend = JsBackend::new();
+
+                    let output = backend.compile(statements);
+
+                    fs::create_dir_all("build").unwrap();
+
+                    let mut file = File::create("build/main.js").unwrap();
+
+                    file.write_all(output.as_bytes()).unwrap();
+
                     println!("Compiled!")
                 }
                 Err(err) => {

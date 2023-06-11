@@ -1,4 +1,11 @@
 #
+# Crane
+#
+
+# Compiled Crane code.
+/build
+
+#
 # Rust
 #
 
