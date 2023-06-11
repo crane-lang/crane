@@ -1,4 +1,4 @@
-use crate::ast::{Expr, ExprKind, Stmt, StmtKind};
+use crate::ast::{Expr, ExprKind, Item, ItemKind, Stmt, StmtKind};
 
 pub struct JsBackend {}
 
@@ -7,7 +7,7 @@ impl JsBackend {
         Self {}
     }
 
-    pub fn compile(&self, program: Vec<Stmt>) -> String {
+    pub fn compile(&self, program: Vec<Item>) -> String {
         let inline_std = r#"
 function print(value) {
     process.stdout.write(value);
@@ -20,7 +20,7 @@ function println(value) {
 
         let compiled_program = program
             .into_iter()
-            .flat_map(|stmt| self.compile_stmt(stmt))
+            .flat_map(|item| self.compile_item(item))
             .collect::<Vec<_>>()
             .join("\n");
 
@@ -38,9 +38,9 @@ main();
         )
     }
 
-    fn compile_stmt(&self, stmt: Stmt) -> Vec<String> {
-        match stmt.kind {
-            StmtKind::Fn(fun) => vec![format!(
+    fn compile_item(&self, item: Item) -> Vec<String> {
+        match item.kind {
+            ItemKind::Fn(fun) => vec![format!(
                 r#"
                 function {name}() {{
                     {body}
@@ -54,6 +54,12 @@ main();
                     .collect::<Vec<_>>()
                     .join("\n")
             )],
+        }
+    }
+
+    fn compile_stmt(&self, stmt: Stmt) -> Vec<String> {
+        match stmt.kind {
+            StmtKind::Item(item) => self.compile_item(item),
             StmtKind::Expr(expr) => self.compile_expr(expr),
         }
     }

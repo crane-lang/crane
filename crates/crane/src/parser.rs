@@ -7,7 +7,7 @@ use std::iter::Peekable;
 use thin_vec::ThinVec;
 use tracing::trace;
 
-use crate::ast::{Expr, ExprKind, Fn, Ident, Stmt, StmtKind};
+use crate::ast::{Expr, ExprKind, Fn, Ident, Item, ItemKind, Stmt, StmtKind};
 use crate::lexer::token::TokenKind;
 use crate::lexer::{token::Token, Lexer};
 
@@ -26,18 +26,18 @@ impl<'src> Parser<'src> {
         }
     }
 
-    pub fn parse(mut self) -> ParseResult<Vec<Stmt>> {
+    pub fn parse(mut self) -> ParseResult<Vec<Item>> {
         trace!("Parsing program");
 
-        let mut statements = Vec::new();
+        let mut items = Vec::new();
 
         while !self.is_at_end().unwrap() {
-            let fn_decl = self.parse_fn()?;
+            let item = self.parse_fn_item()?;
 
-            statements.push(fn_decl);
+            items.push(item);
         }
 
-        Ok(statements)
+        Ok(items)
     }
 
     fn peek(&mut self) -> ParseResult<Option<&Token>> {
@@ -114,7 +114,7 @@ impl<'src> Parser<'src> {
         }
     }
 
-    fn parse_fn(&mut self) -> ParseResult<Stmt> {
+    fn parse_fn_item(&mut self) -> ParseResult<Item> {
         trace!("Parsing function declaration");
 
         match self.peek()? {
@@ -155,11 +155,12 @@ impl<'src> Parser<'src> {
 
         self.consume(TokenKind::CloseBrace, "Expected '}'.")?;
 
-        Ok(Stmt {
-            kind: StmtKind::Fn(Box::new(Fn {
-                name: name.lexeme.into(),
+        Ok(Item {
+            kind: ItemKind::Fn(Box::new(Fn {
+                name: name.lexeme.clone().into(),
                 body,
             })),
+            name: Ident(name.lexeme.into()),
         })
     }
 

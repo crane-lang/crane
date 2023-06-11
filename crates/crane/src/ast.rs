@@ -11,7 +11,7 @@ impl std::fmt::Display for Ident {
     }
 }
 
-/// The kind of a Crane expression.
+/// The kind of an [`Expr`].
 #[derive(Debug, Clone)]
 pub enum ExprKind {
     /// A literal.
@@ -27,17 +27,17 @@ pub enum ExprKind {
     },
 }
 
-/// A Crane expression.
+/// An expression.
 #[derive(Debug, Clone)]
 pub struct Expr {
     pub kind: ExprKind,
 }
 
-/// The kind of a Crane statement.
+/// The kind of a [`Stmt`].
 #[derive(Debug, Clone)]
 pub enum StmtKind {
-    /// A function declaration (`fn`).
-    Fn(Box<Fn>),
+    /// An item.
+    Item(Item),
 
     /// An expression.
     Expr(Expr),
@@ -50,8 +50,28 @@ pub struct Fn {
     pub body: ThinVec<Stmt>,
 }
 
-/// A Crane statement.
+/// A statement.
 #[derive(Debug, Clone)]
 pub struct Stmt {
     pub kind: StmtKind,
+}
+
+/// The kind of an [`Item`].
+#[derive(Debug, Clone)]
+pub enum ItemKind {
+    /// A function declaration (`fn`).
+    Fn(Box<Fn>),
+}
+
+/// An item in a [`Module`].
+#[derive(Debug, Clone)]
+pub struct Item {
+    pub kind: ItemKind,
+    pub name: Ident,
+}
+
+/// A module.
+#[derive(Debug, Clone)]
+pub struct Module {
+    pub items: ThinVec<Item>,
 }
