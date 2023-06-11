@@ -156,10 +156,7 @@ impl<'src> Parser<'src> {
         self.consume(TokenKind::CloseBrace, "Expected '}'.")?;
 
         Ok(Item {
-            kind: ItemKind::Fn(Box::new(Fn {
-                name: name.lexeme.clone().into(),
-                body,
-            })),
+            kind: ItemKind::Fn(Box::new(Fn { body })),
             name: Ident(name.lexeme.into()),
         })
     }

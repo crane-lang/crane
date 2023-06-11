@@ -46,7 +46,7 @@ main();
                     {body}
                 }}
                 "#,
-                name = fun.name,
+                name = item.name,
                 body = fun
                     .body
                     .into_iter()

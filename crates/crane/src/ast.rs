@@ -46,7 +46,6 @@ pub enum StmtKind {
 /// A function definition.
 #[derive(Debug, Clone)]
 pub struct Fn {
-    pub name: SmolStr,
     pub body: ThinVec<Stmt>,
 }
 
