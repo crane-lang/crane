@@ -4,6 +4,7 @@ mod error;
 pub use error::*;
 
 use std::collections::HashMap;
+use std::ops::Range;
 
 use crate::ast::{ExprKind, Ident, ItemKind, Module, StmtKind};
 
@@ -36,17 +37,19 @@ impl Typer {
         for item in &module.items {
             match &item.kind {
                 ItemKind::Fn(fun) => {
-                    for fn_name in fun.body.iter().filter_map(|stmt| match &stmt.kind {
-                        StmtKind::Expr(expr) => match &expr.kind {
-                            ExprKind::Call { fun, .. } => match &fun.kind {
-                                ExprKind::Variable { name } => Some(name),
+                    for (fn_name, call_expr) in
+                        fun.body.iter().filter_map(|stmt| match &stmt.kind {
+                            StmtKind::Expr(expr) => match &expr.kind {
+                                ExprKind::Call { fun, .. } => match &fun.kind {
+                                    ExprKind::Variable { name } => Some((name, expr)),
+                                    _ => None,
+                                },
                                 _ => None,
                             },
                             _ => None,
-                        },
-                        _ => None,
-                    }) {
-                        self.ensure_function_exists(fn_name)?;
+                        })
+                    {
+                        self.ensure_function_exists(fn_name, &call_expr.span)?;
                     }
                 }
             }
@@ -59,14 +62,14 @@ impl Typer {
         self.module_functions.insert(name, ());
     }
 
-    fn ensure_function_exists(&self, name: &Ident) -> TypeCheckResult<()> {
+    fn ensure_function_exists(&self, name: &Ident, span: &Range<usize>) -> TypeCheckResult<()> {
         if let Some(_) = self.module_functions.get(name) {
             return Ok(());
         }
 
         Err(TypeError {
             kind: TypeErrorKind::UnknownFunction { name: name.clone() },
-            span: 10..11,
+            span: span.clone(),
         })
     }
 }

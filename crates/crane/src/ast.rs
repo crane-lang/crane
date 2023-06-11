@@ -1,8 +1,10 @@
+use std::ops::Range;
+
 use smol_str::SmolStr;
 use thin_vec::ThinVec;
 
 /// An identifier.
-#[derive(Debug, PartialEq, Eq,  Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Ident(pub SmolStr);
 
 impl std::fmt::Display for Ident {
@@ -31,6 +33,7 @@ pub enum ExprKind {
 #[derive(Debug, Clone)]
 pub struct Expr {
     pub kind: ExprKind,
+    pub span: Range<usize>,
 }
 
 /// The kind of a [`Stmt`].

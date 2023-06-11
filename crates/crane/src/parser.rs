@@ -169,6 +169,7 @@ impl<'src> Parser<'src> {
 
             Ok(Expr {
                 kind: ExprKind::Literal(token.lexeme),
+                span: token.span,
             })
         } else {
             todo!()
@@ -200,13 +201,17 @@ impl<'src> Parser<'src> {
             kind: ExprKind::Variable {
                 name: Ident(callee.lexeme),
             },
+            span: callee.span,
         };
+
+        let span = callee.span.clone();
 
         Ok(Expr {
             kind: ExprKind::Call {
                 fun: Box::new(callee),
                 args: args.into_iter().map(Box::new).collect(),
             },
+            span,
         })
     }
 }
