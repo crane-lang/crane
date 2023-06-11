@@ -20,7 +20,8 @@ function println(...args) {
             .collect::<Vec<_>>()
             .join("\n");
 
-        format!(r#"
+        format!(
+            r#"
 // Begin Crane standard library.
 {inline_std}
 // End Crane standard library.
@@ -29,7 +30,8 @@ function println(...args) {
 
 // Program entrypoint.
 main();
-        "#)
+        "#
+        )
     }
 
     fn compile_stmt(&self, stmt: Stmt) -> Vec<String> {
@@ -54,10 +56,18 @@ main();
 
     fn compile_expr(&self, expr: Expr) -> Vec<String> {
         match expr.kind {
+            ExprKind::Literal(literal) => vec![literal.to_string()],
             ExprKind::Variable { name } => vec![name.0.to_string()],
             ExprKind::Call { fun, args } => vec![match fun.kind {
-                ExprKind::Variable { name } => format!("{name}()"),
-                ExprKind::Call { fun, args } => todo!(),
+                ExprKind::Variable { name } => format!(
+                    "{name}({arg_list})",
+                    arg_list = args
+                        .into_iter()
+                        .map(|arg| self.compile_expr(*arg).join(""))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                ),
+                _ => todo!(),
             }],
         }
     }

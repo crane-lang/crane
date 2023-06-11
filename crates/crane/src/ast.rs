@@ -14,6 +14,9 @@ impl std::fmt::Display for Ident {
 /// The kind of a Crane expression.
 #[derive(Debug, Clone)]
 pub enum ExprKind {
+    /// A literal.
+    Literal(SmolStr),
+
     /// A reference to a variable.
     Variable { name: Ident },
 

@@ -21,6 +21,10 @@ pub enum TokenKind {
     #[token("}")]
     CloseBrace,
 
+    /// `,`
+    #[token(",")]
+    Comma,
+
     /// An identifier.
     #[regex(r"[A-Za-z_]+")]
     Ident,

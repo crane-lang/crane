@@ -97,10 +97,23 @@ impl<'src> Parser<'src> {
             .unwrap_or(false))
     }
 
+    fn check_and_consume(&mut self, kind: TokenKind) -> Result<bool, ()> {
+        if self.check(kind)? {
+            self.advance()?;
+
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    }
+
     fn consume(&mut self, kind: TokenKind, message: &str) -> Result<Token, ()> {
         if self.check(kind)? {
             self.advance()
         } else {
+            eprintln!("{}", message);
+            let _ = dbg!(self.peek());
+
             Err(())
         }
     }
@@ -145,6 +158,20 @@ impl<'src> Parser<'src> {
         })
     }
 
+    fn parse_expr(&mut self) -> Result<Expr, ()> {
+        trace!("Parsing expression");
+
+        if self.check(TokenKind::String)? {
+            let token = self.advance()?;
+
+            Ok(Expr {
+                kind: ExprKind::Literal(token.lexeme),
+            })
+        } else {
+            todo!()
+        }
+    }
+
     fn parse_call_expr(&mut self) -> Result<Expr, ()> {
         trace!("Parsing call expression");
 
@@ -152,6 +179,19 @@ impl<'src> Parser<'src> {
         assert_eq!(callee.kind, TokenKind::Ident);
 
         self.consume(TokenKind::OpenParen, "Expected '('.")?;
+
+        let mut args = ThinVec::new();
+
+        if !self.check(TokenKind::CloseParen)? {
+            loop {
+                args.push(self.parse_expr()?);
+
+                if !self.check_and_consume(TokenKind::Comma)? {
+                    break;
+                }
+            }
+        }
+
         self.consume(TokenKind::CloseParen, "Expected ')'.")?;
 
         let callee = Expr {
@@ -163,7 +203,7 @@ impl<'src> Parser<'src> {
         Ok(Expr {
             kind: ExprKind::Call {
                 fun: Box::new(callee),
-                args: ThinVec::new(),
+                args: args.into_iter().map(Box::new).collect(),
             },
         })
     }
