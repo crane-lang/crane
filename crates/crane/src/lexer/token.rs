@@ -1,8 +1,7 @@
-use std::ops::Range;
-
 use logos::Logos;
 use smol_str::SmolStr;
 
+use crate::ast::Span;
 use crate::lexer::LexErrorKind;
 
 #[derive(Logos, Debug, PartialEq, Clone, Copy)]
@@ -49,5 +48,5 @@ pub enum TokenKind {
 pub struct Token {
     pub kind: TokenKind,
     pub lexeme: SmolStr,
-    pub span: Range<usize>,
+    pub span: Span,
 }

@@ -5,6 +5,7 @@ mod parser;
 mod typer;
 
 use ariadne::{Color, Label, Report, ReportKind, Source};
+use ast::SourceSpan;
 use clap::{Parser, Subcommand};
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
@@ -93,7 +94,7 @@ fn compile() -> Result<(), ()> {
                             Report::build(ReportKind::Error, "scratch.crane", 1)
                                 .with_message("A type error occurred.")
                                 .with_label(
-                                    Label::new(("scratch.crane", span))
+                                    Label::new(SourceSpan::from(("scratch.crane", span)))
                                         .with_message(format!("Function `{name}` does not exist."))
                                         .with_color(Color::Red),
                                 )
@@ -102,7 +103,7 @@ fn compile() -> Result<(), ()> {
                     };
 
                     error_report
-                        .eprint(("scratch.crane", Source::from(source)))
+                        .eprint(("scratch.crane".into(), Source::from(source)))
                         .unwrap();
 
                     Err(())
@@ -117,7 +118,7 @@ fn compile() -> Result<(), ()> {
                     Report::build(ReportKind::Error, "scratch.crane", 1)
                         .with_message("An error occurred during lexing.")
                         .with_label(
-                            Label::new(("scratch.crane", span))
+                            Label::new(SourceSpan::from(("scratch.crane", span)))
                                 .with_message(lex_error)
                                 .with_color(Color::Red),
                         )
@@ -127,7 +128,7 @@ fn compile() -> Result<(), ()> {
                     Report::build(ReportKind::Error, "scratch.crane", 1)
                         .with_message("An error occurred during parsing.")
                         .with_label(
-                            Label::new(("scratch.crane", span))
+                            Label::new(SourceSpan::from(("scratch.crane", span)))
                                 .with_message(err.kind)
                                 .with_color(Color::Red),
                         )
@@ -137,7 +138,7 @@ fn compile() -> Result<(), ()> {
                     Report::build(ReportKind::Error, "scratch.crane", 1)
                         .with_message("An error occurred during parsing.")
                         .with_label(
-                            Label::new(("scratch.crane", span))
+                            Label::new(SourceSpan::from(("scratch.crane", span)))
                                 .with_message(message)
                                 .with_color(Color::Red),
                         )
@@ -146,7 +147,7 @@ fn compile() -> Result<(), ()> {
             };
 
             error_report
-                .eprint(("scratch.crane", Source::from(source)))
+                .eprint(("scratch.crane".into(), Source::from(source)))
                 .unwrap();
 
             Err(())

@@ -1,11 +1,10 @@
-use std::ops::Range;
-
+use crate::ast::Span;
 use crate::lexer::{LexError, LexErrorKind};
 
 #[derive(Debug)]
 pub struct ParseError {
     pub kind: ParseErrorKind,
-    pub span: Range<usize>,
+    pub span: Span,
 }
 
 #[derive(Debug)]

@@ -4,9 +4,8 @@ mod error;
 pub use error::*;
 
 use std::collections::HashMap;
-use std::ops::Range;
 
-use crate::ast::{ExprKind, Ident, ItemKind, Module, StmtKind};
+use crate::ast::{ExprKind, Ident, ItemKind, Module, Span, StmtKind};
 
 pub type TypeCheckResult<T> = Result<T, TypeError>;
 
@@ -49,7 +48,7 @@ impl Typer {
                             _ => None,
                         })
                     {
-                        self.ensure_function_exists(fn_name, &call_expr.span)?;
+                        self.ensure_function_exists(fn_name, call_expr.span)?;
                     }
                 }
             }
@@ -62,14 +61,14 @@ impl Typer {
         self.module_functions.insert(name, ());
     }
 
-    fn ensure_function_exists(&self, name: &Ident, span: &Range<usize>) -> TypeCheckResult<()> {
+    fn ensure_function_exists(&self, name: &Ident, span: Span) -> TypeCheckResult<()> {
         if let Some(_) = self.module_functions.get(name) {
             return Ok(());
         }
 
         Err(TypeError {
             kind: TypeErrorKind::UnknownFunction { name: name.clone() },
-            span: span.clone(),
+            span,
         })
     }
 }

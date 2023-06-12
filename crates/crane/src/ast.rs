@@ -1,4 +1,8 @@
-use std::ops::Range;
+mod source_span;
+mod span;
+
+pub use source_span::*;
+pub use span::*;
 
 use smol_str::SmolStr;
 use thin_vec::ThinVec;
@@ -33,7 +37,7 @@ pub enum ExprKind {
 #[derive(Debug, Clone)]
 pub struct Expr {
     pub kind: ExprKind,
-    pub span: Range<usize>,
+    pub span: Span,
 }
 
 /// The kind of a [`Stmt`].

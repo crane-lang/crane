@@ -73,7 +73,7 @@ impl<'src> Parser<'src> {
     fn advance(&mut self) -> ParseResult<Token> {
         let token = self.lexer.next().ok_or(ParseError {
             kind: ParseErrorKind::AdvancedPastEndOfInput,
-            span: 0..0,
+            span: (0..0).into(),
         })?;
         let token = token?;
 
@@ -108,8 +108,12 @@ impl<'src> Parser<'src> {
                 kind: ParseErrorKind::Error(message.to_string()),
                 span: self
                     .peek()
-                    .map(|token| token.map(|token| token.span.clone()).unwrap_or(0..0))
-                    .unwrap_or(0..0),
+                    .map(|token| {
+                        token
+                            .map(|token| token.span.clone())
+                            .unwrap_or((0..0).into())
+                    })
+                    .unwrap_or((0..0).into()),
             })
         }
     }

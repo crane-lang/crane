@@ -1,12 +1,20 @@
-use std::ops::Range;
-
 use thiserror::Error;
 
-#[derive(Error, Debug, PartialEq, Clone, Default)]
+use crate::ast::Span;
+
+#[derive(Error, Debug, PartialEq, Clone)]
 pub struct LexError {
     pub kind: LexErrorKind,
+    pub span: Span,
+}
 
-    pub span: Range<usize>,
+impl Default for LexError {
+    fn default() -> Self {
+        Self {
+            kind: Default::default(),
+            span: Span::new(0, 0),
+        }
+    }
 }
 
 impl std::fmt::Display for LexError {

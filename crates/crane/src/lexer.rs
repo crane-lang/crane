@@ -26,13 +26,13 @@ impl<'src> Iterator for Lexer<'src> {
     fn next(&mut self) -> Option<Self::Item> {
         let kind = self.lexer.next()?;
         let lexeme = self.lexer.slice();
-        let span = self.lexer.span();
+        let span = self.lexer.span().into();
 
         Some(
             kind.map(|kind| Token {
                 kind: kind.into(),
                 lexeme: lexeme.into(),
-                span: span.clone(),
+                span,
             })
             .map_err(|kind| LexError { kind, span }),
         )
