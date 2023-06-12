@@ -42,11 +42,17 @@ main();
         match item.kind {
             ItemKind::Fn(fun) => vec![format!(
                 r#"
-                function {name}() {{
+                function {name}({param_list}) {{
                     {body}
                 }}
                 "#,
                 name = item.name,
+                param_list = fun
+                    .params
+                    .into_iter()
+                    .map(|param| param.name.to_string())
+                    .collect::<Vec<_>>()
+                    .join(", "),
                 body = fun
                     .body
                     .into_iter()
@@ -66,7 +72,7 @@ main();
 
     fn compile_expr(&self, expr: Expr) -> Vec<String> {
         match expr.kind {
-            ExprKind::Literal(literal) => vec![literal.to_string()],
+            ExprKind::Literal(literal) => vec![literal.value.to_string()],
             ExprKind::Variable { name } => vec![name.0.to_string()],
             ExprKind::Call { fun, args } => vec![match fun.kind {
                 ExprKind::Variable { name } => format!(

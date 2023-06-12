@@ -1,13 +1,15 @@
-use smol_str::SmolStr;
+use std::sync::Arc;
+
 use thin_vec::ThinVec;
 
-use crate::ast::{Ident, Span};
+use crate::ast::{Ident, Literal, Span};
+use crate::typer::Type;
 
 /// The kind of a [`TyExpr`].
 #[derive(Debug, Clone)]
 pub enum TyExprKind {
     /// A literal.
-    Literal(SmolStr),
+    Literal(Literal),
 
     /// A reference to a variable.
     Variable { name: Ident },
@@ -24,6 +26,7 @@ pub enum TyExprKind {
 pub struct TyExpr {
     pub kind: TyExprKind,
     pub span: Span,
+    pub ty: Arc<Type>,
 }
 
 /// The kind of a [`TyStmt`].

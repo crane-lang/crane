@@ -7,7 +7,9 @@ use std::iter::Peekable;
 use thin_vec::ThinVec;
 use tracing::trace;
 
-use crate::ast::{Expr, ExprKind, Fn, Ident, Item, ItemKind, Stmt, StmtKind};
+use crate::ast::{
+    Expr, ExprKind, Fn, FnParam, Ident, Item, ItemKind, Literal, LiteralKind, Stmt, StmtKind,
+};
 use crate::lexer::token::{Token, TokenKind};
 use crate::lexer::Lexer;
 
@@ -139,7 +141,29 @@ impl<'src> Parser<'src> {
         let name = self.consume(TokenKind::Ident, "Expected a function name.")?;
 
         self.consume(TokenKind::OpenParen, "Expected '('.")?;
-        self.consume(TokenKind::CloseParen, "Expected ')'.")?;
+
+        let mut params = ThinVec::new();
+
+        if !self.check(TokenKind::CloseParen)? {
+            loop {
+                let param_name =
+                    self.consume(TokenKind::Ident, "Expected a function parameter name.")?;
+
+                params.push(FnParam {
+                    name: Ident(param_name.lexeme.into()),
+                    span: param_name.span,
+                });
+
+                if !self.check_and_consume(TokenKind::Comma)? {
+                    break;
+                }
+            }
+        }
+
+        self.consume(
+            TokenKind::CloseParen,
+            "Expected a ')' to close the parameter list.",
+        )?;
 
         self.consume(TokenKind::OpenBrace, "Expected '{'.")?;
 
@@ -163,7 +187,7 @@ impl<'src> Parser<'src> {
         self.consume(TokenKind::CloseBrace, "Expected '}'.")?;
 
         Ok(Item {
-            kind: ItemKind::Fn(Box::new(Fn { body })),
+            kind: ItemKind::Fn(Box::new(Fn { params, body })),
             name: Ident(name.lexeme.into()),
         })
     }
@@ -175,7 +199,19 @@ impl<'src> Parser<'src> {
             let token = self.advance()?;
 
             Ok(Expr {
-                kind: ExprKind::Literal(token.lexeme),
+                kind: ExprKind::Literal(Literal {
+                    kind: LiteralKind::String,
+                    value: token.lexeme,
+                }),
+                span: token.span,
+            })
+        } else if self.check(TokenKind::Ident)? {
+            let token = self.advance()?;
+
+            Ok(Expr {
+                kind: ExprKind::Variable {
+                    name: Ident(token.lexeme.into()),
+                },
                 span: token.span,
             })
         } else {

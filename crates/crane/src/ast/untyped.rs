@@ -7,7 +7,7 @@ use crate::ast::{Ident, Span};
 #[derive(Debug, Clone)]
 pub enum ExprKind {
     /// A literal.
-    Literal(SmolStr),
+    Literal(Literal),
 
     /// A reference to a variable.
     Variable { name: Ident },
@@ -17,6 +17,19 @@ pub enum ExprKind {
         fun: Box<Expr>,
         args: ThinVec<Box<Expr>>,
     },
+}
+
+/// The kind of a [`Literal`].
+#[derive(Debug, Clone)]
+pub enum LiteralKind {
+    String,
+}
+
+/// A literal.
+#[derive(Debug, Clone)]
+pub struct Literal {
+    pub kind: LiteralKind,
+    pub value: SmolStr,
 }
 
 /// An expression.
@@ -39,7 +52,15 @@ pub enum StmtKind {
 /// A function definition.
 #[derive(Debug, Clone)]
 pub struct Fn {
+    pub params: ThinVec<FnParam>,
     pub body: ThinVec<Stmt>,
+}
+
+/// A parameter to a [`Fn`].
+#[derive(Debug, Clone)]
+pub struct FnParam {
+    pub name: Ident,
+    pub span: Span,
 }
 
 /// A statement.

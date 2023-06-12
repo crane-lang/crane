@@ -1,11 +1,17 @@
 mod environment;
 mod error;
+mod r#type;
 
 pub use error::*;
+pub use r#type::*;
 
 use std::collections::HashMap;
+use std::sync::Arc;
 
-use crate::ast::{ExprKind, Ident, ItemKind, Module, Span, StmtKind};
+use crate::ast::{
+    Expr, ExprKind, Ident, ItemKind, Literal, LiteralKind, Module, Span, StmtKind, TyExpr,
+    TyExprKind,
+};
 
 pub type TypeCheckResult<T> = Result<T, TypeError>;
 
@@ -69,6 +75,30 @@ impl Typer {
         Err(TypeError {
             kind: TypeErrorKind::UnknownFunction { name: name.clone() },
             span,
+        })
+    }
+
+    fn infer_expr(&self, expr: Expr) -> TypeCheckResult<TyExpr> {
+        match expr.kind {
+            ExprKind::Literal(literal) => match literal.kind {
+                LiteralKind::String => self.infer_string(literal, expr.span),
+            },
+            ExprKind::Variable { name } => todo!(),
+            ExprKind::Call { fun, args } => todo!(),
+        }
+    }
+
+    fn infer_string(&self, literal: Literal, span: Span) -> TypeCheckResult<TyExpr> {
+        Ok(TyExpr {
+            kind: TyExprKind::Literal(Literal {
+                kind: LiteralKind::String,
+                value: literal.value,
+            }),
+            span,
+            ty: Arc::new(Type::UserDefined {
+                module: "std::prelude".into(),
+                name: "String".into(),
+            }),
         })
     }
 }
