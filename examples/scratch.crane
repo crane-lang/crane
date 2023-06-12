@@ -6,5 +6,4 @@ pub fn main() {
     print(" ")
     print("world!")
     println("")
-    does_not_exist()
 }

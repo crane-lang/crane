@@ -60,6 +60,7 @@ pub struct Fn {
 #[derive(Debug, Clone)]
 pub struct Stmt {
     pub kind: StmtKind,
+    pub span: Span,
 }
 
 /// The kind of an [`Item`].

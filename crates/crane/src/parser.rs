@@ -152,8 +152,11 @@ impl<'src> Parser<'src> {
 
             let fn_call = self.parse_call_expr()?;
 
+            let span = fn_call.span;
+
             body.push(Stmt {
                 kind: StmtKind::Expr(fn_call),
+                span,
             });
         }
 
