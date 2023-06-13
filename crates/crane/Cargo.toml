@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 ariadne = "0.3.0"
 clap = { version = "4.3.3", features = ["derive"] }
+inkwell = { version = "0.2.0", features = ["llvm16-0"] }
 logos = "0.13.0"
 smol_str = "0.2.0"
 thin-vec = "0.2.12"
