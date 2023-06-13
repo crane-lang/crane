@@ -13,6 +13,7 @@ use typer::TypeErrorKind;
 
 use crate::ast::Module;
 use crate::backend::javascript::JsBackend;
+use crate::backend::native::NativeBackend;
 use crate::parser::ParseErrorKind;
 use crate::typer::Typer;
 
@@ -72,15 +73,19 @@ fn compile() -> Result<(), ()> {
                     use std::fs::{self, File};
                     use std::io::Write;
 
-                    let backend = JsBackend::new();
+                    let js_backend = JsBackend::new();
 
-                    let output = backend.compile(items);
+                    let output = js_backend.compile(items.clone());
 
                     fs::create_dir_all("build").unwrap();
 
                     let mut file = File::create("build/main.js").unwrap();
 
                     file.write_all(output.as_bytes()).unwrap();
+
+                    let backend = NativeBackend::new();
+
+                    backend.compile(items);
 
                     println!("Compiled!");
 
