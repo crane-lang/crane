@@ -5,7 +5,7 @@ use inkwell::targets::{
 };
 use inkwell::OptimizationLevel;
 
-use crate::ast::{Item, ItemKind};
+use crate::ast::{ExprKind, Item, ItemKind, StmtKind};
 
 pub struct NativeBackend {
     context: Context,
@@ -51,7 +51,12 @@ impl NativeBackend {
 
         fpm.initialize();
 
-        for item in program {
+        for item in program
+            // HACK: Reverse the items so we define the helper functions before `main`.
+            // This should be replaced with a call-flow graph.
+            .into_iter()
+            .rev()
+        {
             match item.kind {
                 ItemKind::Fn(fun) => {
                     let fn_type = self.context.void_type().fn_type(&[], false);
@@ -61,6 +66,30 @@ impl NativeBackend {
                     let entry = self.context.append_basic_block(fn_value, "entry");
 
                     builder.position_at_end(entry);
+
+                    for stmt in fun.body {
+                        match stmt.kind {
+                            StmtKind::Expr(expr) => match expr.kind {
+                                ExprKind::Literal(_) => todo!(),
+                                ExprKind::Variable { name } => todo!(),
+                                ExprKind::Call { fun, args } => {
+                                    let callee_name = match fun.kind {
+                                        ExprKind::Variable { name } => name,
+                                        _ => todo!(),
+                                    };
+
+                                    if let Some(callee) =
+                                        module.get_function(&callee_name.to_string())
+                                    {
+                                        builder.build_call(callee, &[], "tmp");
+                                    } else {
+                                        eprintln!("Function '{}' not found.", callee_name);
+                                    }
+                                }
+                            },
+                            StmtKind::Item(item) => todo!(),
+                        }
+                    }
 
                     builder.build_return(None);
 
