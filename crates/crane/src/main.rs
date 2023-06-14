@@ -12,7 +12,6 @@ use tracing_subscriber::FmtSubscriber;
 use typer::TypeErrorKind;
 
 use crate::ast::Module;
-use crate::backend::javascript::JsBackend;
 use crate::backend::native::NativeBackend;
 use crate::parser::ParseErrorKind;
 use crate::typer::Typer;
@@ -70,18 +69,7 @@ fn compile() -> Result<(), ()> {
 
             match typer.type_check_module(module) {
                 Ok(()) => {
-                    use std::fs::{self, File};
-                    use std::io::Write;
-
-                    let js_backend = JsBackend::new();
-
-                    let output = js_backend.compile(items.clone());
-
-                    fs::create_dir_all("build").unwrap();
-
-                    let mut file = File::create("build/main.js").unwrap();
-
-                    file.write_all(output.as_bytes()).unwrap();
+                    std::fs::create_dir_all("build").unwrap();
 
                     let backend = NativeBackend::new();
 
@@ -163,18 +151,9 @@ fn compile() -> Result<(), ()> {
 fn run() {
     use std::process::Command;
 
-    let use_native_backend = true;
-
-    let exit_status = if use_native_backend {
-        Command::new("./build/main")
-            .status()
-            .expect("Failed to run")
-    } else {
-        Command::new("node")
-            .arg("build/main.js")
-            .status()
-            .expect("Failed to run")
-    };
+    let exit_status = Command::new("./build/main")
+        .status()
+        .expect("Failed to run");
 
     println!("Exited with {}", exit_status);
 }
