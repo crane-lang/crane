@@ -1,3 +1,5 @@
+use std::process::Command;
+
 use inkwell::context::Context;
 use inkwell::passes::PassManager;
 use inkwell::targets::{
@@ -123,5 +125,12 @@ impl NativeBackend {
         let bitcode = module.write_bitcode_to_memory();
 
         outfile.write_all(bitcode.as_slice()).unwrap();
+
+        let exit_status = Command::new("clang")
+            .args(["-o", "build/main", "build/main.o"])
+            .status()
+            .expect("Failed to build with clang");
+
+        println!("clang exited with {}", exit_status);
     }
 }
