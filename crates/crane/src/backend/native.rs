@@ -1,11 +1,14 @@
 use std::process::Command;
 
 use inkwell::context::Context;
+use inkwell::module::Linkage;
 use inkwell::passes::PassManager;
 use inkwell::targets::{
     CodeModel, FileType, InitializationConfig, RelocMode, Target, TargetTriple,
 };
-use inkwell::OptimizationLevel;
+use inkwell::types::BasicType;
+use inkwell::values::BasicValue;
+use inkwell::{AddressSpace, OptimizationLevel};
 
 use crate::ast::{ExprKind, Item, ItemKind, StmtKind};
 
@@ -52,6 +55,94 @@ impl NativeBackend {
         fpm.add_instruction_combining_pass();
 
         fpm.initialize();
+
+        let i8_type = self.context.i8_type();
+        let i32_type = self.context.i32_type();
+        let fn_type = i32_type.fn_type(
+            &[i8_type
+                .ptr_type(AddressSpace::default())
+                .as_basic_type_enum()
+                .into()],
+            false,
+        );
+
+        let puts = module.add_function("puts", fn_type, Some(Linkage::External));
+
+        dbg!(puts);
+
+        let hello_world = b"Hello, world!\n";
+
+        let i8_type = self.context.i8_type();
+        let i8_array_type = i8_type.array_type(hello_world.len() as u32 + 1);
+
+        let hello = self.context.const_string(hello_world, true);
+
+        let global = module.add_global(i8_array_type, None, "blah");
+        global.set_linkage(Linkage::Internal);
+        global.set_constant(true);
+        global.set_initializer(&hello);
+
+        let global = dbg!(global);
+
+        // HACK: Register `print` function.
+        {
+            let fn_name = "print";
+            let fn_type = self.context.void_type().fn_type(&[], false);
+
+            let fn_value = module.add_function(&fn_name, fn_type, None);
+
+            let entry = self.context.append_basic_block(fn_value, "entry");
+
+            builder.position_at_end(entry);
+
+            if let Some(callee) = module.get_function(&"puts") {
+                builder.build_call(callee, &[global.as_basic_value_enum().into()], "tmp");
+            } else {
+                eprintln!("Function '{}' not found.", "puts");
+            }
+
+            builder.build_return(None);
+
+            if fn_value.verify(true) {
+                fpm.run_on(&fn_value);
+
+                println!("{} is verified!", fn_name);
+            } else {
+                println!("{} is not verified :(", fn_name);
+            }
+
+            dbg!(fn_value);
+        }
+
+        // HACK: Register `println` function.
+        {
+            let fn_name = "println";
+            let fn_type = self.context.void_type().fn_type(&[], false);
+
+            let fn_value = module.add_function(&fn_name, fn_type, None);
+
+            let entry = self.context.append_basic_block(fn_value, "entry");
+
+            builder.position_at_end(entry);
+
+            if let Some(callee) = module.get_function(&"puts") {
+                builder.build_call(callee, &[global.as_basic_value_enum().into()], "tmp");
+            } else {
+                eprintln!("Function '{}' not found.", "puts");
+            }
+
+            builder.build_return(None);
+
+            if fn_value.verify(true) {
+                fpm.run_on(&fn_value);
+
+                println!("{} is verified!", fn_name);
+            } else {
+                println!("{} is not verified :(", fn_name);
+            }
+
+            dbg!(fn_value);
+        }
 
         for item in program
             // HACK: Reverse the items so we define the helper functions before `main`.
