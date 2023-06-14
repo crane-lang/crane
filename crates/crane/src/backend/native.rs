@@ -203,6 +203,10 @@ impl NativeBackend {
 
         dbg!(module.get_functions().count());
 
+        module
+            .print_to_file("build/main.ll")
+            .expect("Failed to emit main.ll");
+
         let buffer = target_machine
             .write_to_memory_buffer(&module, FileType::Object)
             .expect("Failed to write to buffer");
