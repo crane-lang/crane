@@ -134,6 +134,12 @@ impl NativeBackend {
 
                     let fn_value = module.add_function(&item.name.to_string(), fn_type, None);
 
+                    for (index, param_value) in fn_value.get_param_iter().enumerate() {
+                        if let Some(param) = fun.params.get(index) {
+                            param_value.set_name(&param.name.to_string());
+                        }
+                    }
+
                     let entry = self.context.append_basic_block(fn_value, "entry");
 
                     builder.position_at_end(entry);
