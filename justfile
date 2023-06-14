@@ -5,7 +5,7 @@ build-llvm:
     pushd llvm
     cmake -S llvm -B build -G Ninja \
         -DCMAKE_BUILD_TYPE=Release \
-        -DLLVM_ENABLE_PROJECTS=lld \
+        -DLLVM_ENABLE_PROJECTS="clang;lld" \
         -DCMAKE_INSTALL_PREFIX=/Users/maxdeviant/projects/crane/llvm-build
     ninja -C build
     popd
