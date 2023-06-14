@@ -1,16 +1,17 @@
 use std::process::Command;
 
+use inkwell::builder::Builder;
 use inkwell::context::Context;
-use inkwell::module::Linkage;
+use inkwell::module::{Linkage, Module};
 use inkwell::passes::PassManager;
 use inkwell::targets::{
     CodeModel, FileType, InitializationConfig, RelocMode, Target, TargetTriple,
 };
 use inkwell::types::BasicType;
-use inkwell::values::BasicValue;
+use inkwell::values::{BasicMetadataValueEnum, BasicValue, GlobalValue};
 use inkwell::{AddressSpace, OptimizationLevel};
 
-use crate::ast::{ExprKind, Item, ItemKind, StmtKind};
+use crate::ast::{Expr, ExprKind, Item, ItemKind, Literal, LiteralKind, StmtKind};
 
 pub struct NativeBackend {
     context: Context,
@@ -70,63 +71,26 @@ impl NativeBackend {
 
         dbg!(puts);
 
-        let hello_world = b"Hello, world!\n";
-
-        let i8_type = self.context.i8_type();
-        let i8_array_type = i8_type.array_type(hello_world.len() as u32 + 1);
-
-        let hello = self.context.const_string(hello_world, true);
-
-        let global = module.add_global(i8_array_type, None, "blah");
-        global.set_linkage(Linkage::Internal);
-        global.set_constant(true);
-        global.set_initializer(&hello);
-
-        let global = dbg!(global);
-
-        // HACK: Register `print` function.
-        {
-            let fn_name = "print";
-            let fn_type = self.context.void_type().fn_type(&[], false);
+        // HACK: Register `print` and `println` functions.
+        for fn_name in ["print", "println"] {
+            let fn_type = self.context.void_type().fn_type(
+                &[i8_type
+                    .ptr_type(AddressSpace::default())
+                    .as_basic_type_enum()
+                    .into()],
+                false,
+            );
 
             let fn_value = module.add_function(&fn_name, fn_type, None);
+
+            let value_param = fn_value.get_first_param().unwrap();
 
             let entry = self.context.append_basic_block(fn_value, "entry");
 
             builder.position_at_end(entry);
 
             if let Some(callee) = module.get_function(&"puts") {
-                builder.build_call(callee, &[global.as_basic_value_enum().into()], "tmp");
-            } else {
-                eprintln!("Function '{}' not found.", "puts");
-            }
-
-            builder.build_return(None);
-
-            if fn_value.verify(true) {
-                fpm.run_on(&fn_value);
-
-                println!("{} is verified!", fn_name);
-            } else {
-                println!("{} is not verified :(", fn_name);
-            }
-
-            dbg!(fn_value);
-        }
-
-        // HACK: Register `println` function.
-        {
-            let fn_name = "println";
-            let fn_type = self.context.void_type().fn_type(&[], false);
-
-            let fn_value = module.add_function(&fn_name, fn_type, None);
-
-            let entry = self.context.append_basic_block(fn_value, "entry");
-
-            builder.position_at_end(entry);
-
-            if let Some(callee) = module.get_function(&"puts") {
-                builder.build_call(callee, &[global.as_basic_value_enum().into()], "tmp");
+                builder.build_call(callee, &[value_param.into()], "tmp");
             } else {
                 eprintln!("Function '{}' not found.", "puts");
             }
@@ -146,7 +110,7 @@ impl NativeBackend {
 
         for item in program
             // HACK: Reverse the items so we define the helper functions before `main`.
-            // This should be replaced with a call-flow graph.
+            // This should be replaced with a call graph.
             .into_iter()
             .rev()
         {
@@ -162,24 +126,9 @@ impl NativeBackend {
 
                     for stmt in fun.body {
                         match stmt.kind {
-                            StmtKind::Expr(expr) => match expr.kind {
-                                ExprKind::Literal(_) => todo!(),
-                                ExprKind::Variable { name } => todo!(),
-                                ExprKind::Call { fun, args } => {
-                                    let callee_name = match fun.kind {
-                                        ExprKind::Variable { name } => name,
-                                        _ => todo!(),
-                                    };
-
-                                    if let Some(callee) =
-                                        module.get_function(&callee_name.to_string())
-                                    {
-                                        builder.build_call(callee, &[], "tmp");
-                                    } else {
-                                        eprintln!("Function '{}' not found.", callee_name);
-                                    }
-                                }
-                            },
+                            StmtKind::Expr(expr) => {
+                                Self::compile_expr(&self.context, &builder, &module, expr)
+                            }
                             StmtKind::Item(item) => todo!(),
                         }
                     }
@@ -227,5 +176,77 @@ impl NativeBackend {
             .expect("Failed to build with clang");
 
         println!("clang exited with {}", exit_status);
+    }
+
+    fn compile_expr<'ctx>(
+        context: &'ctx Context,
+        builder: &Builder<'ctx>,
+        module: &Module<'ctx>,
+        expr: Expr,
+    ) {
+        match expr.kind {
+            ExprKind::Literal(literal) => match literal.kind {
+                LiteralKind::String => {
+                    Self::compile_string_literal(&context, &builder, &module, literal);
+                }
+            },
+            ExprKind::Variable { name } => todo!(),
+            ExprKind::Call { fun, args } => {
+                let callee_name = match fun.kind {
+                    ExprKind::Variable { name } => name,
+                    _ => todo!(),
+                };
+
+                if let Some(callee) = module.get_function(&callee_name.to_string()) {
+                    let args: Vec<BasicMetadataValueEnum> = args
+                        .into_iter()
+                        .map(|arg| match arg.kind {
+                            ExprKind::Literal(literal) => match literal.kind {
+                                LiteralKind::String => Self::compile_string_literal(
+                                    &context, &builder, &module, literal,
+                                )
+                                .as_basic_value_enum()
+                                .into(),
+                            },
+                            ExprKind::Variable { name } => todo!(),
+                            ExprKind::Call { fun, args } => todo!(),
+                        })
+                        .collect::<Vec<_>>();
+
+                    builder.build_call(callee, args.as_slice(), "tmp");
+                } else {
+                    eprintln!("Function '{}' not found.", callee_name);
+                }
+            }
+        }
+    }
+
+    fn compile_string_literal<'ctx>(
+        context: &'ctx Context,
+        builder: &Builder<'ctx>,
+        module: &Module<'ctx>,
+        literal: Literal,
+    ) -> GlobalValue<'ctx> {
+        // Unquote the string literal.
+        let value = {
+            let mut chars = literal.value.chars();
+            chars.next();
+            chars.next_back();
+            chars.as_str()
+        };
+
+        let value = value.as_bytes();
+
+        let i8_type = context.i8_type();
+        let i8_array_type = i8_type.array_type(value.len() as u32 + 1);
+
+        let string = context.const_string(value, true);
+
+        let global = module.add_global(i8_array_type, None, "string_lit");
+        global.set_linkage(Linkage::Internal);
+        global.set_constant(true);
+        global.set_initializer(&string);
+
+        global
     }
 }
