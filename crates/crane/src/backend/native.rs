@@ -8,10 +8,13 @@ use inkwell::targets::{
     CodeModel, FileType, InitializationConfig, RelocMode, Target, TargetTriple,
 };
 use inkwell::types::BasicType;
-use inkwell::values::{BasicMetadataValueEnum, BasicValue, GlobalValue};
+use inkwell::values::{
+    BasicMetadataValueEnum, BasicValue, CallSiteValue, FunctionValue, GlobalValue,
+};
 use inkwell::{AddressSpace, OptimizationLevel};
+use thin_vec::ThinVec;
 
-use crate::ast::{Expr, ExprKind, Item, ItemKind, Literal, LiteralKind, StmtKind};
+use crate::ast::{Expr, ExprKind, FnParam, Item, ItemKind, Literal, LiteralKind, StmtKind};
 
 pub struct NativeBackend {
     context: Context,
@@ -116,7 +119,18 @@ impl NativeBackend {
         {
             match item.kind {
                 ItemKind::Fn(fun) => {
-                    let fn_type = self.context.void_type().fn_type(&[], false);
+                    let params = fun
+                        .params
+                        .iter()
+                        .map(|_param| {
+                            i8_type
+                                .ptr_type(AddressSpace::default())
+                                .as_basic_type_enum()
+                                .into()
+                        })
+                        .collect::<Vec<_>>();
+
+                    let fn_type = self.context.void_type().fn_type(&params, false);
 
                     let fn_value = module.add_function(&item.name.to_string(), fn_type, None);
 
@@ -126,9 +140,14 @@ impl NativeBackend {
 
                     for stmt in fun.body {
                         match stmt.kind {
-                            StmtKind::Expr(expr) => {
-                                Self::compile_expr(&self.context, &builder, &module, expr)
-                            }
+                            StmtKind::Expr(expr) => Self::compile_expr(
+                                &self.context,
+                                &builder,
+                                &module,
+                                &fun.params,
+                                &fn_value,
+                                expr,
+                            ),
                             StmtKind::Item(item) => todo!(),
                         }
                     }
@@ -182,6 +201,8 @@ impl NativeBackend {
         context: &'ctx Context,
         builder: &Builder<'ctx>,
         module: &Module<'ctx>,
+        fn_params: &ThinVec<FnParam>,
+        fn_value: &FunctionValue<'ctx>,
         expr: Expr,
     ) {
         match expr.kind {
@@ -192,31 +213,16 @@ impl NativeBackend {
             },
             ExprKind::Variable { name } => todo!(),
             ExprKind::Call { fun, args } => {
-                let callee_name = match fun.kind {
-                    ExprKind::Variable { name } => name,
-                    _ => todo!(),
-                };
-
-                if let Some(callee) = module.get_function(&callee_name.to_string()) {
-                    let args: Vec<BasicMetadataValueEnum> = args
-                        .into_iter()
-                        .map(|arg| match arg.kind {
-                            ExprKind::Literal(literal) => match literal.kind {
-                                LiteralKind::String => Self::compile_string_literal(
-                                    &context, &builder, &module, literal,
-                                )
-                                .as_basic_value_enum()
-                                .into(),
-                            },
-                            ExprKind::Variable { name } => todo!(),
-                            ExprKind::Call { fun, args } => todo!(),
-                        })
-                        .collect::<Vec<_>>();
-
-                    builder.build_call(callee, args.as_slice(), "tmp");
-                } else {
-                    eprintln!("Function '{}' not found.", callee_name);
-                }
+                Self::compile_fn_call(
+                    context,
+                    builder,
+                    module,
+                    fn_value,
+                    fn_params,
+                    fun.clone(),
+                    args,
+                )
+                .expect(&format!("Failed to compile function call: {:?}", fun));
             }
         }
     }
@@ -248,5 +254,66 @@ impl NativeBackend {
         global.set_initializer(&string);
 
         global
+    }
+
+    fn compile_fn_call<'ctx>(
+        context: &'ctx Context,
+        builder: &Builder<'ctx>,
+        module: &Module<'ctx>,
+        caller: &FunctionValue<'ctx>,
+        caller_params: &ThinVec<FnParam>,
+        fun: Box<Expr>,
+        args: ThinVec<Box<Expr>>,
+    ) -> Result<CallSiteValue<'ctx>, String> {
+        let callee_name = match fun.kind {
+            ExprKind::Variable { name } => name,
+            _ => todo!(),
+        };
+
+        if let Some(callee) = module.get_function(&callee_name.to_string()) {
+            let args: Vec<BasicMetadataValueEnum> = args
+                .into_iter()
+                .map(|arg| match arg.kind {
+                    ExprKind::Literal(literal) => match literal.kind {
+                        LiteralKind::String => {
+                            Self::compile_string_literal(&context, &builder, &module, literal)
+                                .as_basic_value_enum()
+                                .into()
+                        }
+                    },
+                    ExprKind::Variable { name } => {
+                        let (param_index, _) = caller_params
+                            .into_iter()
+                            .enumerate()
+                            .find(|(_, param)| param.name == name)
+                            .expect(&format!("Param '{}' not found.", name));
+
+                        caller
+                            .get_nth_param(param_index as u32)
+                            .expect("Param not found")
+                            .as_basic_value_enum()
+                            .into()
+                    }
+                    ExprKind::Call { fun, args } => Self::compile_fn_call(
+                        &context,
+                        &builder,
+                        &module,
+                        caller,
+                        caller_params,
+                        fun,
+                        args,
+                    )
+                    .unwrap()
+                    .try_as_basic_value()
+                    .unwrap_left()
+                    .into(),
+                })
+                .collect::<Vec<_>>();
+
+            Ok(builder.build_call(callee, args.as_slice(), "tmp"))
+        } else {
+            eprintln!("Function '{}' not found.", callee_name);
+            Err(format!("Function '{}' not found.", callee_name))
+        }
     }
 }
