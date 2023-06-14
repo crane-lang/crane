@@ -163,10 +163,18 @@ fn compile() -> Result<(), ()> {
 fn run() {
     use std::process::Command;
 
-    let exit_status = Command::new("node")
-        .arg("build/main.js")
-        .status()
-        .expect("Failed to run");
+    let use_native_backend = true;
+
+    let exit_status = if use_native_backend {
+        Command::new("./build/main")
+            .status()
+            .expect("Failed to run")
+    } else {
+        Command::new("node")
+            .arg("build/main.js")
+            .status()
+            .expect("Failed to run")
+    };
 
     println!("Exited with {}", exit_status);
 }
