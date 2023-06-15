@@ -101,8 +101,85 @@ impl NativeBackend {
             dbg!(sprintf);
         }
 
-        // HACK: Register `print` and `println` functions.
-        for fn_name in ["print", "println"] {
+        // Define `printf`.
+        {
+            let i8_type = self.context.i8_type();
+            let i32_type = self.context.i32_type();
+
+            let fn_type = i32_type.fn_type(
+                &[i8_type
+                    .ptr_type(AddressSpace::default())
+                    .as_basic_type_enum()
+                    .into()],
+                true,
+            );
+
+            let printf = module.add_function("printf", fn_type, Some(Linkage::External));
+
+            dbg!(printf);
+        }
+
+        // Define `print`.
+        {
+            let fn_name = "print";
+
+            let i8_type = self.context.i8_type();
+
+            let fn_type = self.context.void_type().fn_type(
+                &[i8_type
+                    .ptr_type(AddressSpace::default())
+                    .as_basic_type_enum()
+                    .into()],
+                false,
+            );
+
+            let fn_value = module.add_function(&fn_name, fn_type, None);
+
+            let value_param = fn_value.get_first_param().unwrap();
+
+            let entry = self.context.append_basic_block(fn_value, "entry");
+
+            builder.position_at_end(entry);
+
+            let template = b"%1$s";
+
+            let i8_type = self.context.i8_type();
+            let i8_array_type = i8_type.array_type(template.len() as u32 + 1);
+
+            let template = self.context.const_string(template, true);
+
+            let global = module.add_global(i8_array_type, None, "print_template");
+            global.set_linkage(Linkage::Internal);
+            global.set_constant(true);
+            global.set_initializer(&template);
+
+            if let Some(callee) = module.get_function(&"printf") {
+                builder.build_call(
+                    callee,
+                    &[global.as_basic_value_enum().into(), value_param.into()],
+                    "tmp",
+                );
+            } else {
+                eprintln!("Function '{}' not found.", "puts");
+            }
+
+            builder.build_return(None);
+
+            if fn_value.verify(true) {
+                fpm.run_on(&fn_value);
+
+                println!("{} is verified!", fn_name);
+            } else {
+                println!("{} is not verified :(", fn_name);
+            }
+
+            dbg!(fn_value);
+        }
+
+        // Define `println`.
+        {
+            let fn_name = "println";
+
             let i8_type = self.context.i8_type();
 
             let fn_type = self.context.void_type().fn_type(
