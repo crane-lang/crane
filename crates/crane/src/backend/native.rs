@@ -170,13 +170,7 @@ impl NativeBackend {
 
             builder.build_return(None);
 
-            if fn_value.verify(true) {
-                fpm.run_on(&fn_value);
-
-                println!("{} is verified!", fn_name);
-            } else {
-                println!("{} is not verified :(", fn_name);
-            }
+            Self::verify_fn(&fpm, &fn_name, &fn_value).unwrap();
 
             dbg!(fn_value);
         }
@@ -211,13 +205,7 @@ impl NativeBackend {
 
             builder.build_return(None);
 
-            if fn_value.verify(true) {
-                fpm.run_on(&fn_value);
-
-                println!("{} is verified!", fn_name);
-            } else {
-                println!("{} is not verified :(", fn_name);
-            }
+            Self::verify_fn(&fpm, &fn_name, &fn_value).unwrap();
 
             dbg!(fn_value);
         }
@@ -226,12 +214,12 @@ impl NativeBackend {
         {
             let fn_name = "int_add";
 
-            let i128_type = self.context.i128_type();
+            let i64_type = self.context.i64_type();
 
-            let fn_type = self.context.i128_type().fn_type(
+            let fn_type = self.context.i64_type().fn_type(
                 &[
-                    i128_type.as_basic_type_enum().into(),
-                    i128_type.as_basic_type_enum().into(),
+                    i64_type.as_basic_type_enum().into(),
+                    i64_type.as_basic_type_enum().into(),
                 ],
                 false,
             );
@@ -249,13 +237,7 @@ impl NativeBackend {
 
             builder.build_return(Some(&sum));
 
-            if fn_value.verify(true) {
-                fpm.run_on(&fn_value);
-
-                println!("{} is verified!", fn_name);
-            } else {
-                println!("{} is not verified :(", fn_name);
-            }
+            Self::verify_fn(&fpm, &fn_name, &fn_value).unwrap();
 
             dbg!(fn_value);
         }
@@ -264,11 +246,11 @@ impl NativeBackend {
         {
             let fn_name = "int_to_string";
 
-            let i128_type = self.context.i128_type();
+            let i64_type = self.context.i64_type();
             let i8_type = self.context.i8_type();
             let i8_ptr_type = i8_type.ptr_type(AddressSpace::default());
 
-            let fn_type = i8_ptr_type.fn_type(&[i128_type.as_basic_type_enum().into()], false);
+            let fn_type = i8_ptr_type.fn_type(&[i64_type.as_basic_type_enum().into()], false);
 
             let fn_value = module.add_function(&fn_name, fn_type, None);
 
@@ -310,13 +292,7 @@ impl NativeBackend {
 
             builder.build_return(Some(&buffer));
 
-            if fn_value.verify(true) {
-                fpm.run_on(&fn_value);
-
-                println!("{} is verified!", fn_name);
-            } else {
-                println!("{} is not verified :(", fn_name);
-            }
+            Self::verify_fn(&fpm, &fn_name, &fn_value).unwrap();
 
             dbg!(fn_value);
         }
@@ -389,13 +365,7 @@ impl NativeBackend {
 
                     dbg!(fn_value);
 
-                    if fn_value.verify(true) {
-                        fpm.run_on(&fn_value);
-
-                        println!("{} is verified!", item.name);
-                    } else {
-                        println!("{} is not verified :(", item.name);
-                    }
+                    Self::verify_fn(&fpm, &item.name.to_string(), &fn_value).unwrap();
 
                     fn_value.print_to_stderr();
                 }
@@ -428,6 +398,20 @@ impl NativeBackend {
             .expect("Failed to build with clang");
 
         println!("clang exited with {}", exit_status);
+    }
+
+    fn verify_fn(
+        fpm: &PassManager<FunctionValue>,
+        fn_name: &str,
+        fn_value: &FunctionValue,
+    ) -> Result<(), String> {
+        if fn_value.verify(true) {
+            fpm.run_on(&fn_value);
+
+            Ok(())
+        } else {
+            Err(format!("`{}` not verified", fn_name))
+        }
     }
 
     fn compile_expr<'ctx>(
