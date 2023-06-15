@@ -5,9 +5,9 @@ pub fn main() {
     greet("world")
     greet("trees")
     greet("everyone")
-    print_and_add(1, 1)
-    print_and_add(2, 2)
-    print_and_add(3, 3)
+    add_and_print(1, 1)
+    add_and_print(2, 2)
+    add_and_print(3, 3)
 }
 
 fn greet(name: String) {
@@ -22,7 +22,7 @@ fn join(a: String, b: String) {
     print(b)
 }
 
-fn print_and_add(a: Uint64, b: Uint64) {
+fn add_and_print(a: Uint64, b: Uint64) {
     print(int_to_string(a))
     print(" + ")
     print(int_to_string(b))
