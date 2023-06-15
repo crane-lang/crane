@@ -9,7 +9,7 @@ use inkwell::targets::{
 };
 use inkwell::types::BasicType;
 use inkwell::values::{
-    BasicMetadataValueEnum, BasicValue, CallSiteValue, FunctionValue, GlobalValue,
+    BasicMetadataValueEnum, BasicValue, CallSiteValue, FunctionValue, GlobalValue, IntValue,
 };
 use inkwell::{AddressSpace, OptimizationLevel};
 use thin_vec::ThinVec;
@@ -99,6 +99,44 @@ impl NativeBackend {
             }
 
             builder.build_return(None);
+
+            if fn_value.verify(true) {
+                fpm.run_on(&fn_value);
+
+                println!("{} is verified!", fn_name);
+            } else {
+                println!("{} is not verified :(", fn_name);
+            }
+
+            dbg!(fn_value);
+        }
+
+        // Define `int_add`.
+        {
+            let fn_name = "int_add";
+
+            let i128_type = self.context.i128_type();
+
+            let fn_type = self.context.i128_type().fn_type(
+                &[
+                    i128_type.as_basic_type_enum().into(),
+                    i128_type.as_basic_type_enum().into(),
+                ],
+                false,
+            );
+
+            let fn_value = module.add_function(&fn_name, fn_type, None);
+
+            let lhs_param = fn_value.get_first_param().unwrap().into_int_value();
+            let rhs_param = fn_value.get_nth_param(1).unwrap().into_int_value();
+
+            let entry = self.context.append_basic_block(fn_value, "entry");
+
+            builder.position_at_end(entry);
+
+            let sum = builder.build_int_add(lhs_param, rhs_param, "sum");
+
+            builder.build_return(Some(&sum));
 
             if fn_value.verify(true) {
                 fpm.run_on(&fn_value);
@@ -216,6 +254,7 @@ impl NativeBackend {
                 LiteralKind::String => {
                     Self::compile_string_literal(&context, &builder, &module, literal);
                 }
+                LiteralKind::Integer => {}
             },
             ExprKind::Variable { name } => todo!(),
             ExprKind::Call { fun, args } => {
@@ -262,6 +301,20 @@ impl NativeBackend {
         global
     }
 
+    fn compile_integer_literal<'ctx>(
+        context: &'ctx Context,
+        builder: &Builder<'ctx>,
+        module: &Module<'ctx>,
+        literal: Literal,
+    ) -> IntValue<'ctx> {
+        let int_type = match literal.kind {
+            LiteralKind::Integer => context.i128_type(),
+            LiteralKind::String => unreachable!("Tried to compile a string literal as an integer."),
+        };
+
+        int_type.const_int(literal.value.parse().unwrap(), false)
+    }
+
     fn compile_fn_call<'ctx>(
         context: &'ctx Context,
         builder: &Builder<'ctx>,
@@ -283,6 +336,11 @@ impl NativeBackend {
                     ExprKind::Literal(literal) => match literal.kind {
                         LiteralKind::String => {
                             Self::compile_string_literal(&context, &builder, &module, literal)
+                                .as_basic_value_enum()
+                                .into()
+                        }
+                        LiteralKind::Integer => {
+                            Self::compile_integer_literal(&context, &builder, &module, literal)
                                 .as_basic_value_enum()
                                 .into()
                         }

@@ -35,6 +35,10 @@ pub enum TokenKind {
     #[regex(r#""[^"]*""#)]
     String,
 
+    /// An integer literal.
+    #[regex(r#"[\d]+"#)]
+    Integer,
+
     /// A comment.
     #[regex(r"//.*")]
     Comment,

@@ -2,9 +2,7 @@
 // use std::io::{print, println}
 
 pub fn main() {
-    greet("world")
-    greet("trees")
-    greet("everyone")
+    int_add(1, 1)
 }
 
 fn greet(name) {

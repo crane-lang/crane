@@ -205,6 +205,16 @@ impl<'src> Parser<'src> {
                 }),
                 span: token.span,
             })
+        } else if self.check(TokenKind::Integer)? {
+            let token = self.advance()?;
+
+            Ok(Expr {
+                kind: ExprKind::Literal(Literal {
+                    kind: LiteralKind::Integer,
+                    value: token.lexeme,
+                }),
+                span: token.span,
+            })
         } else if self.check(TokenKind::Ident)? {
             let token = self.advance()?;
 

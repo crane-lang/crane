@@ -10,7 +10,7 @@ use std::sync::Arc;
 
 use crate::ast::{
     Expr, ExprKind, Ident, ItemKind, Literal, LiteralKind, Module, Span, StmtKind, TyExpr,
-    TyExprKind,
+    TyExprKind, TyIntegerLiteral, TyLiteral, TyLiteralKind, TyUint,
 };
 
 pub type TypeCheckResult<T> = Result<T, TypeError>;
@@ -27,9 +27,10 @@ impl Typer {
     }
 
     pub fn type_check_module(&mut self, module: Module) -> TypeCheckResult<()> {
-        // HACK: Register the functions from `std::io`.
+        // HACK: Register the functions from `std`.
         self.register_function(Ident("print".into()));
         self.register_function(Ident("println".into()));
+        self.register_function(Ident("int_add".into()));
 
         for item in &module.items {
             match item.kind {
@@ -82,6 +83,7 @@ impl Typer {
         match expr.kind {
             ExprKind::Literal(literal) => match literal.kind {
                 LiteralKind::String => self.infer_string(literal, expr.span),
+                LiteralKind::Integer => self.infer_integer(literal, expr.span),
             },
             ExprKind::Variable { name } => todo!(),
             ExprKind::Call { fun, args } => todo!(),
@@ -90,14 +92,30 @@ impl Typer {
 
     fn infer_string(&self, literal: Literal, span: Span) -> TypeCheckResult<TyExpr> {
         Ok(TyExpr {
-            kind: TyExprKind::Literal(Literal {
-                kind: LiteralKind::String,
-                value: literal.value,
+            kind: TyExprKind::Literal(TyLiteral {
+                kind: TyLiteralKind::String(literal.value),
+                span,
             }),
             span,
             ty: Arc::new(Type::UserDefined {
                 module: "std::prelude".into(),
                 name: "String".into(),
+            }),
+        })
+    }
+
+    fn infer_integer(&self, literal: Literal, span: Span) -> TypeCheckResult<TyExpr> {
+        let value: u128 = literal.value.parse().expect("Failed to parse integer.");
+
+        Ok(TyExpr {
+            kind: TyExprKind::Literal(TyLiteral {
+                kind: TyLiteralKind::Integer(TyIntegerLiteral::Unsigned(value, TyUint::Uint64)),
+                span,
+            }),
+            span,
+            ty: Arc::new(Type::UserDefined {
+                module: "std::prelude".into(),
+                name: "Uint64".into(),
             }),
         })
     }

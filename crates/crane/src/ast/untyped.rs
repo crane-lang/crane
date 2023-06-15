@@ -23,6 +23,7 @@ pub enum ExprKind {
 #[derive(Debug, Clone)]
 pub enum LiteralKind {
     String,
+    Integer,
 }
 
 /// A literal.

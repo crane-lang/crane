@@ -1,15 +1,42 @@
 use std::sync::Arc;
 
+use smol_str::SmolStr;
 use thin_vec::ThinVec;
 
-use crate::ast::{Ident, Literal, Span};
+use crate::ast::{Ident, Span};
 use crate::typer::Type;
+
+/// The type of an unsigned integer.
+#[derive(Debug, Clone)]
+pub enum TyUint {
+    Uint64,
+}
+
+/// The type of an integer literal.
+#[derive(Debug, Clone)]
+pub enum TyIntegerLiteral {
+    Unsigned(u128, TyUint),
+}
+
+/// The kind of a [`TyLiteral`].
+#[derive(Debug, Clone)]
+pub enum TyLiteralKind {
+    String(SmolStr),
+    Integer(TyIntegerLiteral),
+}
+
+/// A typed literal.
+#[derive(Debug, Clone)]
+pub struct TyLiteral {
+    pub kind: TyLiteralKind,
+    pub span: Span,
+}
 
 /// The kind of a [`TyExpr`].
 #[derive(Debug, Clone)]
 pub enum TyExprKind {
     /// A literal.
-    Literal(Literal),
+    Literal(TyLiteral),
 
     /// A reference to a variable.
     Variable { name: Ident },
