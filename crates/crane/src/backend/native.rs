@@ -19,6 +19,7 @@ use crate::ast::{
     TyExpr, TyExprKind, TyFnParam, TyIntegerLiteral, TyItem, TyItemKind, TyLiteralKind, TyStmtKind,
     TyUint,
 };
+use crate::typer::Type;
 
 pub struct NativeBackend {
     context: Context,
@@ -331,13 +332,28 @@ impl NativeBackend {
                     let params = fun
                         .params
                         .iter()
-                        .map(|_param| {
-                            let i8_type = self.context.i8_type();
+                        .map(|param| {
+                            let param_type = match &*param.ty {
+                                Type::Fn { args, return_ty } => todo!(),
+                                Type::UserDefined { module, name } => {
+                                    match (module.as_ref(), name.as_ref()) {
+                                        ("std::prelude", "String") => self
+                                            .context
+                                            .i8_type()
+                                            .ptr_type(AddressSpace::default())
+                                            .as_basic_type_enum(),
+                                        ("std::prelude", "Uint64") => {
+                                            self.context.i64_type().as_basic_type_enum()
+                                        }
+                                        (module, name) => panic!(
+                                            "Unknown function parameter type: {}::{}",
+                                            module, name
+                                        ),
+                                    }
+                                }
+                            };
 
-                            i8_type
-                                .ptr_type(AddressSpace::default())
-                                .as_basic_type_enum()
-                                .into()
+                            param_type.into()
                         })
                         .collect::<Vec<_>>();
 

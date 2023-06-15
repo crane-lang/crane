@@ -105,7 +105,7 @@ impl Typer {
                     name: param.name.clone(),
                     ty: Arc::new(Type::UserDefined {
                         module: "std::prelude".into(),
-                        name: param.name.to_string().into(),
+                        name: param.ty.to_string().into(),
                     }),
                     span: param.span,
                 })
