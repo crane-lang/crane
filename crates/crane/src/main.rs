@@ -68,12 +68,12 @@ fn compile() -> Result<(), ()> {
             };
 
             match typer.type_check_module(module) {
-                Ok(()) => {
+                Ok(typed_module) => {
                     std::fs::create_dir_all("build").unwrap();
 
                     let backend = NativeBackend::new();
 
-                    backend.compile(items);
+                    backend.compile(typed_module.items.into());
 
                     println!("Compiled!");
 

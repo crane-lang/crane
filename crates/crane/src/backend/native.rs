@@ -12,9 +12,13 @@ use inkwell::values::{
     BasicMetadataValueEnum, BasicValue, CallSiteValue, FunctionValue, GlobalValue, IntValue,
 };
 use inkwell::{AddressSpace, OptimizationLevel};
+use smol_str::SmolStr;
 use thin_vec::ThinVec;
 
-use crate::ast::{Expr, ExprKind, FnParam, Item, ItemKind, Literal, LiteralKind, StmtKind};
+use crate::ast::{
+    TyExpr, TyExprKind, TyFnParam, TyIntegerLiteral, TyItem, TyItemKind, TyLiteralKind, TyStmtKind,
+    TyUint,
+};
 
 pub struct NativeBackend {
     context: Context,
@@ -27,7 +31,7 @@ impl NativeBackend {
         }
     }
 
-    pub fn compile(&self, program: Vec<Item>) {
+    pub fn compile(&self, program: Vec<TyItem>) {
         Target::initialize_aarch64(&InitializationConfig::default());
 
         let opt = OptimizationLevel::Default;
@@ -323,7 +327,7 @@ impl NativeBackend {
             .rev()
         {
             match item.kind {
-                ItemKind::Fn(fun) => {
+                TyItemKind::Fn(fun) => {
                     let params = fun
                         .params
                         .iter()
@@ -353,7 +357,7 @@ impl NativeBackend {
 
                     for stmt in fun.body {
                         match stmt.kind {
-                            StmtKind::Expr(expr) => Self::compile_expr(
+                            TyStmtKind::Expr(expr) => Self::compile_expr(
                                 &self.context,
                                 &builder,
                                 &module,
@@ -361,7 +365,7 @@ impl NativeBackend {
                                 &fn_value,
                                 expr,
                             ),
-                            StmtKind::Item(item) => todo!(),
+                            TyStmtKind::Item(item) => todo!(),
                         }
                     }
 
@@ -414,19 +418,19 @@ impl NativeBackend {
         context: &'ctx Context,
         builder: &Builder<'ctx>,
         module: &Module<'ctx>,
-        fn_params: &ThinVec<FnParam>,
+        fn_params: &ThinVec<TyFnParam>,
         fn_value: &FunctionValue<'ctx>,
-        expr: Expr,
+        expr: TyExpr,
     ) {
         match expr.kind {
-            ExprKind::Literal(literal) => match literal.kind {
-                LiteralKind::String => {
+            TyExprKind::Literal(literal) => match literal.kind {
+                TyLiteralKind::String(literal) => {
                     Self::compile_string_literal(&context, &builder, &module, literal);
                 }
-                LiteralKind::Integer => {}
+                TyLiteralKind::Integer(literal) => {}
             },
-            ExprKind::Variable { name } => todo!(),
-            ExprKind::Call { fun, args } => {
+            TyExprKind::Variable { name } => todo!(),
+            TyExprKind::Call { fun, args } => {
                 Self::compile_fn_call(
                     context,
                     builder,
@@ -445,11 +449,11 @@ impl NativeBackend {
         context: &'ctx Context,
         builder: &Builder<'ctx>,
         module: &Module<'ctx>,
-        literal: Literal,
+        literal: SmolStr,
     ) -> GlobalValue<'ctx> {
         // Unquote the string literal.
         let value = {
-            let mut chars = literal.value.chars();
+            let mut chars = literal.chars();
             chars.next();
             chars.next_back();
             chars.as_str()
@@ -472,16 +476,15 @@ impl NativeBackend {
 
     fn compile_integer_literal<'ctx>(
         context: &'ctx Context,
-        builder: &Builder<'ctx>,
-        module: &Module<'ctx>,
-        literal: Literal,
+        _builder: &Builder<'ctx>,
+        _module: &Module<'ctx>,
+        literal: TyIntegerLiteral,
     ) -> IntValue<'ctx> {
-        let int_type = match literal.kind {
-            LiteralKind::Integer => context.i128_type(),
-            LiteralKind::String => unreachable!("Tried to compile a string literal as an integer."),
+        let (int_value, int_type) = match literal {
+            TyIntegerLiteral::Unsigned(value, TyUint::Uint64) => (value as u64, context.i64_type()),
         };
 
-        int_type.const_int(literal.value.parse().unwrap(), false)
+        int_type.const_int(int_value, false)
     }
 
     fn compile_fn_call<'ctx>(
@@ -489,12 +492,12 @@ impl NativeBackend {
         builder: &Builder<'ctx>,
         module: &Module<'ctx>,
         caller: &FunctionValue<'ctx>,
-        caller_params: &ThinVec<FnParam>,
-        fun: Box<Expr>,
-        args: ThinVec<Box<Expr>>,
+        caller_params: &ThinVec<TyFnParam>,
+        fun: Box<TyExpr>,
+        args: ThinVec<Box<TyExpr>>,
     ) -> Result<CallSiteValue<'ctx>, String> {
         let callee_name = match fun.kind {
-            ExprKind::Variable { name } => name,
+            TyExprKind::Variable { name } => name,
             _ => todo!(),
         };
 
@@ -502,19 +505,19 @@ impl NativeBackend {
             let args: Vec<BasicMetadataValueEnum> = args
                 .into_iter()
                 .map(|arg| match arg.kind {
-                    ExprKind::Literal(literal) => match literal.kind {
-                        LiteralKind::String => {
+                    TyExprKind::Literal(literal) => match literal.kind {
+                        TyLiteralKind::String(literal) => {
                             Self::compile_string_literal(&context, &builder, &module, literal)
                                 .as_basic_value_enum()
                                 .into()
                         }
-                        LiteralKind::Integer => {
+                        TyLiteralKind::Integer(literal) => {
                             Self::compile_integer_literal(&context, &builder, &module, literal)
                                 .as_basic_value_enum()
                                 .into()
                         }
                     },
-                    ExprKind::Variable { name } => {
+                    TyExprKind::Variable { name } => {
                         let (param_index, _) = caller_params
                             .into_iter()
                             .enumerate()
@@ -527,7 +530,7 @@ impl NativeBackend {
                             .as_basic_value_enum()
                             .into()
                     }
-                    ExprKind::Call { fun, args } => Self::compile_fn_call(
+                    TyExprKind::Call { fun, args } => Self::compile_fn_call(
                         &context,
                         &builder,
                         &module,

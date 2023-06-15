@@ -4,13 +4,15 @@ mod r#type;
 
 pub use error::*;
 pub use r#type::*;
+use thin_vec::ThinVec;
 
 use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::ast::{
-    Expr, ExprKind, Ident, ItemKind, Literal, LiteralKind, Module, Span, StmtKind, TyExpr,
-    TyExprKind, TyIntegerLiteral, TyLiteral, TyLiteralKind, TyUint,
+    Expr, ExprKind, Fn, Ident, Item, ItemKind, Literal, LiteralKind, Module, Span, Stmt, StmtKind,
+    TyExpr, TyExprKind, TyFn, TyFnParam, TyIntegerLiteral, TyItem, TyItemKind, TyLiteral,
+    TyLiteralKind, TyModule, TyStmt, TyStmtKind, TyUint,
 };
 
 pub type TypeCheckResult<T> = Result<T, TypeError>;
@@ -26,7 +28,7 @@ impl Typer {
         }
     }
 
-    pub fn type_check_module(&mut self, module: Module) -> TypeCheckResult<()> {
+    pub fn type_check_module(&mut self, module: Module) -> TypeCheckResult<TyModule> {
         // HACK: Register the functions from `std`.
         self.register_function(Ident("print".into()));
         self.register_function(Ident("println".into()));
@@ -61,7 +63,13 @@ impl Typer {
             }
         }
 
-        Ok(())
+        let mut typed_items = ThinVec::new();
+
+        for item in module.items {
+            typed_items.push(self.infer_item(item)?);
+        }
+
+        Ok(TyModule { items: typed_items })
     }
 
     fn register_function(&mut self, name: Ident) {
@@ -79,14 +87,76 @@ impl Typer {
         })
     }
 
+    fn infer_item(&self, item: Item) -> TypeCheckResult<TyItem> {
+        match item.kind {
+            ItemKind::Fn(fun) => Ok(TyItem {
+                kind: TyItemKind::Fn(Box::new(self.infer_function(*fun)?)),
+                name: item.name,
+            }),
+        }
+    }
+
+    fn infer_function(&self, fun: Fn) -> TypeCheckResult<TyFn> {
+        Ok(TyFn {
+            params: fun
+                .params
+                .iter()
+                .map(|param| TyFnParam {
+                    name: param.name.clone(),
+                    ty: Arc::new(Type::UserDefined {
+                        module: "std::prelude".into(),
+                        name: param.name.to_string().into(),
+                    }),
+                    span: param.span,
+                })
+                .collect::<ThinVec<_>>(),
+            body: fun
+                .body
+                .into_iter()
+                .map(|stmt| self.infer_stmt(stmt))
+                .collect::<Result<ThinVec<_>, _>>()?,
+        })
+    }
+
+    fn infer_stmt(&self, stmt: Stmt) -> TypeCheckResult<TyStmt> {
+        Ok(TyStmt {
+            kind: match stmt.kind {
+                StmtKind::Expr(expr) => TyStmtKind::Expr(self.infer_expr(expr)?),
+                StmtKind::Item(_) => todo!(),
+            },
+            span: stmt.span,
+        })
+    }
+
     fn infer_expr(&self, expr: Expr) -> TypeCheckResult<TyExpr> {
         match expr.kind {
             ExprKind::Literal(literal) => match literal.kind {
                 LiteralKind::String => self.infer_string(literal, expr.span),
                 LiteralKind::Integer => self.infer_integer(literal, expr.span),
             },
-            ExprKind::Variable { name } => todo!(),
-            ExprKind::Call { fun, args } => todo!(),
+            ExprKind::Variable { name } => Ok(TyExpr {
+                kind: TyExprKind::Variable { name },
+                ty: Arc::new(Type::UserDefined {
+                    module: "?".into(),
+                    name: "?".into(),
+                }),
+                span: expr.span,
+            }),
+            ExprKind::Call { fun, args } => Ok(TyExpr {
+                kind: TyExprKind::Call {
+                    fun: Box::new(self.infer_expr(*fun)?),
+                    args: args
+                        .into_iter()
+                        .map(|expr| self.infer_expr(*expr))
+                        .map(|result| result.map(Box::new))
+                        .collect::<Result<ThinVec<_>, _>>()?,
+                },
+                ty: Arc::new(Type::UserDefined {
+                    module: "?".into(),
+                    name: "?".into(),
+                }),
+                span: expr.span,
+            }),
         }
     }
 
