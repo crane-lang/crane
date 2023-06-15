@@ -149,8 +149,14 @@ impl<'src> Parser<'src> {
                 let param_name =
                     self.consume(TokenKind::Ident, "Expected a function parameter name.")?;
 
+                self.consume(TokenKind::Colon, "Expected a ':'.")?;
+
+                let ty_annotation =
+                    self.consume(TokenKind::Ident, "Expected a type annotation.")?;
+
                 params.push(FnParam {
                     name: Ident(param_name.lexeme.into()),
+                    ty: Ident(ty_annotation.lexeme.into()),
                     span: param_name.span,
                 });
 

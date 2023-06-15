@@ -61,6 +61,7 @@ pub struct Fn {
 #[derive(Debug, Clone)]
 pub struct FnParam {
     pub name: Ident,
+    pub ty: Ident,
     pub span: Span,
 }
 

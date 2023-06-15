@@ -5,18 +5,28 @@ pub fn main() {
     greet("world")
     greet("trees")
     greet("everyone")
-    println("1 + 1 =")
-    println(int_to_string(int_add(1, 1)))
+    print_and_add(1, 1)
+    print_and_add(2, 2)
+    print_and_add(3, 3)
 }
 
-fn greet(name) {
+fn greet(name: String) {
     join("Hello", name)
     print("!")
     println("")
 }
 
-fn join(a, b) {
+fn join(a: String, b: String) {
     print(a)
     print(", ")
     print(b)
+}
+
+fn print_and_add(a: Uint64, b: Uint64) {
+    print(int_to_string(a))
+    print(" + ")
+    print(int_to_string(b))
+    print(" = ")
+    print(int_to_string(int_add(a, b)))
+    println("")
 }

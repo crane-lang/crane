@@ -27,8 +27,12 @@ pub enum TokenKind {
     #[token(",")]
     Comma,
 
+    /// `:`
+    #[token(":")]
+    Colon,
+
     /// An identifier.
-    #[regex(r"[A-Za-z_]+")]
+    #[regex(r"[A-Za-z_][A-Za-z0-9_]*")]
     Ident,
 
     /// A string literal.

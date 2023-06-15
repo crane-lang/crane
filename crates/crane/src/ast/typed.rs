@@ -69,7 +69,16 @@ pub enum TyStmtKind {
 /// A typed function definition.
 #[derive(Debug, Clone)]
 pub struct TyFn {
+    pub params: ThinVec<TyFnParam>,
     pub body: ThinVec<TyStmt>,
+}
+
+/// A parameter to a [`TyFn`].
+#[derive(Debug, Clone)]
+pub struct TyFnParam {
+    pub name: Ident,
+    pub ty: Arc<Type>,
+    pub span: Span,
 }
 
 /// A typed statement.
