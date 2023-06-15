@@ -2,7 +2,8 @@
 // use std::io::{print, println}
 
 pub fn main() {
-    int_add(1, 1)
+    println("1 + 1 =")
+    println(int_to_string(int_add(1, 1)))
 }
 
 fn greet(name) {

@@ -60,22 +60,51 @@ impl NativeBackend {
 
         fpm.initialize();
 
-        let i8_type = self.context.i8_type();
-        let i32_type = self.context.i32_type();
-        let fn_type = i32_type.fn_type(
-            &[i8_type
-                .ptr_type(AddressSpace::default())
-                .as_basic_type_enum()
-                .into()],
-            false,
-        );
+        // Define `puts`.
+        {
+            let i8_type = self.context.i8_type();
+            let i32_type = self.context.i32_type();
+            let fn_type = i32_type.fn_type(
+                &[i8_type
+                    .ptr_type(AddressSpace::default())
+                    .as_basic_type_enum()
+                    .into()],
+                false,
+            );
 
-        let puts = module.add_function("puts", fn_type, Some(Linkage::External));
+            let puts = module.add_function("puts", fn_type, Some(Linkage::External));
 
-        dbg!(puts);
+            dbg!(puts);
+        }
+
+        // Define `sprintf`.
+        {
+            let i8_type = self.context.i8_type();
+            let i32_type = self.context.i32_type();
+
+            let fn_type = i32_type.fn_type(
+                &[
+                    i8_type
+                        .ptr_type(AddressSpace::default())
+                        .as_basic_type_enum()
+                        .into(),
+                    i8_type
+                        .ptr_type(AddressSpace::default())
+                        .as_basic_type_enum()
+                        .into(),
+                ],
+                true,
+            );
+
+            let sprintf = module.add_function("sprintf", fn_type, Some(Linkage::External));
+
+            dbg!(sprintf);
+        }
 
         // HACK: Register `print` and `println` functions.
         for fn_name in ["print", "println"] {
+            let i8_type = self.context.i8_type();
+
             let fn_type = self.context.void_type().fn_type(
                 &[i8_type
                     .ptr_type(AddressSpace::default())
@@ -149,6 +178,67 @@ impl NativeBackend {
             dbg!(fn_value);
         }
 
+        // Define `int_to_string`.
+        {
+            let fn_name = "int_to_string";
+
+            let i128_type = self.context.i128_type();
+            let i8_type = self.context.i8_type();
+            let i8_ptr_type = i8_type.ptr_type(AddressSpace::default());
+
+            let fn_type = i8_ptr_type.fn_type(&[i128_type.as_basic_type_enum().into()], false);
+
+            let fn_value = module.add_function(&fn_name, fn_type, None);
+
+            let int_value = fn_value.get_first_param().unwrap().into_int_value();
+
+            let entry = self.context.append_basic_block(fn_value, "entry");
+
+            builder.position_at_end(entry);
+
+            let buffer = builder
+                .build_malloc(i8_ptr_type, "buffer")
+                .expect("Failed to allocate `int_to_string` buffer.");
+
+            let template = b"%1$d";
+
+            let i8_type = self.context.i8_type();
+            let i8_array_type = i8_type.array_type(template.len() as u32 + 1);
+
+            let template = self.context.const_string(template, true);
+
+            let global = module.add_global(i8_array_type, None, "int_to_string_template");
+            global.set_linkage(Linkage::Internal);
+            global.set_constant(true);
+            global.set_initializer(&template);
+
+            if let Some(callee) = module.get_function(&"sprintf") {
+                builder.build_call(
+                    callee,
+                    &[
+                        buffer.into(),
+                        global.as_basic_value_enum().into(),
+                        int_value.into(),
+                    ],
+                    "tmp",
+                );
+            } else {
+                panic!("Function '{}' not found.", "sprintf");
+            }
+
+            builder.build_return(Some(&buffer));
+
+            if fn_value.verify(true) {
+                fpm.run_on(&fn_value);
+
+                println!("{} is verified!", fn_name);
+            } else {
+                println!("{} is not verified :(", fn_name);
+            }
+
+            dbg!(fn_value);
+        }
+
         for item in program
             // HACK: Reverse the items so we define the helper functions before `main`.
             // This should be replaced with a call graph.
@@ -161,6 +251,8 @@ impl NativeBackend {
                         .params
                         .iter()
                         .map(|_param| {
+                            let i8_type = self.context.i8_type();
+
                             i8_type
                                 .ptr_type(AddressSpace::default())
                                 .as_basic_type_enum()

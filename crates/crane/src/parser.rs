@@ -174,7 +174,7 @@ impl<'src> Parser<'src> {
                 break;
             }
 
-            let fn_call = self.parse_call_expr()?;
+            let fn_call = self.parse_call_expr(None)?;
 
             let span = fn_call.span;
 
@@ -198,41 +198,53 @@ impl<'src> Parser<'src> {
         if self.check(TokenKind::String)? {
             let token = self.advance()?;
 
-            Ok(Expr {
+            return Ok(Expr {
                 kind: ExprKind::Literal(Literal {
                     kind: LiteralKind::String,
                     value: token.lexeme,
                 }),
                 span: token.span,
-            })
-        } else if self.check(TokenKind::Integer)? {
+            });
+        }
+
+        if self.check(TokenKind::Integer)? {
             let token = self.advance()?;
 
-            Ok(Expr {
+            return Ok(Expr {
                 kind: ExprKind::Literal(Literal {
                     kind: LiteralKind::Integer,
                     value: token.lexeme,
                 }),
                 span: token.span,
-            })
-        } else if self.check(TokenKind::Ident)? {
+            });
+        }
+
+        if self.check(TokenKind::Ident)? {
             let token = self.advance()?;
 
-            Ok(Expr {
-                kind: ExprKind::Variable {
-                    name: Ident(token.lexeme.into()),
-                },
-                span: token.span,
-            })
-        } else {
-            todo!()
+            if self.check(TokenKind::OpenParen)? {
+                return self.parse_call_expr(Some(token));
+            } else {
+                return Ok(Expr {
+                    kind: ExprKind::Variable {
+                        name: Ident(token.lexeme.into()),
+                    },
+                    span: token.span,
+                });
+            }
         }
+
+        todo!()
     }
 
-    fn parse_call_expr(&mut self) -> ParseResult<Expr> {
+    fn parse_call_expr(&mut self, callee: Option<Token>) -> ParseResult<Expr> {
         trace!("Parsing call expression");
 
-        let callee = self.consume(TokenKind::Ident, "Expected a function name.")?;
+        let callee = if let Some(callee) = callee {
+            callee
+        } else {
+            self.consume(TokenKind::Ident, "Expected a function name.")?
+        };
 
         self.consume(TokenKind::OpenParen, "Expected '('.")?;
 
