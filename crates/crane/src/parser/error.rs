@@ -10,7 +10,6 @@ pub struct ParseError {
 #[derive(Debug)]
 pub enum ParseErrorKind {
     LexError(LexErrorKind),
-    AdvancedPastEndOfInput,
     Error(String),
 }
 
@@ -21,7 +20,6 @@ impl std::fmt::Display for ParseErrorKind {
             "{}",
             match self {
                 Self::LexError(error) => error.to_string(),
-                Self::AdvancedPastEndOfInput => "Advanced past end of input.".to_string(),
                 Self::Error(message) => message.to_string(),
             }
         )

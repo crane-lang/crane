@@ -118,16 +118,6 @@ fn compile() -> Result<(), ()> {
                         )
                         .finish()
                 }
-                ParseErrorKind::AdvancedPastEndOfInput => {
-                    Report::build(ReportKind::Error, "scratch.crane", 1)
-                        .with_message("An error occurred during parsing.")
-                        .with_label(
-                            Label::new(SourceSpan::from(("scratch.crane", span)))
-                                .with_message(err.kind)
-                                .with_color(Color::Red),
-                        )
-                        .finish()
-                }
                 ParseErrorKind::Error(message) => {
                     Report::build(ReportKind::Error, "scratch.crane", 1)
                         .with_message("An error occurred during parsing.")

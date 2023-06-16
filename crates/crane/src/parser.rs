@@ -8,12 +8,9 @@ pub use error::*;
 use thin_vec::ThinVec;
 use tracing::trace;
 
-use crate::ast::{
-    Expr, ExprKind, Fn, FnParam, Ident, Item, ItemKind, Literal, LiteralKind, Span, Stmt, StmtKind,
-    DUMMY_SPAN,
-};
+use crate::ast::{Ident, Item, Span};
 use crate::lexer::token::{Token, TokenKind};
-use crate::lexer::{LexError, Lexer};
+use crate::lexer::LexError;
 
 pub type ParseResult<T> = Result<T, ParseError>;
 
@@ -98,32 +95,6 @@ where
 
         parse_result
     }
-
-    // fn peek(&mut self) -> ParseResult<Option<&Token>> {
-    //     if let Some(token) = self.lexer.peek() {
-    //         let next_token_kind = token
-    //             .as_ref()
-    //             .map(|token| token.kind)
-    //             .map_err(|err| err.clone())?;
-
-    //         match next_token_kind {
-    //             TokenKind::Comment => {
-    //                 self.advance()?;
-
-    //                 return self.peek();
-    //             }
-    //             _ => {}
-    //         }
-    //     }
-
-    //     if let Some(token) = self.lexer.peek() {
-    //         let token = token.as_ref().map_err(|err| err.clone())?;
-
-    //         Ok(Some(token))
-    //     } else {
-    //         Ok(None)
-    //     }
-    // }
 
     /// Returns whether the parser is at the end of the token stream.
     fn is_at_end(&mut self) -> bool {
@@ -246,39 +217,4 @@ where
 
         Ok(ident)
     }
-
-    // fn check(&mut self, kind: TokenKind) -> ParseResult<bool> {
-    //     Ok(self
-    //         .peek()?
-    //         .map(|token| token.kind == kind)
-    //         .unwrap_or(false))
-    // }
-
-    // fn check_and_consume(&mut self, kind: TokenKind) -> ParseResult<bool> {
-    //     if self.check(kind)? {
-    //         self.advance()?;
-
-    //         Ok(true)
-    //     } else {
-    //         Ok(false)
-    //     }
-    // }
-
-    // fn consume(&mut self, kind: TokenKind, message: &str) -> ParseResult<Token> {
-    //     if self.check(kind)? {
-    //         self.advance()
-    //     } else {
-    //         Err(ParseError {
-    //             kind: ParseErrorKind::Error(message.to_string()),
-    //             span: self
-    //                 .peek()
-    //                 .map(|token| {
-    //                     token
-    //                         .map(|token| token.span.clone())
-    //                         .unwrap_or((0..0).into())
-    //                 })
-    //                 .unwrap_or((0..0).into()),
-    //         })
-    //     }
-    // }
 }
