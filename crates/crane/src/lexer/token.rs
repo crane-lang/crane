@@ -1,7 +1,7 @@
 use logos::Logos;
 use smol_str::SmolStr;
 
-use crate::ast::Span;
+use crate::ast::{Span, DUMMY_SPAN};
 use crate::lexer::LexErrorKind;
 
 #[derive(Logos, Debug, PartialEq, Clone, Copy)]
@@ -57,4 +57,15 @@ pub struct Token {
     pub kind: TokenKind,
     pub lexeme: SmolStr,
     pub span: Span,
+}
+
+impl Token {
+    /// A dummy [`Token`], to be thrown away later.
+    pub fn dummy() -> Self {
+        Self {
+            kind: TokenKind::Comment,
+            lexeme: SmolStr::default(),
+            span: DUMMY_SPAN,
+        }
+    }
 }
