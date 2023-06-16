@@ -10,7 +10,7 @@ use thin_vec::ThinVec;
 use tracing::trace;
 
 use crate::ast::{
-    Expr, ExprKind, Fn, FnParam, Ident, Item, ItemKind, Literal, LiteralKind, Stmt, StmtKind,
+    Expr, ExprKind, Fn, FnParam, Ident, Item, ItemKind, Literal, LiteralKind, Span, Stmt, StmtKind,
     DUMMY_SPAN,
 };
 use crate::lexer::token::{Token, TokenKind};
@@ -18,12 +18,23 @@ use crate::lexer::{LexError, Lexer};
 
 pub type ParseResult<T> = Result<T, ParseError>;
 
+/// An expected token.
+#[derive(Debug, Clone, PartialEq)]
+enum ExpectedToken {
+    Token(TokenKind),
+    Keyword(Ident),
+    Ident,
+}
+
 pub struct Parser<TokenStream: Iterator<Item = Result<Token, LexError>>> {
     /// The list of tokens.
     tokens: TokenStream,
 
     /// The list of lexing errors uncovered during parsing.
     lex_errors: Vec<LexError>,
+
+    /// The list of tokens the parser was expecting.
+    expected_tokens: Vec<ExpectedToken>,
 
     /// The current token.
     token: Token,
@@ -40,6 +51,7 @@ where
         let mut parser = Self {
             tokens: input,
             lex_errors: Vec::new(),
+            expected_tokens: Vec::new(),
             token: Token::dummy(),
             prev_token: Token::dummy(),
         };
@@ -50,18 +62,42 @@ where
         parser
     }
 
-    pub fn parse(mut self) -> ParseResult<Vec<Item>> {
+    pub fn parse(mut self) -> ParseResult<ThinVec<Item>> {
         trace!("Parsing program");
 
-        let mut items = Vec::new();
+        let items_result = self.parse_module_items();
 
-        while !self.is_at_end() {
-            let item = self.parse_item()?;
+        let items = self.ensure_no_errors(items_result)?;
 
+        if !self.is_at_end() {
+            return Err(ParseError {
+                kind: ParseErrorKind::Error("Expected end of file".into()),
+                span: self.token.span,
+            });
+        }
+
+        Ok(items)
+    }
+
+    fn parse_module_items(&mut self) -> ParseResult<ThinVec<Item>> {
+        let mut items = ThinVec::new();
+
+        while let Some(item) = self.parse_item()? {
             items.push(item);
         }
 
         Ok(items)
+    }
+
+    fn ensure_no_errors<T>(&self, parse_result: ParseResult<T>) -> ParseResult<T> {
+        if let Some(lex_error) = self.lex_errors.first() {
+            return Err(ParseError {
+                kind: ParseErrorKind::LexError(lex_error.kind.clone()),
+                span: lex_error.span,
+            });
+        }
+
+        parse_result
     }
 
     // fn peek(&mut self) -> ParseResult<Option<&Token>> {
@@ -130,18 +166,47 @@ where
             };
         }
 
+        // TODO: Figure out a better way of dealing with the end of input.
         let next_token = next_token.unwrap_or(Token {
             kind: TokenKind::Eof,
             lexeme: "".into(),
-            span: DUMMY_SPAN,
+            span: Span {
+                start: self.token.span.end,
+                end: self.token.span.end + 1,
+            },
         });
 
         self.prev_token = std::mem::replace(&mut self.token, next_token);
     }
 
     /// Returns whether the next token is of the given [`TokenKind`].
+    ///
+    /// If the token is not present this method will add the token to the list
+    /// of expected tokens.
     fn check(&mut self, kind: TokenKind) -> bool {
+        let is_present = self.token.kind == kind;
+        if !is_present {
+            self.expected_tokens.push(ExpectedToken::Token(kind));
+        }
+
+        is_present
+    }
+
+    /// Returns whether the next token is of the given [`TokenKind`].
+    ///
+    /// This does not add the token to the list of expected tokens.
+    fn check_without_expect(&mut self, kind: TokenKind) -> bool {
         self.token.kind == kind
+    }
+
+    /// Returns whether the next token is the given keyword.
+    ///
+    /// This method adds the keyword to the list of expected tokens.
+    fn check_keyword(&mut self, keyword: Ident) -> bool {
+        self.expected_tokens
+            .push(ExpectedToken::Keyword(keyword.clone()));
+
+        self.token.is_keyword(keyword)
     }
 
     /// Consumes the next token if it is of the given [`TokenKind`].
@@ -156,7 +221,32 @@ where
         is_present
     }
 
-    // pub fn consume_keyword(&mut self, keyword: Ident)
+    /// Consumes the next token if it is the given keyword
+    ///
+    /// Otherwise it does not consume the token and returns `false`.
+    ///
+    /// This method adds the keyword to the list of expected tokens.
+    pub fn consume_keyword(&mut self, keyword: Ident) -> bool {
+        if self.check_keyword(keyword) {
+            self.advance();
+
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Parses an [`Ident`].
+    pub fn parse_ident(&mut self) -> ParseResult<Ident> {
+        let ident = self.token.ident().ok_or_else(|| ParseError {
+            kind: ParseErrorKind::Error("Expected an identifier".to_string()),
+            span: self.token.span,
+        })?;
+
+        self.advance();
+
+        Ok(ident)
+    }
 
     // fn check(&mut self, kind: TokenKind) -> ParseResult<bool> {
     //     Ok(self
@@ -191,84 +281,6 @@ where
     //                 .unwrap_or((0..0).into()),
     //         })
     //     }
-    // }
-
-    // fn parse_fn_item(&mut self) -> ParseResult<Item> {
-    //     trace!("Parsing function declaration");
-
-    //     match self.peek()? {
-    //         Some(peeked) if peeked.kind == TokenKind::Ident && peeked.lexeme == "pub" => {
-    //             self.advance()?;
-    //         }
-    //         _ => {}
-    //     }
-
-    //     let fn_keyword = self.consume(TokenKind::Ident, "Expected 'fn'.")?;
-    //     if fn_keyword.lexeme != "fn" {
-    //         return Err(ParseError {
-    //             kind: ParseErrorKind::Error("Expected 'fn'.".to_string()),
-    //             span: fn_keyword.span,
-    //         });
-    //     }
-
-    //     let name = self.consume(TokenKind::Ident, "Expected a function name.")?;
-
-    //     self.consume(TokenKind::OpenParen, "Expected '('.")?;
-
-    //     let mut params = ThinVec::new();
-
-    //     if !self.check(TokenKind::CloseParen)? {
-    //         loop {
-    //             let param_name =
-    //                 self.consume(TokenKind::Ident, "Expected a function parameter name.")?;
-
-    //             self.consume(TokenKind::Colon, "Expected a ':'.")?;
-
-    //             let ty_annotation =
-    //                 self.consume(TokenKind::Ident, "Expected a type annotation.")?;
-
-    //             params.push(FnParam {
-    //                 name: Ident(param_name.lexeme.into()),
-    //                 ty: Ident(ty_annotation.lexeme.into()),
-    //                 span: param_name.span,
-    //             });
-
-    //             if !self.check_and_consume(TokenKind::Comma)? {
-    //                 break;
-    //             }
-    //         }
-    //     }
-
-    //     self.consume(
-    //         TokenKind::CloseParen,
-    //         "Expected a ')' to close the parameter list.",
-    //     )?;
-
-    //     self.consume(TokenKind::OpenBrace, "Expected '{'.")?;
-
-    //     let mut body = ThinVec::new();
-
-    //     loop {
-    //         if self.check(TokenKind::CloseBrace)? {
-    //             break;
-    //         }
-
-    //         let fn_call = self.parse_call_expr(None)?;
-
-    //         let span = fn_call.span;
-
-    //         body.push(Stmt {
-    //             kind: StmtKind::Expr(fn_call),
-    //             span,
-    //         });
-    //     }
-
-    //     self.consume(TokenKind::CloseBrace, "Expected '}'.")?;
-
-    //     Ok(Item {
-    //         kind: ItemKind::Fn(Box::new(Fn { params, body })),
-    //         name: Ident(name.lexeme.into()),
-    //     })
     // }
 
     // fn parse_expr(&mut self) -> ParseResult<Expr> {

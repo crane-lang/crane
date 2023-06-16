@@ -66,9 +66,7 @@ fn compile() -> Result<(), ()> {
         Ok(items) => {
             let mut typer = Typer::new();
 
-            let module = Module {
-                items: items.clone().into(),
-            };
+            let module = Module { items };
 
             match typer.type_check_module(module) {
                 Ok(typed_module) => {

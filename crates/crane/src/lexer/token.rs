@@ -1,7 +1,7 @@
 use logos::Logos;
 use smol_str::SmolStr;
 
-use crate::ast::{Span, DUMMY_SPAN};
+use crate::ast::{Ident, Span, DUMMY_SPAN};
 use crate::lexer::LexErrorKind;
 
 #[derive(Logos, Debug, PartialEq, Clone, Copy)]
@@ -70,6 +70,18 @@ impl Token {
             kind: TokenKind::Comment,
             lexeme: SmolStr::default(),
             span: DUMMY_SPAN,
+        }
+    }
+
+    /// Returns whether this token is the given keyword.
+    pub fn is_keyword(&self, keyword: Ident) -> bool {
+        self.kind == TokenKind::Ident && self.lexeme == keyword.0
+    }
+
+    pub fn ident(&self) -> Option<Ident> {
+        match self.kind {
+            TokenKind::Ident => Some(Ident(self.lexeme.clone())),
+            _ => None,
         }
     }
 }
