@@ -22,7 +22,7 @@ pub struct Parser<TokenStream: Iterator<Item = Result<Token, LexError>>> {
     tokens: TokenStream,
 
     /// The list of lexing errors uncovered during parsing.
-    lex_errors: ThinVec<LexError>,
+    lex_errors: Vec<LexError>,
 
     /// The current token.
     token: Option<Token>,
@@ -38,7 +38,7 @@ where
     pub fn new(input: TokenStream) -> Self {
         let mut parser = Self {
             tokens: input,
-            lex_errors: ThinVec::new(),
+            lex_errors: Vec::new(),
             token: None,
             prev_token: None,
         };
@@ -137,6 +137,28 @@ where
 
         self.prev_token = std::mem::replace(&mut self.token, next_token);
     }
+
+    /// Returns whether the next token is of the given [`TokenKind`].
+    fn check(&mut self, kind: TokenKind) -> bool {
+        match &self.token {
+            Some(token) => token.kind == kind,
+            None => false,
+        }
+    }
+
+    /// Consumes the next token if it is of the given [`TokenKind`].
+    ///
+    /// Returns whether the token was present.
+    pub fn consume(&mut self, kind: TokenKind) -> bool {
+        let is_present = self.check(kind);
+        if is_present {
+            self.advance();
+        }
+
+        is_present
+    }
+
+    // pub fn consume_keyword(&mut self, keyword: Ident)
 
     // fn check(&mut self, kind: TokenKind) -> ParseResult<bool> {
     //     Ok(self
