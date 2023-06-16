@@ -1,7 +1,7 @@
 use logos::Logos;
 use smol_str::SmolStr;
 
-use crate::ast::Span;
+use crate::ast::{Ident, Span, DUMMY_SPAN};
 use crate::lexer::LexErrorKind;
 
 #[derive(Logos, Debug, PartialEq, Clone, Copy)]
@@ -50,6 +50,10 @@ pub enum TokenKind {
     /// Any sequence of whitespace characters.
     #[regex(r"[ \n]+", logos::skip)]
     Whitespace,
+
+    /// The end of the file (EOF).
+    #[end]
+    Eof,
 }
 
 #[derive(Debug, Clone)]
@@ -57,4 +61,30 @@ pub struct Token {
     pub kind: TokenKind,
     pub lexeme: SmolStr,
     pub span: Span,
+}
+
+impl Token {
+    /// A dummy [`Token`], to be thrown away later.
+    pub fn dummy() -> Self {
+        Self {
+            kind: TokenKind::Comment,
+            lexeme: SmolStr::default(),
+            span: DUMMY_SPAN,
+        }
+    }
+
+    /// Returns whether this token is the given keyword.
+    pub fn is_keyword(&self, keyword: Ident) -> bool {
+        self.kind == TokenKind::Ident && self.lexeme == keyword.name
+    }
+
+    pub fn ident(&self) -> Option<Ident> {
+        match self.kind {
+            TokenKind::Ident => Some(Ident {
+                name: self.lexeme.clone(),
+                span: self.span,
+            }),
+            _ => None,
+        }
+    }
 }

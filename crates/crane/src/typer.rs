@@ -4,15 +4,16 @@ mod r#type;
 
 pub use error::*;
 pub use r#type::*;
-use thin_vec::ThinVec;
 
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use thin_vec::ThinVec;
+
 use crate::ast::{
     Expr, ExprKind, Fn, Ident, Item, ItemKind, Literal, LiteralKind, Module, Span, Stmt, StmtKind,
     TyExpr, TyExprKind, TyFn, TyFnParam, TyIntegerLiteral, TyItem, TyItemKind, TyLiteral,
-    TyLiteralKind, TyModule, TyStmt, TyStmtKind, TyUint,
+    TyLiteralKind, TyModule, TyStmt, TyStmtKind, TyUint, DUMMY_SPAN,
 };
 
 pub type TypeCheckResult<T> = Result<T, TypeError>;
@@ -30,9 +31,18 @@ impl Typer {
 
     pub fn type_check_module(&mut self, module: Module) -> TypeCheckResult<TyModule> {
         // HACK: Register the functions from `std`.
-        self.register_function(Ident("print".into()));
-        self.register_function(Ident("println".into()));
-        self.register_function(Ident("int_add".into()));
+        self.register_function(Ident {
+            name: "print".into(),
+            span: DUMMY_SPAN,
+        });
+        self.register_function(Ident {
+            name: "println".into(),
+            span: DUMMY_SPAN,
+        });
+        self.register_function(Ident {
+            name: "int_add".into(),
+            span: DUMMY_SPAN,
+        });
 
         for item in &module.items {
             match item.kind {

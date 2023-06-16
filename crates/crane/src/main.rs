@@ -7,6 +7,7 @@ mod typer;
 use ariadne::{Color, Label, Report, ReportKind, Source};
 use ast::SourceSpan;
 use clap::{Parser, Subcommand};
+use lexer::Lexer;
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
 use typer::TypeErrorKind;
@@ -57,15 +58,15 @@ fn main() {
 fn compile() -> Result<(), ()> {
     let source = std::fs::read_to_string("examples/scratch.crane").unwrap();
 
-    let parser = crate::parser::Parser::new(&source);
+    let lexer = Lexer::new(&source);
+
+    let parser = crate::parser::Parser::new(lexer);
 
     match parser.parse() {
         Ok(items) => {
             let mut typer = Typer::new();
 
-            let module = Module {
-                items: items.clone().into(),
-            };
+            let module = Module { items };
 
             match typer.type_check_module(module) {
                 Ok(typed_module) => {
@@ -113,16 +114,6 @@ fn compile() -> Result<(), ()> {
                         .with_label(
                             Label::new(SourceSpan::from(("scratch.crane", span)))
                                 .with_message(lex_error)
-                                .with_color(Color::Red),
-                        )
-                        .finish()
-                }
-                ParseErrorKind::AdvancedPastEndOfInput => {
-                    Report::build(ReportKind::Error, "scratch.crane", 1)
-                        .with_message("An error occurred during parsing.")
-                        .with_label(
-                            Label::new(SourceSpan::from(("scratch.crane", span)))
-                                .with_message(err.kind)
                                 .with_color(Color::Red),
                         )
                         .finish()
