@@ -1,4 +1,4 @@
-use crate::ast::{Stmt, StmtKind, DUMMY_SPAN};
+use crate::ast::{Stmt, StmtKind};
 use crate::lexer::token::Token;
 use crate::lexer::LexError;
 use crate::parser::{ParseResult, Parser};
@@ -9,10 +9,11 @@ where
 {
     pub fn parse_stmt(&mut self) -> ParseResult<Option<Stmt>> {
         if let Some(expr) = self.parse_expr()? {
+            let span = expr.span;
+
             return Ok(Some(Stmt {
                 kind: StmtKind::Expr(expr),
-                // TODO: Use a real span.
-                span: DUMMY_SPAN,
+                span,
             }));
         }
 

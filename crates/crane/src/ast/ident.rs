@@ -1,5 +1,6 @@
 use smol_str::SmolStr;
 
+// TODO: Add span to `Ident`.
 /// An identifier.
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Ident(pub SmolStr);

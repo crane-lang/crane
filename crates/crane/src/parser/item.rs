@@ -1,7 +1,7 @@
 use thin_vec::ThinVec;
 use tracing::trace;
 
-use crate::ast::{Fn, Ident, Item, ItemKind, Stmt, StmtKind};
+use crate::ast::{Fn, FnParam, Ident, Item, ItemKind, DUMMY_SPAN};
 use crate::lexer::token::{Token, TokenKind};
 use crate::lexer::LexError;
 use crate::parser::{ParseResult, Parser};
@@ -47,6 +47,21 @@ where
         if !self.check(TokenKind::CloseParen) {
             loop {
                 let param_name = self.parse_ident()?;
+
+                self.consume(TokenKind::Colon);
+
+                let ty_annotation = self.parse_ident()?;
+
+                params.push(FnParam {
+                    name: param_name,
+                    ty: ty_annotation,
+                    // TODO: This should be the `param_name`'s span.
+                    span: DUMMY_SPAN,
+                });
+
+                if !self.consume(TokenKind::Comma) {
+                    break;
+                }
             }
         }
 
