@@ -1,9 +1,9 @@
 use thin_vec::ThinVec;
 use tracing::trace;
 
-use crate::ast::{Fn, Ident, Item, ItemKind};
-use crate::lexer::token::TokenKind;
-use crate::lexer::{token::Token, LexError};
+use crate::ast::{Fn, Ident, Item, ItemKind, Stmt, StmtKind};
+use crate::lexer::token::{Token, TokenKind};
+use crate::lexer::LexError;
 use crate::parser::{ParseResult, Parser};
 
 type ItemInfo = (Ident, ItemKind);
@@ -52,13 +52,17 @@ where
 
         self.consume(TokenKind::CloseParen);
 
-        Ok((
-            ident,
-            Fn {
-                params,
-                body: ThinVec::new(),
-            },
-        ))
+        self.consume(TokenKind::OpenBrace);
+
+        let mut body = ThinVec::new();
+
+        while let Some(stmt) = self.parse_stmt()? {
+            body.push(stmt);
+        }
+
+        self.consume(TokenKind::CloseBrace);
+
+        Ok((ident, Fn { params, body }))
     }
 }
 
