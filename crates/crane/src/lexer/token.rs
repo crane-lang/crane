@@ -50,6 +50,10 @@ pub enum TokenKind {
     /// Any sequence of whitespace characters.
     #[regex(r"[ \n]+", logos::skip)]
     Whitespace,
+
+    /// The end of the file (EOF).
+    #[end]
+    Eof,
 }
 
 #[derive(Debug, Clone)]
