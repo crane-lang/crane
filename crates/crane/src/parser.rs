@@ -11,6 +11,7 @@ use tracing::trace;
 
 use crate::ast::{
     Expr, ExprKind, Fn, FnParam, Ident, Item, ItemKind, Literal, LiteralKind, Stmt, StmtKind,
+    DUMMY_SPAN,
 };
 use crate::lexer::token::{Token, TokenKind};
 use crate::lexer::{LexError, Lexer};
@@ -25,10 +26,10 @@ pub struct Parser<TokenStream: Iterator<Item = Result<Token, LexError>>> {
     lex_errors: Vec<LexError>,
 
     /// The current token.
-    token: Option<Token>,
+    token: Token,
 
     /// The previous token.
-    prev_token: Option<Token>,
+    prev_token: Token,
 }
 
 impl<TokenStream> Parser<TokenStream>
@@ -39,8 +40,8 @@ where
         let mut parser = Self {
             tokens: input,
             lex_errors: Vec::new(),
-            token: None,
-            prev_token: None,
+            token: Token::dummy(),
+            prev_token: Token::dummy(),
         };
 
         // Advance the parser to the first token.
@@ -91,13 +92,7 @@ where
 
     /// Returns whether the parser is at the end of the token stream.
     fn is_at_end(&mut self) -> bool {
-        matches!(
-            self.token,
-            Some(Token {
-                kind: TokenKind::Eof,
-                ..
-            })
-        )
+        self.token.kind == TokenKind::Eof
     }
 
     /// Advances the parser to the next token.
@@ -135,15 +130,18 @@ where
             };
         }
 
+        let next_token = next_token.unwrap_or(Token {
+            kind: TokenKind::Eof,
+            lexeme: "".into(),
+            span: DUMMY_SPAN,
+        });
+
         self.prev_token = std::mem::replace(&mut self.token, next_token);
     }
 
     /// Returns whether the next token is of the given [`TokenKind`].
     fn check(&mut self, kind: TokenKind) -> bool {
-        match &self.token {
-            Some(token) => token.kind == kind,
-            None => false,
-        }
+        self.token.kind == kind
     }
 
     /// Consumes the next token if it is of the given [`TokenKind`].
