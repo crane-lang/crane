@@ -41,8 +41,6 @@ impl NativeBackend {
 
         let target = Target::from_name("aarch64").expect("Failed to parse target");
 
-        let target = dbg!(target);
-
         let target_machine = target
             .create_target_machine(
                 &TargetTriple::create("aarch64-apple-darwin"),
@@ -53,8 +51,6 @@ impl NativeBackend {
                 model,
             )
             .unwrap();
-
-        let target_machine = dbg!(target_machine);
 
         let module = self.context.create_module("main");
         let builder = self.context.create_builder();
@@ -79,7 +75,7 @@ impl NativeBackend {
 
             let puts = module.add_function("puts", fn_type, Some(Linkage::External));
 
-            dbg!(puts);
+            Self::verify_fn(&fpm, "puts", &puts).unwrap();
         }
 
         // Define `sprintf`.
@@ -103,7 +99,7 @@ impl NativeBackend {
 
             let sprintf = module.add_function("sprintf", fn_type, Some(Linkage::External));
 
-            dbg!(sprintf);
+            Self::verify_fn(&fpm, "sprintf", &sprintf).unwrap();
         }
 
         // Define `printf`.
@@ -121,7 +117,7 @@ impl NativeBackend {
 
             let printf = module.add_function("printf", fn_type, Some(Linkage::External));
 
-            dbg!(printf);
+            Self::verify_fn(&fpm, "printf", &printf).unwrap();
         }
 
         // Define `print`.
@@ -171,8 +167,6 @@ impl NativeBackend {
             builder.build_return(None);
 
             Self::verify_fn(&fpm, &fn_name, &fn_value).unwrap();
-
-            dbg!(fn_value);
         }
 
         // Define `println`.
@@ -206,8 +200,6 @@ impl NativeBackend {
             builder.build_return(None);
 
             Self::verify_fn(&fpm, &fn_name, &fn_value).unwrap();
-
-            dbg!(fn_value);
         }
 
         // Define `int_add`.
@@ -238,8 +230,6 @@ impl NativeBackend {
             builder.build_return(Some(&sum));
 
             Self::verify_fn(&fpm, &fn_name, &fn_value).unwrap();
-
-            dbg!(fn_value);
         }
 
         // Define `int_to_string`.
@@ -293,8 +283,6 @@ impl NativeBackend {
             builder.build_return(Some(&buffer));
 
             Self::verify_fn(&fpm, &fn_name, &fn_value).unwrap();
-
-            dbg!(fn_value);
         }
 
         for item in program
@@ -363,16 +351,10 @@ impl NativeBackend {
 
                     builder.build_return(None);
 
-                    dbg!(fn_value);
-
                     Self::verify_fn(&fpm, &item.name.to_string(), &fn_value).unwrap();
-
-                    fn_value.print_to_stderr();
                 }
             }
         }
-
-        dbg!(module.get_functions().count());
 
         module
             .print_to_file("build/main.ll")
