@@ -1,12 +1,28 @@
 use thin_vec::ThinVec;
 use tracing::trace;
 
-use crate::ast::{Fn, FnParam, Ident, Item, ItemKind, DUMMY_SPAN};
+use crate::ast::{Fn, FnParam, Ident, Item, ItemKind};
 use crate::lexer::token::{Token, TokenKind};
 use crate::lexer::LexError;
 use crate::parser::{ParseResult, Parser};
 
 type ItemInfo = (Ident, ItemKind);
+
+mod keywords {
+    use smol_str::SmolStr;
+
+    use crate::ast::{Ident, DUMMY_SPAN};
+
+    pub const PUB: Ident = Ident {
+        name: SmolStr::new_inline("pub"),
+        span: DUMMY_SPAN,
+    };
+
+    pub const FN: Ident = Ident {
+        name: SmolStr::new_inline("fn"),
+        span: DUMMY_SPAN,
+    };
+}
 
 impl<TokenStream> Parser<TokenStream>
 where
@@ -16,7 +32,7 @@ where
     pub fn parse_item(&mut self) -> ParseResult<Option<Item>> {
         trace!("parse_item");
 
-        self.consume_keyword(Ident("pub".into()));
+        self.consume_keyword(keywords::PUB);
 
         Ok(self
             .parse_item_kind()?
@@ -26,7 +42,7 @@ where
     fn parse_item_kind(&mut self) -> ParseResult<Option<ItemInfo>> {
         trace!("parse_item_kind");
 
-        if self.consume_keyword(Ident("fn".into())) {
+        if self.consume_keyword(keywords::FN) {
             let (name, fun) = self.parse_fn()?;
 
             return Ok(Some((name, ItemKind::Fn(Box::new(fun)))));
@@ -52,11 +68,12 @@ where
 
                 let ty_annotation = self.parse_ident()?;
 
+                let span = param_name.span;
+
                 params.push(FnParam {
                     name: param_name,
                     ty: ty_annotation,
-                    // TODO: This should be the `param_name`'s span.
-                    span: DUMMY_SPAN,
+                    span,
                 });
 
                 if !self.consume(TokenKind::Comma) {

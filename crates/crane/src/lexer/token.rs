@@ -75,12 +75,15 @@ impl Token {
 
     /// Returns whether this token is the given keyword.
     pub fn is_keyword(&self, keyword: Ident) -> bool {
-        self.kind == TokenKind::Ident && self.lexeme == keyword.0
+        self.kind == TokenKind::Ident && self.lexeme == keyword.name
     }
 
     pub fn ident(&self) -> Option<Ident> {
         match self.kind {
-            TokenKind::Ident => Some(Ident(self.lexeme.clone())),
+            TokenKind::Ident => Some(Ident {
+                name: self.lexeme.clone(),
+                span: self.span,
+            }),
             _ => None,
         }
     }

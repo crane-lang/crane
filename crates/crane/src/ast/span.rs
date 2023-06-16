@@ -4,7 +4,7 @@
 pub const DUMMY_SPAN: Span = Span { start: 0, end: 0 };
 
 /// A span.
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Span {
     /// The start offset of the span (inclusive).
     pub start: usize,

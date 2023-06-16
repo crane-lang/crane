@@ -1,7 +1,7 @@
 use thin_vec::ThinVec;
 use tracing::trace;
 
-use crate::ast::{Expr, ExprKind, Literal, LiteralKind, DUMMY_SPAN};
+use crate::ast::{Expr, ExprKind, Literal, LiteralKind};
 use crate::lexer::token::{Token, TokenKind};
 use crate::lexer::LexError;
 use crate::parser::{ParseResult, Parser};
@@ -45,10 +45,11 @@ where
             let ident = self.parse_ident()?;
 
             if self.check_without_expect(TokenKind::OpenParen) {
+                let span = ident.span;
+
                 let callee = Expr {
                     kind: ExprKind::Variable { name: ident },
-                    // TODO: This should be the `ident`'s span.
-                    span: DUMMY_SPAN,
+                    span,
                 };
 
                 let args = self.parse_call_expr()?;
@@ -58,14 +59,14 @@ where
                         fun: Box::new(callee),
                         args: args.into_iter().map(Box::new).collect(),
                     },
-                    // TODO: What should this span be? The callee?
-                    span: DUMMY_SPAN,
+                    span,
                 }));
             } else {
+                let span = ident.span;
+
                 return Ok(Some(Expr {
                     kind: ExprKind::Variable { name: ident },
-                    // TODO: This should be the `ident`'s span.
-                    span: DUMMY_SPAN,
+                    span,
                 }));
             }
         }
