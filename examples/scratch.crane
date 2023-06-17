@@ -5,9 +5,25 @@ pub fn main() {
     greet("world")
     greet("trees")
     greet("everyone")
+    println("")
+
+    print("This value is always ")
+    println(int_to_string(always_3()))
+    println("")
+
     add_and_print(1, 1)
     add_and_print(2, 2)
     add_and_print(3, 3)
+    print("7 + 5 = ")
+    println(int_to_string(add_5(7)))
+}
+
+fn always_3() -> Uint64 {
+    3
+}
+
+fn add_5(value: Uint64) -> Uint64 {
+    int_add(value, 5)
 }
 
 fn greet(name: String) {
