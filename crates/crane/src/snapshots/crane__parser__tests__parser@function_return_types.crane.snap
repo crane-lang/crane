@@ -1,0 +1,146 @@
+---
+source: crates/crane/src/parser.rs
+expression: parser.parse()
+input_file: crates/crane/src/snapshot_inputs/function_return_types.crane
+---
+Ok:
+  - kind:
+      Fn:
+        params: []
+        return_ty: ~
+        body:
+          - kind:
+              Expr:
+                kind:
+                  Call:
+                    fun:
+                      kind:
+                        Variable:
+                          name:
+                            name: println
+                            span:
+                              start: 16
+                              end: 23
+                      span:
+                        start: 16
+                        end: 23
+                    args:
+                      - kind:
+                          Call:
+                            fun:
+                              kind:
+                                Variable:
+                                  name:
+                                    name: int_to_string
+                                    span:
+                                      start: 24
+                                      end: 37
+                              span:
+                                start: 24
+                                end: 37
+                            args:
+                              - kind:
+                                  Call:
+                                    fun:
+                                      kind:
+                                        Variable:
+                                          name:
+                                            name: add_10
+                                            span:
+                                              start: 38
+                                              end: 44
+                                      span:
+                                        start: 38
+                                        end: 44
+                                    args:
+                                      - kind:
+                                          Literal:
+                                            kind: Integer
+                                            value: "5"
+                                        span:
+                                          start: 45
+                                          end: 46
+                                span:
+                                  start: 38
+                                  end: 44
+                        span:
+                          start: 24
+                          end: 37
+                span:
+                  start: 16
+                  end: 23
+            span:
+              start: 16
+              end: 23
+    name:
+      name: main
+      span:
+        start: 3
+        end: 7
+  - kind:
+      Fn:
+        params:
+          - name:
+              name: n
+              span:
+                start: 63
+                end: 64
+            ty:
+              name: Uint64
+              span:
+                start: 66
+                end: 72
+            span:
+              start: 63
+              end: 64
+        return_ty:
+          name: Uint64
+          span:
+            start: 77
+            end: 83
+        body:
+          - kind:
+              Expr:
+                kind:
+                  Call:
+                    fun:
+                      kind:
+                        Variable:
+                          name:
+                            name: int_add
+                            span:
+                              start: 90
+                              end: 97
+                      span:
+                        start: 90
+                        end: 97
+                    args:
+                      - kind:
+                          Variable:
+                            name:
+                              name: n
+                              span:
+                                start: 98
+                                end: 99
+                        span:
+                          start: 98
+                          end: 99
+                      - kind:
+                          Literal:
+                            kind: Integer
+                            value: "10"
+                        span:
+                          start: 101
+                          end: 103
+                span:
+                  start: 90
+                  end: 97
+            span:
+              start: 90
+              end: 97
+    name:
+      name: add_10
+      span:
+        start: 56
+        end: 62
+

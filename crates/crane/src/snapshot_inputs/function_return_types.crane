@@ -1,0 +1,7 @@
+fn main() {
+    println(int_to_string(add_10(5)))
+}
+
+fn add_10(n: Uint64) -> Uint64 {
+    int_add(n, 10)
+}
