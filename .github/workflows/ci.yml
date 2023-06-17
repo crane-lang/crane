@@ -34,4 +34,6 @@ jobs:
           restore-keys: ${{ runner.os }}-cargo-
 
       - run: cargo build --verbose
+        env:
+          LLVM_SYS_160_PREFIX: ${{ env.LLVM_PATH }}
       - run: cargo test --verbose
