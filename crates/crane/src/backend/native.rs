@@ -62,7 +62,9 @@ impl NativeBackend {
         fpm.initialize();
 
         // Define `puts`.
-        {
+        let puts = {
+            let fn_name = "puts";
+
             let i8_type = self.context.i8_type();
             let i32_type = self.context.i32_type();
             let fn_type = i32_type.fn_type(
@@ -73,13 +75,17 @@ impl NativeBackend {
                 false,
             );
 
-            let puts = module.add_function("puts", fn_type, Some(Linkage::External));
+            let puts = module.add_function(fn_name, fn_type, Some(Linkage::External));
 
-            Self::verify_fn(&fpm, "puts", &puts).unwrap();
-        }
+            Self::verify_fn(&fpm, fn_name, &puts).unwrap();
+
+            fn_name
+        };
 
         // Define `sprintf`.
-        {
+        let sprintf = {
+            let fn_name = "sprintf";
+
             let i8_type = self.context.i8_type();
             let i32_type = self.context.i32_type();
 
@@ -97,13 +103,17 @@ impl NativeBackend {
                 true,
             );
 
-            let sprintf = module.add_function("sprintf", fn_type, Some(Linkage::External));
+            let sprintf = module.add_function(fn_name, fn_type, Some(Linkage::External));
 
-            Self::verify_fn(&fpm, "sprintf", &sprintf).unwrap();
-        }
+            Self::verify_fn(&fpm, fn_name, &sprintf).unwrap();
+
+            fn_name
+        };
 
         // Define `printf`.
-        {
+        let printf = {
+            let fn_name = "printf";
+
             let i8_type = self.context.i8_type();
             let i32_type = self.context.i32_type();
 
@@ -115,10 +125,12 @@ impl NativeBackend {
                 true,
             );
 
-            let printf = module.add_function("printf", fn_type, Some(Linkage::External));
+            let printf = module.add_function(fn_name, fn_type, Some(Linkage::External));
 
-            Self::verify_fn(&fpm, "printf", &printf).unwrap();
-        }
+            Self::verify_fn(&fpm, fn_name, &printf).unwrap();
+
+            fn_name
+        };
 
         // Define `print`.
         {
@@ -154,14 +166,14 @@ impl NativeBackend {
             global.set_constant(true);
             global.set_initializer(&template);
 
-            if let Some(callee) = module.get_function(&"printf") {
+            if let Some(callee) = module.get_function(printf) {
                 builder.build_call(
                     callee,
                     &[global.as_basic_value_enum().into(), value_param.into()],
                     "tmp",
                 );
             } else {
-                eprintln!("Function '{}' not found.", "puts");
+                eprintln!("Function '{}' not found.", printf);
             }
 
             builder.build_return(None);
@@ -191,10 +203,10 @@ impl NativeBackend {
 
             builder.position_at_end(entry);
 
-            if let Some(callee) = module.get_function(&"puts") {
+            if let Some(callee) = module.get_function(puts) {
                 builder.build_call(callee, &[value_param.into()], "tmp");
             } else {
-                eprintln!("Function '{}' not found.", "puts");
+                eprintln!("Function '{}' not found.", puts);
             }
 
             builder.build_return(None);
@@ -266,7 +278,7 @@ impl NativeBackend {
             global.set_constant(true);
             global.set_initializer(&template);
 
-            if let Some(callee) = module.get_function(&"sprintf") {
+            if let Some(callee) = module.get_function(sprintf) {
                 builder.build_call(
                     callee,
                     &[
@@ -277,7 +289,7 @@ impl NativeBackend {
                     "tmp",
                 );
             } else {
-                panic!("Function '{}' not found.", "sprintf");
+                panic!("Function '{}' not found.", sprintf);
             }
 
             builder.build_return(Some(&buffer));
