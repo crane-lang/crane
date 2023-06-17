@@ -408,6 +408,8 @@ impl NativeBackend {
 
                     Self::verify_fn(&fpm, &item.name.to_string(), &fn_value).unwrap();
                 }
+                TyItemKind::Struct(_) => {}
+                TyItemKind::Union(_) => {}
             }
         }
 

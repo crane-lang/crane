@@ -22,6 +22,16 @@ mod keywords {
         name: SmolStr::new_inline("fn"),
         span: DUMMY_SPAN,
     };
+
+    pub const STRUCT: Ident = Ident {
+        name: SmolStr::new_inline("struct"),
+        span: DUMMY_SPAN,
+    };
+
+    pub const UNION: Ident = Ident {
+        name: SmolStr::new_inline("union"),
+        span: DUMMY_SPAN,
+    };
 }
 
 impl<TokenStream> Parser<TokenStream>

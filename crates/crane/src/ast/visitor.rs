@@ -1,4 +1,7 @@
-use crate::ast::{Expr, ExprKind, Fn, FnParam, Ident, Item, ItemKind, Stmt, StmtKind};
+use crate::ast::{
+    Expr, ExprKind, FieldDecl, Fn, FnParam, Ident, Item, ItemKind, Stmt, StmtKind, UnionDecl,
+    Variant, VariantData,
+};
 
 pub trait Visitor: Sized {
     fn visit_ident(&mut self, _ident: &Ident) {}
@@ -17,6 +20,22 @@ pub trait Visitor: Sized {
         walk_fn_param(self, param);
     }
 
+    fn visit_variant_data(&mut self, variant_data: &VariantData) {
+        walk_variant_data(self, variant_data);
+    }
+
+    fn visit_field_decl(&mut self, field_decl: &FieldDecl) {
+        walk_field_decl(self, field_decl);
+    }
+
+    fn visit_union_decl(&mut self, union_decl: &UnionDecl) {
+        walk_union_decl(self, union_decl);
+    }
+
+    fn visit_variant(&mut self, variant: &Variant) {
+        walk_variant(self, variant);
+    }
+
     fn visit_stmt(&mut self, stmt: &Stmt) {
         walk_stmt(self, stmt);
     }
@@ -32,6 +51,12 @@ pub fn walk_item<V: Visitor>(visitor: &mut V, item: &Item) {
     match &item.kind {
         ItemKind::Fn(fun) => {
             visitor.visit_fn(fun);
+        }
+        ItemKind::Struct(variant_data) => {
+            visitor.visit_variant_data(variant_data);
+        }
+        ItemKind::Union(union_decl) => {
+            visitor.visit_union_decl(union_decl);
         }
     }
 }
@@ -49,6 +74,31 @@ pub fn walk_fn<V: Visitor>(visitor: &mut V, fun: &Fn) {
 pub fn walk_fn_param<V: Visitor>(visitor: &mut V, param: &FnParam) {
     visitor.visit_ident(&param.name);
     visitor.visit_ty(&param.ty);
+}
+
+pub fn walk_variant_data<V: Visitor>(visitor: &mut V, variant_data: &VariantData) {
+    for field in variant_data.fields() {
+        visitor.visit_field_decl(field);
+    }
+}
+
+pub fn walk_field_decl<V: Visitor>(visitor: &mut V, field: &FieldDecl) {
+    if let Some(name) = &field.name {
+        visitor.visit_ident(name);
+    }
+
+    visitor.visit_ty(&field.ty);
+}
+
+pub fn walk_union_decl<V: Visitor>(visitor: &mut V, union_decl: &UnionDecl) {
+    for variant in &union_decl.variants {
+        visitor.visit_variant(variant);
+    }
+}
+
+pub fn walk_variant<V: Visitor>(visitor: &mut V, variant: &Variant) {
+    visitor.visit_ident(&variant.name);
+    visitor.visit_variant_data(&variant.data);
 }
 
 pub fn walk_stmt<V: Visitor>(visitor: &mut V, stmt: &Stmt) {

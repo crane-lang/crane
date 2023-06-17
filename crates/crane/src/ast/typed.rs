@@ -90,11 +90,64 @@ pub struct TyStmt {
     pub span: Span,
 }
 
+/// A field declaration in a `struct` or [`Variant`] of a `union`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TyFieldDecl {
+    pub name: Option<Ident>,
+    pub ty: Ident,
+    pub span: Span,
+}
+
+/// The data for a `struct` or [`Variant`] of a `union`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum TyVariantData {
+    /// A struct variant.
+    Struct(ThinVec<TyFieldDecl>),
+
+    /// A tuple variant.
+    Tuple(ThinVec<TyFieldDecl>),
+
+    /// A unit variant.
+    Unit,
+}
+
+impl TyVariantData {
+    /// Return the fields of this variant.
+    pub fn fields(&self) -> &[TyFieldDecl] {
+        match self {
+            TyVariantData::Struct(fields) | TyVariantData::Tuple(fields) => fields,
+            _ => &[],
+        }
+    }
+}
+
+/// A variant in a `union`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TyVariant {
+    pub name: Ident,
+    pub data: TyVariantData,
+    pub span: Span,
+}
+
+/// A `union` declaration.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TyUnionDecl {
+    /// The variants of the `union`.
+    pub variants: ThinVec<TyVariant>,
+}
+
 /// The kind of a [`TyItem`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TyItemKind {
+    // TODO: Remove `Box`?
     /// A function declaration (`fn`).
     Fn(Box<TyFn>),
+
+    /// A struct declaration (`struct`).
+    Struct(TyVariantData),
+
+    /// A union declaration (`union`).
+    Union(TyUnionDecl),
 }
 
 /// An item in a [`TyModule`].

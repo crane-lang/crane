@@ -22,6 +22,20 @@ enum ExpectedToken {
     Ident,
 }
 
+impl std::fmt::Display for ExpectedToken {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::Token(kind) => format!("`{kind:?}`"),
+                Self::Keyword(keyword) => format!("`{keyword}`"),
+                Self::Ident => "an identifier".to_string(),
+            }
+        )
+    }
+}
+
 pub struct Parser<TokenStream: Iterator<Item = Result<Token, LexError>>> {
     /// The list of tokens.
     tokens: TokenStream,
@@ -67,7 +81,14 @@ where
 
         if !self.is_at_end() {
             return Err(ParseError {
-                kind: ParseErrorKind::Error("Expected end of file".into()),
+                kind: ParseErrorKind::Error(format!(
+                    "Unexpected token. Expected {}.",
+                    self.expected_tokens
+                        .into_iter()
+                        .map(|expected| expected.to_string())
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                )),
                 span: self.token.span,
             });
         }

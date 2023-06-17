@@ -74,11 +74,63 @@ pub struct Stmt {
     pub span: Span,
 }
 
+/// A field declaration in a `struct` or [`Variant`] of a `union`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FieldDecl {
+    pub name: Option<Ident>,
+    pub ty: Ident,
+    pub span: Span,
+}
+
+/// The data for a `struct` or [`Variant`] of a `union`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum VariantData {
+    /// A struct variant.
+    Struct(ThinVec<FieldDecl>),
+
+    /// A tuple variant.
+    Tuple(ThinVec<FieldDecl>),
+
+    /// A unit variant.
+    Unit,
+}
+
+impl VariantData {
+    /// Return the fields of this variant.
+    pub fn fields(&self) -> &[FieldDecl] {
+        match self {
+            VariantData::Struct(fields) | VariantData::Tuple(fields) => fields,
+            _ => &[],
+        }
+    }
+}
+
+/// A variant in a `union`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Variant {
+    pub name: Ident,
+    pub data: VariantData,
+    pub span: Span,
+}
+
+/// A `union` declaration.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UnionDecl {
+    /// The variants of the `union`.
+    pub variants: ThinVec<Variant>,
+}
+
 /// The kind of an [`Item`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ItemKind {
     /// A function declaration (`fn`).
     Fn(Box<Fn>),
+
+    /// A struct declaration (`struct`).
+    Struct(VariantData),
+
+    /// A union declaration (`union`).
+    Union(UnionDecl),
 }
 
 /// An item in a [`Module`].

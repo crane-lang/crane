@@ -15,7 +15,8 @@ use crate::ast::visitor::{walk_expr, Visitor};
 use crate::ast::{
     Expr, ExprKind, Fn, FnParam, Ident, Item, ItemKind, Literal, LiteralKind, Module, Span, Stmt,
     StmtKind, TyExpr, TyExprKind, TyFn, TyFnParam, TyIntegerLiteral, TyItem, TyItemKind, TyLiteral,
-    TyLiteralKind, TyModule, TyStmt, TyStmtKind, TyUint, DUMMY_SPAN,
+    TyLiteralKind, TyModule, TyStmt, TyStmtKind, TyUint, TyUnionDecl, TyVariantData, UnionDecl,
+    Variant, VariantData, DUMMY_SPAN,
 };
 
 fn ty_to_string(ty: &Type) -> String {
@@ -155,6 +156,8 @@ impl Typer {
 
                     self.register_function(item.name.clone(), params.clone(), return_ty);
                 }
+                ItemKind::Struct(_) => {}
+                ItemKind::Union(_) => {}
             }
         }
 
@@ -201,6 +204,14 @@ impl Typer {
         match item.kind {
             ItemKind::Fn(fun) => Ok(TyItem {
                 kind: TyItemKind::Fn(Box::new(self.infer_function(&item.name, *fun)?)),
+                name: item.name,
+            }),
+            ItemKind::Struct(struct_decl) => Ok(TyItem {
+                kind: TyItemKind::Struct(self.infer_struct_decl(&struct_decl)?),
+                name: item.name,
+            }),
+            ItemKind::Union(union_decl) => Ok(TyItem {
+                kind: TyItemKind::Union(self.infer_union_decl(&union_decl)?),
                 name: item.name,
             }),
         }
@@ -268,6 +279,14 @@ impl Typer {
                 span: param.span,
             })
             .collect::<ThinVec<_>>())
+    }
+
+    fn infer_struct_decl(&self, struct_decl: &VariantData) -> TypeCheckResult<TyVariantData> {
+        todo!()
+    }
+
+    fn infer_union_decl(&self, union_decl: &UnionDecl) -> TypeCheckResult<TyUnionDecl> {
+        todo!()
     }
 
     fn infer_stmt(&self, stmt: Stmt) -> TypeCheckResult<TyStmt> {
