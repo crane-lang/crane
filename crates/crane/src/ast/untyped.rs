@@ -96,11 +96,11 @@ pub enum VariantData {
 }
 
 impl VariantData {
-    /// Return the fields of this variant.
+    /// Return the fields in this [`VariantData`].
     pub fn fields(&self) -> &[FieldDecl] {
         match self {
             VariantData::Struct(fields) | VariantData::Tuple(fields) => fields,
-            _ => &[],
+            VariantData::Unit => &[],
         }
     }
 }
