@@ -19,7 +19,7 @@ jobs:
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v1
         with:
-          version: '16.0.4'
+          version: "16.0.4"
 
       - name: Cache crates
         uses: actions/cache@v3
@@ -37,3 +37,5 @@ jobs:
         env:
           LLVM_SYS_160_PREFIX: ${{ env.LLVM_PATH }}
       - run: cargo test --verbose
+        env:
+          LLVM_SYS_160_PREFIX: ${{ env.LLVM_PATH }}
