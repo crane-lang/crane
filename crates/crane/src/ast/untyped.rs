@@ -161,6 +161,14 @@ mod tests {
     fn test_ast_node_sizes() {
         use std::mem::size_of;
 
+        dbg!(size_of::<Expr>()).to_string();
+        dbg!(size_of::<ExprKind>()).to_string();
+        dbg!(size_of::<Fn>()).to_string();
+        dbg!(size_of::<Item>()).to_string();
+        dbg!(size_of::<ItemKind>()).to_string();
+        dbg!(size_of::<Stmt>()).to_string();
+        dbg!(size_of::<StmtKind>()).to_string();
+
         insta::assert_snapshot!(size_of::<Expr>().to_string(), @"56");
         insta::assert_snapshot!(size_of::<ExprKind>().to_string(), @"40");
         insta::assert_snapshot!(size_of::<Fn>().to_string(), @"56");

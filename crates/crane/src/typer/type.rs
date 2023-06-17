@@ -33,6 +33,8 @@ mod tests {
     fn test_type_size() {
         use std::mem::size_of;
 
+        dbg!(size_of::<Type>().to_string());
+
         insta::assert_snapshot!(size_of::<Type>().to_string(), @"48");
     }
 }

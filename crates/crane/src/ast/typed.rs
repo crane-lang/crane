@@ -178,6 +178,14 @@ mod tests {
     fn test_ast_node_sizes() {
         use std::mem::size_of;
 
+        dbg!(size_of::<TyExpr>().to_string());
+        dbg!(size_of::<TyExprKind>().to_string());
+        dbg!(size_of::<TyFn>().to_string());
+        dbg!(size_of::<TyItem>().to_string());
+        dbg!(size_of::<TyItemKind>().to_string());
+        dbg!(size_of::<TyStmt>().to_string());
+        dbg!(size_of::<TyStmtKind>().to_string());
+
         insta::assert_snapshot!(size_of::<TyExpr>().to_string(), @"80");
         insta::assert_snapshot!(size_of::<TyExprKind>().to_string(), @"48");
         insta::assert_snapshot!(size_of::<TyFn>().to_string(), @"24");

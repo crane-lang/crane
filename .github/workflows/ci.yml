@@ -47,6 +47,6 @@ jobs:
       - run: cargo build --verbose
         env:
           LLVM_SYS_160_PREFIX: ${{ env.LLVM_PATH }}
-      - run: cargo test --verbose
+      - run: cargo test --verbose -- --no-capture
         env:
           LLVM_SYS_160_PREFIX: ${{ env.LLVM_PATH }}
