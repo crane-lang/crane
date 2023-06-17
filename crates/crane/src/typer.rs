@@ -158,7 +158,7 @@ impl Typer {
     }
 
     fn ensure_function_exists(&self, ident: &Ident) -> TypeCheckResult<()> {
-        if let Some(_) = self.module_functions.get(ident) {
+        if self.module_functions.get(ident).is_some() {
             return Ok(());
         }
 
