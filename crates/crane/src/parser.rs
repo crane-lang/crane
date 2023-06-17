@@ -81,14 +81,7 @@ where
 
         if !self.is_at_end() {
             return Err(ParseError {
-                kind: ParseErrorKind::Error(format!(
-                    "Unexpected token. Expected {}.",
-                    self.expected_tokens
-                        .into_iter()
-                        .map(|expected| expected.to_string())
-                        .collect::<Vec<_>>()
-                        .join(" ")
-                )),
+                kind: ParseErrorKind::Error("Failed to parse.".to_string()),
                 span: self.token.span,
             });
         }
