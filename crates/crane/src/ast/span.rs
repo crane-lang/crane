@@ -1,10 +1,12 @@
+use serde::{Deserialize, Serialize};
+
 /// A dummy [`Span`].
 ///
 /// All of the positions are set to `0`.
 pub const DUMMY_SPAN: Span = Span { start: 0, end: 0 };
 
 /// A span.
-#[derive(PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(PartialEq, Eq, Hash, Clone, Copy, Serialize, Deserialize)]
 pub struct Span {
     /// The start offset of the span (inclusive).
     pub start: usize,
