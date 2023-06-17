@@ -12,47 +12,63 @@ use thin_vec::ThinVec;
 
 use crate::ast::visitor::{walk_expr, Visitor};
 use crate::ast::{
-    Expr, ExprKind, Fn, Ident, Item, ItemKind, Literal, LiteralKind, Module, Span, Stmt, StmtKind,
-    TyExpr, TyExprKind, TyFn, TyFnParam, TyIntegerLiteral, TyItem, TyItemKind, TyLiteral,
+    Expr, ExprKind, Fn, FnParam, Ident, Item, ItemKind, Literal, LiteralKind, Module, Span, Stmt,
+    StmtKind, TyExpr, TyExprKind, TyFn, TyFnParam, TyIntegerLiteral, TyItem, TyItemKind, TyLiteral,
     TyLiteralKind, TyModule, TyStmt, TyStmtKind, TyUint, DUMMY_SPAN,
 };
 
 pub type TypeCheckResult<T> = Result<T, TypeError>;
 
 pub struct Typer {
-    module_functions: HashMap<Ident, ()>,
+    module_functions: HashMap<Ident, ThinVec<TyFnParam>>,
+    scopes: Vec<HashMap<Ident, Arc<Type>>>,
 }
 
 impl Typer {
     pub fn new() -> Self {
         Self {
             module_functions: HashMap::new(),
+            scopes: Vec::new(),
         }
     }
 
     pub fn type_check_module(&mut self, module: Module) -> TypeCheckResult<TyModule> {
         // HACK: Register the functions from `std`.
-        self.register_function(Ident {
-            name: "print".into(),
-            span: DUMMY_SPAN,
-        });
-        self.register_function(Ident {
-            name: "println".into(),
-            span: DUMMY_SPAN,
-        });
-        self.register_function(Ident {
-            name: "int_add".into(),
-            span: DUMMY_SPAN,
-        });
-        self.register_function(Ident {
-            name: "int_to_string".into(),
-            span: DUMMY_SPAN,
-        });
+        self.register_function(
+            Ident {
+                name: "print".into(),
+                span: DUMMY_SPAN,
+            },
+            ThinVec::new(),
+        );
+        self.register_function(
+            Ident {
+                name: "println".into(),
+                span: DUMMY_SPAN,
+            },
+            ThinVec::new(),
+        );
+        self.register_function(
+            Ident {
+                name: "int_add".into(),
+                span: DUMMY_SPAN,
+            },
+            ThinVec::new(),
+        );
+        self.register_function(
+            Ident {
+                name: "int_to_string".into(),
+                span: DUMMY_SPAN,
+            },
+            ThinVec::new(),
+        );
 
         for item in &module.items {
             match item.kind {
-                ItemKind::Fn(_) => {
-                    self.register_function(item.name.clone());
+                ItemKind::Fn(ref fun) => {
+                    let params = self.infer_function_params(&fun.params)?;
+
+                    self.register_function(item.name.clone(), params.clone());
                 }
             }
         }
@@ -76,8 +92,8 @@ impl Typer {
         Ok(TyModule { items: typed_items })
     }
 
-    fn register_function(&mut self, name: Ident) {
-        self.module_functions.insert(name, ());
+    fn register_function(&mut self, name: Ident, params: ThinVec<TyFnParam>) {
+        self.module_functions.insert(name, params);
     }
 
     fn ensure_function_exists(&self, ident: &Ident) -> TypeCheckResult<()> {
@@ -93,7 +109,7 @@ impl Typer {
         })
     }
 
-    fn infer_item(&self, item: Item) -> TypeCheckResult<TyItem> {
+    fn infer_item(&mut self, item: Item) -> TypeCheckResult<TyItem> {
         match item.kind {
             ItemKind::Fn(fun) => Ok(TyItem {
                 kind: TyItemKind::Fn(Box::new(self.infer_function(*fun)?)),
@@ -102,26 +118,45 @@ impl Typer {
         }
     }
 
-    fn infer_function(&self, fun: Fn) -> TypeCheckResult<TyFn> {
-        Ok(TyFn {
-            params: fun
-                .params
-                .iter()
-                .map(|param| TyFnParam {
-                    name: param.name.clone(),
-                    ty: Arc::new(Type::UserDefined {
-                        module: "std::prelude".into(),
-                        name: param.ty.to_string().into(),
-                    }),
-                    span: param.span,
-                })
-                .collect::<ThinVec<_>>(),
+    fn infer_function(&mut self, fun: Fn) -> TypeCheckResult<TyFn> {
+        let params = self.infer_function_params(&fun.params)?;
+
+        self.scopes.push(HashMap::from_iter(
+            params
+                .clone()
+                .into_iter()
+                .map(|param| (param.name, param.ty)),
+        ));
+
+        let ty_fn = TyFn {
+            params,
             body: fun
                 .body
                 .into_iter()
                 .map(|stmt| self.infer_stmt(stmt))
                 .collect::<Result<ThinVec<_>, _>>()?,
-        })
+        };
+
+        self.scopes.pop();
+
+        Ok(ty_fn)
+    }
+
+    fn infer_function_params(
+        &self,
+        params: &ThinVec<FnParam>,
+    ) -> TypeCheckResult<ThinVec<TyFnParam>> {
+        Ok(params
+            .iter()
+            .map(|param| TyFnParam {
+                name: param.name.clone(),
+                ty: Arc::new(Type::UserDefined {
+                    module: "std::prelude".into(),
+                    name: param.ty.to_string().into(),
+                }),
+                span: param.span,
+            })
+            .collect::<ThinVec<_>>())
     }
 
     fn infer_stmt(&self, stmt: Stmt) -> TypeCheckResult<TyStmt> {
@@ -140,29 +175,89 @@ impl Typer {
                 LiteralKind::String => self.infer_string(literal, expr.span),
                 LiteralKind::Integer => self.infer_integer(literal, expr.span),
             },
-            ExprKind::Variable { name } => Ok(TyExpr {
-                kind: TyExprKind::Variable { name },
-                ty: Arc::new(Type::UserDefined {
-                    module: "?".into(),
-                    name: "?".into(),
-                }),
-                span: expr.span,
-            }),
-            ExprKind::Call { fun, args } => Ok(TyExpr {
-                kind: TyExprKind::Call {
-                    fun: Box::new(self.infer_expr(*fun)?),
-                    args: args
-                        .into_iter()
-                        .map(|expr| self.infer_expr(*expr))
-                        .map(|result| result.map(Box::new))
-                        .collect::<Result<ThinVec<_>, _>>()?,
-                },
-                ty: Arc::new(Type::UserDefined {
-                    module: "?".into(),
-                    name: "?".into(),
-                }),
-                span: expr.span,
-            }),
+            ExprKind::Variable { name } => {
+                let ty = self
+                    .scopes
+                    .last()
+                    .and_then(|scope| scope.get(&name).cloned());
+
+                Ok(TyExpr {
+                    kind: TyExprKind::Variable { name },
+                    ty: ty.unwrap_or_else(|| {
+                        Arc::new(Type::UserDefined {
+                            module: "?".into(),
+                            name: "?".into(),
+                        })
+                    }),
+                    span: expr.span,
+                })
+            }
+            ExprKind::Call { fun, args } => {
+                let callee = self.infer_expr(*fun.clone())?;
+
+                let callee = match &callee.kind {
+                    TyExprKind::Variable { name } => Ok(name),
+                    _ => Err(TypeError {
+                        kind: TypeErrorKind::Error(format!("Not a function.")),
+                        span: callee.span,
+                    }),
+                }?;
+
+                let callee_params =
+                    self.module_functions
+                        .get(&callee)
+                        .ok_or_else(|| TypeError {
+                            kind: TypeErrorKind::Error(format!("Function `{}` not found.", callee)),
+                            span: callee.span,
+                        })?;
+
+                let caller_args = args
+                    .into_iter()
+                    .map(|expr| self.infer_expr(*expr))
+                    .map(|result| result.map(Box::new))
+                    .collect::<Result<ThinVec<_>, _>>()?;
+
+                for (param, arg) in callee_params.into_iter().zip(&caller_args) {
+                    if param.ty != arg.ty {
+                        fn ty_to_string(ty: &Type) -> String {
+                            match ty {
+                                Type::UserDefined { module, name } => {
+                                    format!("{}::{}", module, name)
+                                }
+                                Type::Fn { args, return_ty } => format!(
+                                    "Fn({}) -> {}",
+                                    args.iter()
+                                        .map(|ty| ty_to_string(ty))
+                                        .collect::<Vec<_>>()
+                                        .join(", "),
+                                    ty_to_string(return_ty)
+                                ),
+                            }
+                        }
+
+                        return Err(TypeError {
+                            kind: TypeErrorKind::Error(format!(
+                                "Expected `{}` but received `{}`",
+                                ty_to_string(&param.ty),
+                                ty_to_string(&arg.ty)
+                            )),
+                            span: arg.span,
+                        });
+                    }
+                }
+
+                Ok(TyExpr {
+                    kind: TyExprKind::Call {
+                        fun: Box::new(self.infer_expr(*fun)?),
+                        args: caller_args,
+                    },
+                    ty: Arc::new(Type::UserDefined {
+                        module: "?".into(),
+                        name: "?".into(),
+                    }),
+                    span: expr.span,
+                })
+            }
         }
     }
 

@@ -94,6 +94,16 @@ fn compile() -> Result<(), ()> {
                                 )
                                 .finish()
                         }
+                        TypeErrorKind::Error(message) => {
+                            Report::build(ReportKind::Error, "scratch.crane", 1)
+                                .with_message("A type error occurred.")
+                                .with_label(
+                                    Label::new(SourceSpan::from(("scratch.crane", span)))
+                                        .with_message(message)
+                                        .with_color(Color::Red),
+                                )
+                                .finish()
+                        }
                     };
 
                     error_report

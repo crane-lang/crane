@@ -9,4 +9,5 @@ pub struct TypeError {
 #[derive(Debug)]
 pub enum TypeErrorKind {
     UnknownFunction { name: Ident },
+    Error(String),
 }
