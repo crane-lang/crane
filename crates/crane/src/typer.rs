@@ -10,6 +10,7 @@ use std::sync::Arc;
 
 use thin_vec::ThinVec;
 
+use crate::ast::visitor::{walk_expr, Visitor};
 use crate::ast::{
     Expr, ExprKind, Fn, Ident, Item, ItemKind, Literal, LiteralKind, Module, Span, Stmt, StmtKind,
     TyExpr, TyExprKind, TyFn, TyFnParam, TyIntegerLiteral, TyItem, TyItemKind, TyLiteral,
@@ -43,6 +44,10 @@ impl Typer {
             name: "int_add".into(),
             span: DUMMY_SPAN,
         });
+        self.register_function(Ident {
+            name: "int_to_string".into(),
+            span: DUMMY_SPAN,
+        });
 
         for item in &module.items {
             match item.kind {
@@ -52,25 +57,14 @@ impl Typer {
             }
         }
 
+        let mut called_fns_collector = CalledFnsCollector::new();
+
         for item in &module.items {
-            match &item.kind {
-                ItemKind::Fn(fun) => {
-                    for (fn_name, call_expr) in
-                        fun.body.iter().filter_map(|stmt| match &stmt.kind {
-                            StmtKind::Expr(expr) => match &expr.kind {
-                                ExprKind::Call { fun, .. } => match &fun.kind {
-                                    ExprKind::Variable { name } => Some((name, expr)),
-                                    _ => None,
-                                },
-                                _ => None,
-                            },
-                            _ => None,
-                        })
-                    {
-                        self.ensure_function_exists(fn_name, call_expr.span)?;
-                    }
-                }
-            }
+            called_fns_collector.visit_item(item);
+        }
+
+        for called_fn in called_fns_collector.called_fns {
+            self.ensure_function_exists(&called_fn)?;
         }
 
         let mut typed_items = ThinVec::new();
@@ -86,14 +80,16 @@ impl Typer {
         self.module_functions.insert(name, ());
     }
 
-    fn ensure_function_exists(&self, name: &Ident, span: Span) -> TypeCheckResult<()> {
-        if let Some(_) = self.module_functions.get(name) {
+    fn ensure_function_exists(&self, ident: &Ident) -> TypeCheckResult<()> {
+        if let Some(_) = self.module_functions.get(ident) {
             return Ok(());
         }
 
         Err(TypeError {
-            kind: TypeErrorKind::UnknownFunction { name: name.clone() },
-            span,
+            kind: TypeErrorKind::UnknownFunction {
+                name: ident.clone(),
+            },
+            span: ident.span,
         })
     }
 
@@ -198,5 +194,52 @@ impl Typer {
                 name: "Uint64".into(),
             }),
         })
+    }
+}
+
+struct IdentCollector {
+    idents: Vec<Ident>,
+}
+
+impl IdentCollector {
+    pub fn new() -> Self {
+        Self { idents: Vec::new() }
+    }
+}
+
+impl Visitor for IdentCollector {
+    fn visit_ident(&mut self, ident: &Ident) {
+        self.idents.push(ident.clone());
+    }
+}
+
+struct CalledFnsCollector {
+    called_fns: Vec<Ident>,
+}
+
+impl CalledFnsCollector {
+    pub fn new() -> Self {
+        Self {
+            called_fns: Vec::new(),
+        }
+    }
+}
+
+impl Visitor for CalledFnsCollector {
+    fn visit_expr(&mut self, expr: &Expr) {
+        match &expr.kind {
+            ExprKind::Call { fun, .. } => {
+                let mut ident_collector = IdentCollector::new();
+
+                walk_expr(&mut ident_collector, fun);
+
+                if let Some(ident) = ident_collector.idents.first() {
+                    self.called_fns.push(ident.clone());
+                }
+            }
+            _ => {}
+        }
+
+        walk_expr(self, expr);
     }
 }

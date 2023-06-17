@@ -4,6 +4,8 @@ mod span;
 mod typed;
 mod untyped;
 
+pub mod visitor;
+
 pub use ident::*;
 pub use source_span::*;
 pub use span::*;
