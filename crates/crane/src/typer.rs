@@ -8,7 +8,7 @@ pub use r#type::*;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use thin_vec::ThinVec;
+use thin_vec::{thin_vec, ThinVec};
 
 use crate::ast::visitor::{walk_expr, Visitor};
 use crate::ast::{
@@ -39,28 +39,81 @@ impl Typer {
                 name: "print".into(),
                 span: DUMMY_SPAN,
             },
-            ThinVec::new(),
+            thin_vec![TyFnParam {
+                name: Ident {
+                    name: "value".into(),
+                    span: DUMMY_SPAN
+                },
+                ty: Arc::new(Type::UserDefined {
+                    module: "std::prelude".into(),
+                    name: "String".into()
+                }),
+                span: DUMMY_SPAN
+            }],
         );
         self.register_function(
             Ident {
                 name: "println".into(),
                 span: DUMMY_SPAN,
             },
-            ThinVec::new(),
+            thin_vec![TyFnParam {
+                name: Ident {
+                    name: "value".into(),
+                    span: DUMMY_SPAN
+                },
+                ty: Arc::new(Type::UserDefined {
+                    module: "std::prelude".into(),
+                    name: "String".into()
+                }),
+                span: DUMMY_SPAN
+            }],
         );
         self.register_function(
             Ident {
                 name: "int_add".into(),
                 span: DUMMY_SPAN,
             },
-            ThinVec::new(),
+            thin_vec![
+                TyFnParam {
+                    name: Ident {
+                        name: "a".into(),
+                        span: DUMMY_SPAN
+                    },
+                    ty: Arc::new(Type::UserDefined {
+                        module: "std::prelude".into(),
+                        name: "Uint64".into()
+                    }),
+                    span: DUMMY_SPAN
+                },
+                TyFnParam {
+                    name: Ident {
+                        name: "b".into(),
+                        span: DUMMY_SPAN
+                    },
+                    ty: Arc::new(Type::UserDefined {
+                        module: "std::prelude".into(),
+                        name: "Uint64".into()
+                    }),
+                    span: DUMMY_SPAN
+                }
+            ],
         );
         self.register_function(
             Ident {
                 name: "int_to_string".into(),
                 span: DUMMY_SPAN,
             },
-            ThinVec::new(),
+            thin_vec![TyFnParam {
+                name: Ident {
+                    name: "value".into(),
+                    span: DUMMY_SPAN
+                },
+                ty: Arc::new(Type::UserDefined {
+                    module: "std::prelude".into(),
+                    name: "Uint64".into()
+                }),
+                span: DUMMY_SPAN
+            }],
         );
 
         for item in &module.items {
@@ -216,6 +269,16 @@ impl Typer {
                     .map(|expr| self.infer_expr(*expr))
                     .map(|result| result.map(Box::new))
                     .collect::<Result<ThinVec<_>, _>>()?;
+
+                let callee_arity = callee_params.len();
+                let caller_arity = caller_args.len();
+
+                if callee_arity != caller_arity {
+                    return Err(TypeError {
+                        kind: TypeErrorKind::Error(format!("`{}` was called with {caller_arity} arguments when it expected {callee_arity}", callee.name )),
+                        span: callee.span
+                    });
+                }
 
                 for (param, arg) in callee_params.into_iter().zip(&caller_args) {
                     if param.ty != arg.ty {
