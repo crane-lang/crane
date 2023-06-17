@@ -203,11 +203,6 @@ where
 
         self.consume(TokenKind::CloseBrace);
 
-        Ok((
-            ident,
-            UnionDecl {
-                variants: ThinVec::new(),
-            },
-        ))
+        Ok((ident, UnionDecl { variants }))
     }
 }

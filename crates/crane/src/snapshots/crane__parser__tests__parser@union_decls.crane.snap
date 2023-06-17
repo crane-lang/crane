@@ -6,7 +6,25 @@ input_file: crates/crane/src/snapshot_inputs/union_decls.crane
 Ok:
   - kind:
       Union:
-        variants: []
+        variants:
+          - name:
+              name: "True"
+              span:
+                start: 17
+                end: 21
+            data: Unit
+            span:
+              start: 17
+              end: 21
+          - name:
+              name: "False"
+              span:
+                start: 27
+                end: 32
+            data: Unit
+            span:
+              start: 27
+              end: 32
     name:
       name: Bool
       span:
