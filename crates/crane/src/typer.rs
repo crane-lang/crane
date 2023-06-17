@@ -8,6 +8,7 @@ pub use r#type::*;
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use smol_str::SmolStr;
 use thin_vec::{thin_vec, ThinVec};
 
 use crate::ast::visitor::{walk_expr, Visitor};
@@ -20,7 +21,7 @@ use crate::ast::{
 pub type TypeCheckResult<T> = Result<T, TypeError>;
 
 pub struct Typer {
-    module_functions: HashMap<Ident, ThinVec<TyFnParam>>,
+    module_functions: HashMap<Ident, (ThinVec<TyFnParam>, Arc<Type>)>,
     scopes: Vec<HashMap<Ident, Arc<Type>>>,
 }
 
@@ -33,6 +34,21 @@ impl Typer {
     }
 
     pub fn type_check_module(&mut self, module: Module) -> TypeCheckResult<TyModule> {
+        let unit_ty = Arc::new(Type::UserDefined {
+            module: SmolStr::new_inline("std::prelude"),
+            name: SmolStr::new_inline("()"),
+        });
+
+        let string_ty = Arc::new(Type::UserDefined {
+            module: SmolStr::new_inline("std::prelude"),
+            name: SmolStr::new_inline("String"),
+        });
+
+        let uint64_ty = Arc::new(Type::UserDefined {
+            module: SmolStr::new_inline("std::prelude"),
+            name: SmolStr::new_inline("Uint64"),
+        });
+
         // HACK: Register the functions from `std`.
         self.register_function(
             Ident {
@@ -44,12 +60,10 @@ impl Typer {
                     name: "value".into(),
                     span: DUMMY_SPAN
                 },
-                ty: Arc::new(Type::UserDefined {
-                    module: "std::prelude".into(),
-                    name: "String".into()
-                }),
+                ty: string_ty.clone(),
                 span: DUMMY_SPAN
             }],
+            unit_ty.clone(),
         );
         self.register_function(
             Ident {
@@ -61,12 +75,10 @@ impl Typer {
                     name: "value".into(),
                     span: DUMMY_SPAN
                 },
-                ty: Arc::new(Type::UserDefined {
-                    module: "std::prelude".into(),
-                    name: "String".into()
-                }),
+                ty: string_ty.clone(),
                 span: DUMMY_SPAN
             }],
+            unit_ty.clone(),
         );
         self.register_function(
             Ident {
@@ -79,10 +91,7 @@ impl Typer {
                         name: "a".into(),
                         span: DUMMY_SPAN
                     },
-                    ty: Arc::new(Type::UserDefined {
-                        module: "std::prelude".into(),
-                        name: "Uint64".into()
-                    }),
+                    ty: uint64_ty.clone(),
                     span: DUMMY_SPAN
                 },
                 TyFnParam {
@@ -90,13 +99,11 @@ impl Typer {
                         name: "b".into(),
                         span: DUMMY_SPAN
                     },
-                    ty: Arc::new(Type::UserDefined {
-                        module: "std::prelude".into(),
-                        name: "Uint64".into()
-                    }),
+                    ty: uint64_ty.clone(),
                     span: DUMMY_SPAN
                 }
             ],
+            uint64_ty.clone(),
         );
         self.register_function(
             Ident {
@@ -108,12 +115,10 @@ impl Typer {
                     name: "value".into(),
                     span: DUMMY_SPAN
                 },
-                ty: Arc::new(Type::UserDefined {
-                    module: "std::prelude".into(),
-                    name: "Uint64".into()
-                }),
+                ty: uint64_ty.clone(),
                 span: DUMMY_SPAN
             }],
+            string_ty.clone(),
         );
 
         for item in &module.items {
@@ -121,7 +126,10 @@ impl Typer {
                 ItemKind::Fn(ref fun) => {
                     let params = self.infer_function_params(&fun.params)?;
 
-                    self.register_function(item.name.clone(), params.clone());
+                    // TODO: Use function's real return type.
+                    let return_ty = unit_ty.clone();
+
+                    self.register_function(item.name.clone(), params.clone(), return_ty);
                 }
             }
         }
@@ -145,8 +153,8 @@ impl Typer {
         Ok(TyModule { items: typed_items })
     }
 
-    fn register_function(&mut self, name: Ident, params: ThinVec<TyFnParam>) {
-        self.module_functions.insert(name, params);
+    fn register_function(&mut self, name: Ident, params: ThinVec<TyFnParam>, return_ty: Arc<Type>) {
+        self.module_functions.insert(name, (params, return_ty));
     }
 
     fn ensure_function_exists(&self, ident: &Ident) -> TypeCheckResult<()> {
@@ -256,13 +264,13 @@ impl Typer {
                     }),
                 }?;
 
-                let callee_params =
-                    self.module_functions
-                        .get(&callee)
-                        .ok_or_else(|| TypeError {
-                            kind: TypeErrorKind::Error(format!("Function `{}` not found.", callee)),
-                            span: callee.span,
-                        })?;
+                let (callee_params, callee_return_ty) = self
+                    .module_functions
+                    .get(&callee)
+                    .ok_or_else(|| TypeError {
+                        kind: TypeErrorKind::Error(format!("Function `{}` not found.", callee)),
+                        span: callee.span,
+                    })?;
 
                 let caller_args = args
                     .into_iter()
