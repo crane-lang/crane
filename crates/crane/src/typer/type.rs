@@ -30,6 +30,7 @@ mod tests {
 
     /// Tests the size of [`Type`] to ensure it doesn't unintentionally get bigger.
     #[test]
+    #[cfg(target_pointer_width = "64")]
     fn test_type_size() {
         insta::assert_snapshot!(size_of::<Type>().to_string(), @"48");
     }

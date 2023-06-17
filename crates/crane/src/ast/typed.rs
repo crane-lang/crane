@@ -175,6 +175,7 @@ mod tests {
 
     /// Tests the size of AST nodes to ensure they don't unintentionally get bigger.
     #[test]
+    #[cfg(target_pointer_width = "64")]
     fn test_ast_node_sizes() {
         insta::assert_snapshot!(size_of::<TyExpr>().to_string(), @"80");
         insta::assert_snapshot!(size_of::<TyExprKind>().to_string(), @"48");
