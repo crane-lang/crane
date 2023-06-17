@@ -24,12 +24,10 @@ pub enum Type {
 
 #[cfg(test)]
 mod tests {
-    #[cfg(all(target_arch = "x86_64", target_pointer_width = "64"))]
     use super::*;
 
     /// Tests the size of [`Type`] to ensure it doesn't unintentionally get bigger.
     #[test]
-    #[cfg(all(target_arch = "x86_64", target_pointer_width = "64"))]
     fn test_type_size() {
         use std::mem::size_of;
 

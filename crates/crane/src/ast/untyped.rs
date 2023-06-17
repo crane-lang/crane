@@ -152,12 +152,10 @@ pub struct Module {
 
 #[cfg(test)]
 mod tests {
-    #[cfg(all(target_arch = "x86_64", target_pointer_width = "64"))]
     use super::*;
 
     /// Tests the size of AST nodes to ensure they don't unintentionally get bigger.
     #[test]
-    #[cfg(all(target_arch = "x86_64", target_pointer_width = "64"))]
     fn test_ast_node_sizes() {
         use std::mem::size_of;
 
