@@ -14,8 +14,9 @@ use thin_vec::{thin_vec, ThinVec};
 use crate::ast::visitor::{walk_expr, Visitor};
 use crate::ast::{
     Expr, ExprKind, Fn, FnParam, Ident, Item, ItemKind, Literal, LiteralKind, Module, Span, Stmt,
-    StmtKind, TyExpr, TyExprKind, TyFn, TyFnParam, TyIntegerLiteral, TyItem, TyItemKind, TyLiteral,
-    TyLiteralKind, TyModule, TyStmt, TyStmtKind, TyUint, DUMMY_SPAN,
+    StmtKind, StructDecl, TyExpr, TyExprKind, TyFieldDecl, TyFn, TyFnParam, TyIntegerLiteral,
+    TyItem, TyItemKind, TyLiteral, TyLiteralKind, TyModule, TyStmt, TyStmtKind, TyStructDecl,
+    TyUint, TyUnionDecl, TyVariant, TyVariantData, UnionDecl, VariantData, DUMMY_SPAN,
 };
 
 fn ty_to_string(ty: &Type) -> String {
@@ -155,6 +156,8 @@ impl Typer {
 
                     self.register_function(item.name.clone(), params.clone(), return_ty);
                 }
+                ItemKind::Struct(_) => {}
+                ItemKind::Union(_) => {}
             }
         }
 
@@ -201,6 +204,14 @@ impl Typer {
         match item.kind {
             ItemKind::Fn(fun) => Ok(TyItem {
                 kind: TyItemKind::Fn(Box::new(self.infer_function(&item.name, *fun)?)),
+                name: item.name,
+            }),
+            ItemKind::Struct(struct_decl) => Ok(TyItem {
+                kind: TyItemKind::Struct(self.infer_struct_decl(&struct_decl)?),
+                name: item.name,
+            }),
+            ItemKind::Union(union_decl) => Ok(TyItem {
+                kind: TyItemKind::Union(self.infer_union_decl(&union_decl)?),
                 name: item.name,
             }),
         }
@@ -268,6 +279,45 @@ impl Typer {
                 span: param.span,
             })
             .collect::<ThinVec<_>>())
+    }
+
+    fn infer_struct_decl(&self, struct_decl: &StructDecl) -> TypeCheckResult<TyStructDecl> {
+        Ok(TyStructDecl(self.infer_variant_data(&struct_decl.0)?))
+    }
+
+    fn infer_union_decl(&self, union_decl: &UnionDecl) -> TypeCheckResult<TyUnionDecl> {
+        let ty_variants = union_decl
+            .variants
+            .iter()
+            .map(|variant| {
+                Ok(TyVariant {
+                    name: variant.name.clone(),
+                    data: self.infer_variant_data(&variant.data)?,
+                    span: variant.span,
+                })
+            })
+            .collect::<Result<ThinVec<_>, _>>()?;
+
+        Ok(TyUnionDecl {
+            variants: ty_variants,
+        })
+    }
+
+    fn infer_variant_data(&self, variant_data: &VariantData) -> TypeCheckResult<TyVariantData> {
+        Ok(match &variant_data {
+            VariantData::Struct(fields) => TyVariantData::Struct(
+                fields
+                    .into_iter()
+                    .map(|field| TyFieldDecl {
+                        name: field.name.clone(),
+                        ty: field.ty.clone(),
+                        span: field.span,
+                    })
+                    .collect::<ThinVec<_>>(),
+            ),
+            VariantData::Tuple(_) => todo!(),
+            VariantData::Unit => TyVariantData::Unit,
+        })
     }
 
     fn infer_stmt(&self, stmt: Stmt) -> TypeCheckResult<TyStmt> {

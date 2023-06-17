@@ -1,7 +1,9 @@
 use thin_vec::ThinVec;
 use tracing::trace;
 
-use crate::ast::{Fn, FnParam, Ident, Item, ItemKind};
+use crate::ast::{
+    FieldDecl, Fn, FnParam, Ident, Item, ItemKind, StructDecl, UnionDecl, Variant, VariantData,
+};
 use crate::lexer::token::{Token, TokenKind};
 use crate::lexer::LexError;
 use crate::parser::{ParseResult, Parser};
@@ -20,6 +22,16 @@ mod keywords {
 
     pub const FN: Ident = Ident {
         name: SmolStr::new_inline("fn"),
+        span: DUMMY_SPAN,
+    };
+
+    pub const STRUCT: Ident = Ident {
+        name: SmolStr::new_inline("struct"),
+        span: DUMMY_SPAN,
+    };
+
+    pub const UNION: Ident = Ident {
+        name: SmolStr::new_inline("union"),
         span: DUMMY_SPAN,
     };
 }
@@ -46,6 +58,18 @@ where
             let (name, fun) = self.parse_fn()?;
 
             return Ok(Some((name, ItemKind::Fn(Box::new(fun)))));
+        }
+
+        if self.consume_keyword(keywords::STRUCT) {
+            let (name, struct_decl) = self.parse_struct_decl()?;
+
+            return Ok(Some((name, ItemKind::Struct(struct_decl))));
+        }
+
+        if self.consume_keyword(keywords::UNION) {
+            let (name, union_decl) = self.parse_union_decl()?;
+
+            return Ok(Some((name, ItemKind::Union(union_decl))));
         }
 
         Ok(None)
@@ -108,5 +132,77 @@ where
                 body,
             },
         ))
+    }
+
+    fn parse_struct_decl(&mut self) -> ParseResult<(Ident, StructDecl)> {
+        trace!("parse_struct_decl");
+
+        let ident = self.parse_ident()?;
+
+        self.consume(TokenKind::OpenBrace);
+
+        let mut fields = ThinVec::new();
+
+        if !self.check(TokenKind::CloseBrace) {
+            loop {
+                let field_name = self.parse_ident()?;
+
+                self.consume(TokenKind::Colon);
+
+                let ty_annotation = self.parse_ident()?;
+
+                let span = field_name.span;
+
+                fields.push(FieldDecl {
+                    name: Some(field_name),
+                    ty: ty_annotation,
+                    span,
+                });
+
+                self.consume(TokenKind::Comma);
+
+                if self.check(TokenKind::CloseBrace) {
+                    break;
+                }
+            }
+        }
+
+        self.consume(TokenKind::CloseBrace);
+
+        Ok((ident, StructDecl(VariantData::Struct(fields))))
+    }
+
+    fn parse_union_decl(&mut self) -> ParseResult<(Ident, UnionDecl)> {
+        trace!("parse_union_decl");
+
+        let ident = self.parse_ident()?;
+
+        self.consume(TokenKind::OpenBrace);
+
+        let mut variants = ThinVec::new();
+
+        if !self.check(TokenKind::CloseBrace) {
+            loop {
+                let variant_name = self.parse_ident()?;
+
+                let span = variant_name.span;
+
+                variants.push(Variant {
+                    name: variant_name,
+                    data: VariantData::Unit,
+                    span,
+                });
+
+                self.consume(TokenKind::Comma);
+
+                if self.check(TokenKind::CloseBrace) {
+                    break;
+                }
+            }
+        }
+
+        self.consume(TokenKind::CloseBrace);
+
+        Ok((ident, UnionDecl { variants }))
     }
 }

@@ -1,0 +1,78 @@
+---
+source: crates/crane/src/lexer.rs
+expression: "lexer.into_iter().collect::<Vec<_>>()"
+input_file: crates/crane/src/snapshot_inputs/struct_decls.crane
+---
+- Ok:
+    kind: Ident
+    lexeme: struct
+    span:
+      start: 0
+      end: 6
+- Ok:
+    kind: Ident
+    lexeme: Point
+    span:
+      start: 7
+      end: 12
+- Ok:
+    kind: OpenBrace
+    lexeme: "{"
+    span:
+      start: 13
+      end: 14
+- Ok:
+    kind: Ident
+    lexeme: x
+    span:
+      start: 19
+      end: 20
+- Ok:
+    kind: Colon
+    lexeme: ":"
+    span:
+      start: 20
+      end: 21
+- Ok:
+    kind: Ident
+    lexeme: Uint64
+    span:
+      start: 22
+      end: 28
+- Ok:
+    kind: Comma
+    lexeme: ","
+    span:
+      start: 28
+      end: 29
+- Ok:
+    kind: Ident
+    lexeme: y
+    span:
+      start: 34
+      end: 35
+- Ok:
+    kind: Colon
+    lexeme: ":"
+    span:
+      start: 35
+      end: 36
+- Ok:
+    kind: Ident
+    lexeme: Uint64
+    span:
+      start: 37
+      end: 43
+- Ok:
+    kind: Comma
+    lexeme: ","
+    span:
+      start: 43
+      end: 44
+- Ok:
+    kind: CloseBrace
+    lexeme: "}"
+    span:
+      start: 45
+      end: 46
+

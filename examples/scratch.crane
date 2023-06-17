@@ -1,6 +1,16 @@
 // TODO: Handle imports.
 // use std::io::{print, println}
 
+struct User {
+    name: String,
+    age: Uint64,
+}
+
+union Bool {
+    True,
+    False,
+}
+
 pub fn main() {
     greet("world")
     greet("trees")
