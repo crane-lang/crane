@@ -30,7 +30,7 @@ impl<'src> Iterator for Lexer<'src> {
 
         Some(
             kind.map(|kind| Token {
-                kind: kind.into(),
+                kind,
                 lexeme: lexeme.into(),
                 span,
             })
