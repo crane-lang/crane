@@ -9,7 +9,8 @@ use inkwell::targets::{
 };
 use inkwell::types::BasicType;
 use inkwell::values::{
-    BasicMetadataValueEnum, BasicValue, CallSiteValue, FunctionValue, GlobalValue, IntValue,
+    BasicMetadataValueEnum, BasicValue, BasicValueEnum, CallSiteValue, FunctionValue, GlobalValue,
+    IntValue,
 };
 use inkwell::{AddressSpace, OptimizationLevel};
 use smol_str::SmolStr;
@@ -310,7 +311,10 @@ impl NativeBackend {
                         .iter()
                         .map(|param| {
                             let param_type = match &*param.ty {
-                                Type::Fn { args: _, return_ty: _ } => todo!(),
+                                Type::Fn {
+                                    args: _,
+                                    return_ty: _,
+                                } => todo!(),
                                 Type::UserDefined { module, name } => {
                                     match (module.as_ref(), name.as_ref()) {
                                         ("std::prelude", "String") => self
@@ -333,12 +337,35 @@ impl NativeBackend {
                         })
                         .collect::<Vec<_>>();
 
+                    let fn_type = match &*fun.return_ty {
+                        Type::UserDefined { module, name } => {
+                            match (module.as_str(), name.as_str()) {
+                                ("std::prelude", "()") => {
+                                    self.context.void_type().fn_type(&params, false)
+                                }
+                                ("std::prelude", "Uint64") => {
+                                    self.context.i64_type().fn_type(&params, false)
+                                }
+                                ("std::prelude", "String") => self
+                                    .context
+                                    .i8_type()
+                                    .ptr_type(AddressSpace::default())
+                                    .fn_type(&params, false),
+                                (module, name) => panic!("Unknown type {}::{}", module, name),
+                            }
+                        }
+                        Type::Fn {
+                            args: _,
+                            return_ty: _,
+                        } => todo!(),
+                    };
+
                     let is_main_fn = item.name.name == "main";
 
                     let fn_type = if is_main_fn {
                         self.context.i32_type().fn_type(&params, false)
                     } else {
-                        self.context.void_type().fn_type(&params, false)
+                        fn_type
                     };
 
                     let fn_value = module.add_function(&item.name.to_string(), fn_type, None);
@@ -353,25 +380,33 @@ impl NativeBackend {
 
                     builder.position_at_end(entry);
 
-                    for stmt in fun.body {
-                        match stmt.kind {
-                            TyStmtKind::Expr(expr) => Self::compile_expr(
-                                &self.context,
-                                &builder,
-                                &module,
-                                &fun.params,
-                                &fn_value,
-                                expr,
-                            ),
+                    let mut last_stmt: Option<BasicValueEnum> = None;
+
+                    for stmt in &fun.body {
+                        match &stmt.kind {
+                            TyStmtKind::Expr(expr) => {
+                                last_stmt = Self::compile_expr(
+                                    &self.context,
+                                    &builder,
+                                    &module,
+                                    &fun.params,
+                                    &fn_value,
+                                    expr.clone(),
+                                );
+                            }
                             TyStmtKind::Item(_item) => todo!(),
                         }
                     }
 
                     if is_main_fn {
                         builder.build_return(Some(&self.context.i32_type().const_int(0, false)));
+                    } else if let Some(last_stmt) = last_stmt {
+                        builder.build_return(Some(&last_stmt));
                     } else {
                         builder.build_return(None);
                     }
+
+                    module.print_to_stderr();
 
                     Self::verify_fn(&fpm, &item.name.to_string(), &fn_value).unwrap();
                 }
@@ -425,27 +460,31 @@ impl NativeBackend {
         fn_params: &ThinVec<TyFnParam>,
         fn_value: &FunctionValue<'ctx>,
         expr: TyExpr,
-    ) {
+    ) -> Option<BasicValueEnum<'ctx>> {
         match expr.kind {
             TyExprKind::Literal(literal) => match literal.kind {
-                TyLiteralKind::String(literal) => {
-                    Self::compile_string_literal(context, builder, module, literal);
-                }
-                TyLiteralKind::Integer(_literal) => {}
+                TyLiteralKind::String(literal) => Some(
+                    Self::compile_string_literal(context, builder, module, literal)
+                        .as_basic_value_enum(),
+                ),
+                TyLiteralKind::Integer(literal) => Some(
+                    Self::compile_integer_literal(context, builder, module, literal)
+                        .as_basic_value_enum(),
+                ),
             },
             TyExprKind::Variable { name: _ } => todo!(),
-            TyExprKind::Call { fun, args } => {
-                Self::compile_fn_call(
-                    context,
-                    builder,
-                    module,
-                    fn_value,
-                    fn_params,
-                    fun.clone(),
-                    args,
-                )
-                .unwrap_or_else(|_| panic!("Failed to compile function call: {:?}", fun));
-            }
+            TyExprKind::Call { fun, args } => Self::compile_fn_call(
+                context,
+                builder,
+                module,
+                fn_value,
+                fn_params,
+                fun.clone(),
+                args,
+            )
+            .unwrap_or_else(|_| panic!("Failed to compile function call: {:?}", fun))
+            .try_as_basic_value()
+            .either(Some, |_| None),
         }
     }
 

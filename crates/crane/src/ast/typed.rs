@@ -70,6 +70,7 @@ pub enum TyStmtKind {
 #[derive(Debug, Clone)]
 pub struct TyFn {
     pub params: ThinVec<TyFnParam>,
+    pub return_ty: Arc<Type>,
     pub body: ThinVec<TyStmt>,
 }
 

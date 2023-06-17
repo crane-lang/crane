@@ -54,6 +54,7 @@ pub enum StmtKind {
 #[derive(Debug, Clone)]
 pub struct Fn {
     pub params: ThinVec<FnParam>,
+    pub return_ty: Option<Ident>,
     pub body: ThinVec<Stmt>,
 }
 

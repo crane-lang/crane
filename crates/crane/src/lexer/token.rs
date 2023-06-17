@@ -31,6 +31,10 @@ pub enum TokenKind {
     #[token(":")]
     Colon,
 
+    /// `->`
+    #[token("->")]
+    RightArrow,
+
     /// An identifier.
     #[regex(r"[A-Za-z_][A-Za-z0-9_]*")]
     Ident,

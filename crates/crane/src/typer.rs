@@ -126,8 +126,16 @@ impl Typer {
                 ItemKind::Fn(ref fun) => {
                     let params = self.infer_function_params(&fun.params)?;
 
-                    // TODO: Use function's real return type.
-                    let return_ty = unit_ty.clone();
+                    let return_ty = fun
+                        .return_ty
+                        .as_ref()
+                        .map(|return_ty| {
+                            Arc::new(Type::UserDefined {
+                                module: "std::prelude".into(),
+                                name: return_ty.to_string().into(),
+                            })
+                        })
+                        .unwrap_or(unit_ty.clone());
 
                     self.register_function(item.name.clone(), params.clone(), return_ty);
                 }
@@ -157,9 +165,12 @@ impl Typer {
         self.module_functions.insert(name, (params, return_ty));
     }
 
-    fn ensure_function_exists(&self, ident: &Ident) -> TypeCheckResult<()> {
-        if self.module_functions.get(ident).is_some() {
-            return Ok(());
+    fn ensure_function_exists(
+        &self,
+        ident: &Ident,
+    ) -> TypeCheckResult<(&ThinVec<TyFnParam>, Arc<Type>)> {
+        if let Some((params, return_ty)) = self.module_functions.get(ident) {
+            return Ok((params, return_ty.clone()));
         }
 
         Err(TypeError {
@@ -173,13 +184,15 @@ impl Typer {
     fn infer_item(&mut self, item: Item) -> TypeCheckResult<TyItem> {
         match item.kind {
             ItemKind::Fn(fun) => Ok(TyItem {
-                kind: TyItemKind::Fn(Box::new(self.infer_function(*fun)?)),
+                kind: TyItemKind::Fn(Box::new(self.infer_function(&item.name, *fun)?)),
                 name: item.name,
             }),
         }
     }
 
-    fn infer_function(&mut self, fun: Fn) -> TypeCheckResult<TyFn> {
+    fn infer_function(&mut self, name: &Ident, fun: Fn) -> TypeCheckResult<TyFn> {
+        let (_, return_ty) = self.ensure_function_exists(name)?;
+
         let params = self.infer_function_params(&fun.params)?;
 
         self.scopes.push(HashMap::from_iter(
@@ -191,6 +204,7 @@ impl Typer {
 
         let ty_fn = TyFn {
             params,
+            return_ty,
             body: fun
                 .body
                 .into_iter()
@@ -264,10 +278,8 @@ impl Typer {
                     }),
                 }?;
 
-                let (callee_params, callee_return_ty) = self
-                    .module_functions
-                    .get(callee)
-                    .ok_or_else(|| TypeError {
+                let (callee_params, callee_return_ty) =
+                    self.module_functions.get(callee).ok_or_else(|| TypeError {
                         kind: TypeErrorKind::Error(format!("Function `{}` not found.", callee)),
                         span: callee.span,
                     })?;

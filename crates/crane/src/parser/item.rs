@@ -84,6 +84,12 @@ where
 
         self.consume(TokenKind::CloseParen);
 
+        let return_ty = if self.consume(TokenKind::RightArrow) {
+            Some(self.parse_ident()?)
+        } else {
+            None
+        };
+
         self.consume(TokenKind::OpenBrace);
 
         let mut body = ThinVec::new();
@@ -94,6 +100,13 @@ where
 
         self.consume(TokenKind::CloseBrace);
 
-        Ok((ident, Fn { params, body }))
+        Ok((
+            ident,
+            Fn {
+                params,
+                return_ty,
+                body,
+            },
+        ))
     }
 }
