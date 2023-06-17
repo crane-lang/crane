@@ -1,11 +1,12 @@
 use std::hash::{Hash, Hasher};
 
+use serde::{Deserialize, Serialize};
 use smol_str::SmolStr;
 
 use crate::ast::Span;
 
 /// An identifier.
-#[derive(Debug, Eq, Clone)]
+#[derive(Debug, Eq, Clone, Serialize, Deserialize)]
 pub struct Ident {
     pub name: SmolStr,
     pub span: Span,

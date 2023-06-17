@@ -218,3 +218,22 @@ where
         Ok(ident)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::lexer::Lexer;
+
+    use super::*;
+
+    #[test]
+    pub fn test_parser() {
+        insta::glob!("snapshot_inputs/*.crane", |path| {
+            let source = std::fs::read_to_string(path).unwrap();
+
+            let lexer = Lexer::new(&source);
+            let parser = Parser::new(lexer);
+
+            insta::assert_yaml_snapshot!(parser.parse());
+        })
+    }
+}

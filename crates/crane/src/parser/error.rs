@@ -1,13 +1,15 @@
+use serde::{Deserialize, Serialize};
+
 use crate::ast::Span;
 use crate::lexer::{LexError, LexErrorKind};
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ParseError {
     pub kind: ParseErrorKind,
     pub span: Span,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum ParseErrorKind {
     LexError(LexErrorKind),
     Error(String),
