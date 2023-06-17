@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use smol_str::SmolStr;
 use thin_vec::ThinVec;
 
