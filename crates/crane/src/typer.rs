@@ -322,10 +322,7 @@ impl Typer {
                         fun: Box::new(self.infer_expr(*fun)?),
                         args: caller_args,
                     },
-                    ty: Arc::new(Type::UserDefined {
-                        module: "?".into(),
-                        name: "?".into(),
-                    }),
+                    ty: callee_return_ty.clone(),
                     span: expr.span,
                 })
             }
