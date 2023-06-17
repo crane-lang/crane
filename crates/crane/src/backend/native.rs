@@ -321,7 +321,13 @@ impl NativeBackend {
                         })
                         .collect::<Vec<_>>();
 
-                    let fn_type = self.context.void_type().fn_type(&params, false);
+                    let is_main_fn = item.name.name == "main";
+
+                    let fn_type = if is_main_fn {
+                        self.context.i32_type().fn_type(&params, false)
+                    } else {
+                        self.context.void_type().fn_type(&params, false)
+                    };
 
                     let fn_value = module.add_function(&item.name.to_string(), fn_type, None);
 
@@ -349,7 +355,11 @@ impl NativeBackend {
                         }
                     }
 
-                    builder.build_return(None);
+                    if is_main_fn {
+                        builder.build_return(Some(&self.context.i32_type().const_int(0, false)));
+                    } else {
+                        builder.build_return(None);
+                    }
 
                     Self::verify_fn(&fpm, &item.name.to_string(), &fn_value).unwrap();
                 }
