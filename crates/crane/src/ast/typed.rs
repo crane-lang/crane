@@ -129,6 +129,10 @@ pub struct TyVariant {
     pub span: Span,
 }
 
+/// A `struct` declaration.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TyStructDecl(pub TyVariantData);
+
 /// A `union` declaration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TyUnionDecl {
@@ -144,7 +148,7 @@ pub enum TyItemKind {
     Fn(Box<TyFn>),
 
     /// A struct declaration (`struct`).
-    Struct(TyVariantData),
+    Struct(TyStructDecl),
 
     /// A union declaration (`union`).
     Union(TyUnionDecl),

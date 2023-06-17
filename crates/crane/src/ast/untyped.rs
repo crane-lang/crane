@@ -113,6 +113,10 @@ pub struct Variant {
     pub span: Span,
 }
 
+/// A `struct` declaration.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StructDecl(pub VariantData);
+
 /// A `union` declaration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnionDecl {
@@ -127,7 +131,7 @@ pub enum ItemKind {
     Fn(Box<Fn>),
 
     /// A struct declaration (`struct`).
-    Struct(VariantData),
+    Struct(StructDecl),
 
     /// A union declaration (`union`).
     Union(UnionDecl),

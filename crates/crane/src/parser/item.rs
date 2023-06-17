@@ -1,7 +1,9 @@
 use thin_vec::ThinVec;
 use tracing::trace;
 
-use crate::ast::{FieldDecl, Fn, FnParam, Ident, Item, ItemKind, UnionDecl, Variant, VariantData};
+use crate::ast::{
+    FieldDecl, Fn, FnParam, Ident, Item, ItemKind, StructDecl, UnionDecl, Variant, VariantData,
+};
 use crate::lexer::token::{Token, TokenKind};
 use crate::lexer::LexError;
 use crate::parser::{ParseResult, Parser};
@@ -132,7 +134,7 @@ where
         ))
     }
 
-    fn parse_struct_decl(&mut self) -> ParseResult<(Ident, VariantData)> {
+    fn parse_struct_decl(&mut self) -> ParseResult<(Ident, StructDecl)> {
         trace!("parse_struct_decl");
 
         let ident = self.parse_ident()?;
@@ -167,7 +169,7 @@ where
 
         self.consume(TokenKind::CloseBrace);
 
-        Ok((ident, VariantData::Struct(fields)))
+        Ok((ident, StructDecl(VariantData::Struct(fields))))
     }
 
     fn parse_union_decl(&mut self) -> ParseResult<(Ident, UnionDecl)> {
