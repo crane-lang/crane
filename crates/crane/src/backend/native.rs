@@ -406,8 +406,6 @@ impl NativeBackend {
                         builder.build_return(None);
                     }
 
-                    module.print_to_stderr();
-
                     Self::verify_fn(&fpm, &item.name.to_string(), &fn_value).unwrap();
                 }
             }
