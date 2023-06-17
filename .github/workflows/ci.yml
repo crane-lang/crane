@@ -43,6 +43,7 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
 
+      - run: cargo fmt --check
       - run: cargo build --verbose
         env:
           LLVM_SYS_160_PREFIX: ${{ env.LLVM_PATH }}
