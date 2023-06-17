@@ -2,5 +2,6 @@
   "rust-analyzer.cargo.extraEnv": {
     "LLVM_SYS_160_PREFIX": "${workspaceFolder}/llvm/build"
   },
-  "rust-analyzer.imports.prefix": "crate"
+  "rust-analyzer.imports.prefix": "crate",
+  "rust-analyzer.imports.granularity.group": "module"
 }
