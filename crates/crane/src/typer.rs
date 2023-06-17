@@ -438,3 +438,29 @@ impl Visitor for CalledFnsCollector {
         walk_expr(self, expr);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::lexer::Lexer;
+    use crate::parser::Parser;
+
+    use super::*;
+
+    #[test]
+    pub fn test_typer() {
+        insta::glob!("snapshot_inputs/*.crane", |path| {
+            let source = std::fs::read_to_string(path).unwrap();
+
+            let lexer = Lexer::new(&source);
+            let parser = Parser::new(lexer);
+
+            let items = parser.parse().unwrap();
+
+            let module = Module { items };
+
+            let mut typer = Typer::new();
+
+            insta::assert_yaml_snapshot!(typer.type_check_module(module));
+        })
+    }
+}

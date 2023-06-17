@@ -10,7 +10,7 @@ ariadne = "0.3.0"
 clap = { version = "4.3.3", features = ["derive"] }
 inkwell = { version = "0.2.0", features = ["llvm16-0"] }
 logos = "0.13.0"
-serde = { version = "1.0.164", features = ["derive"] }
+serde = { version = "1.0.164", features = ["derive", "rc"] }
 smol_str = { version = "0.2.0", features = ["serde"] }
 thin-vec = { version = "0.2.12", features = ["serde"] }
 thiserror = "1.0.40"

@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
+use serde::{Serialize, Deserialize};
 use smol_str::SmolStr;
 use thin_vec::ThinVec;
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum Type {
     /// A user-defined type.
     UserDefined {
