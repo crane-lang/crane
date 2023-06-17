@@ -1,3 +1,7 @@
+# Remove obsolete `insta` snapshots.
+remove-obsolete-snapshots:
+    cargo insta test --unreferenced delete
+
 clone-llvm:
     git clone --depth 1 --branch llvmorg-16.0.5 https://github.com/llvm/llvm-project.git llvm
 

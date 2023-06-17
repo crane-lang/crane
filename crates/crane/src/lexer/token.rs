@@ -1,10 +1,11 @@
 use logos::Logos;
+use serde::{Deserialize, Serialize};
 use smol_str::SmolStr;
 
 use crate::ast::{Ident, Span, DUMMY_SPAN};
 use crate::lexer::LexErrorKind;
 
-#[derive(Logos, Debug, PartialEq, Clone, Copy)]
+#[derive(Logos, Debug, PartialEq, Clone, Copy, Serialize, Deserialize)]
 #[logos(error = LexErrorKind)]
 pub enum TokenKind {
     /// `(`
@@ -60,7 +61,7 @@ pub enum TokenKind {
     Eof,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Token {
     pub kind: TokenKind,
     pub lexeme: SmolStr,

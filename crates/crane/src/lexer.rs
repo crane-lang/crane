@@ -107,4 +107,15 @@ mod tests {
         assert_eq!(lex.span(), 10..11);
         assert_eq!(lex.slice(), "}");
     }
+
+    #[test]
+    fn test_lexer() {
+        insta::glob!("snapshot_inputs/*.crane", |path| {
+            let source = std::fs::read_to_string(path).unwrap();
+
+            let lexer = Lexer::new(&source);
+
+            insta::assert_yaml_snapshot!(lexer.into_iter().collect::<Vec<_>>())
+        })
+    }
 }

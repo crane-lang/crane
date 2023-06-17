@@ -1,0 +1,84 @@
+---
+source: crates/crane/src/lexer.rs
+expression: "lexer.into_iter().collect::<Vec<_>>()"
+input_file: crates/crane/src/snapshot_inputs/hello_world.crane
+---
+- Ok:
+    kind: Comment
+    lexeme: "// TODO: Handle imports."
+    span:
+      start: 0
+      end: 24
+- Ok:
+    kind: Comment
+    lexeme: "// use std::io::println"
+    span:
+      start: 25
+      end: 48
+- Ok:
+    kind: Ident
+    lexeme: pub
+    span:
+      start: 50
+      end: 53
+- Ok:
+    kind: Ident
+    lexeme: fn
+    span:
+      start: 54
+      end: 56
+- Ok:
+    kind: Ident
+    lexeme: main
+    span:
+      start: 57
+      end: 61
+- Ok:
+    kind: OpenParen
+    lexeme: (
+    span:
+      start: 61
+      end: 62
+- Ok:
+    kind: CloseParen
+    lexeme: )
+    span:
+      start: 62
+      end: 63
+- Ok:
+    kind: OpenBrace
+    lexeme: "{"
+    span:
+      start: 64
+      end: 65
+- Ok:
+    kind: Ident
+    lexeme: println
+    span:
+      start: 70
+      end: 77
+- Ok:
+    kind: OpenParen
+    lexeme: (
+    span:
+      start: 77
+      end: 78
+- Ok:
+    kind: String
+    lexeme: "\"Hello, world!\""
+    span:
+      start: 78
+      end: 93
+- Ok:
+    kind: CloseParen
+    lexeme: )
+    span:
+      start: 93
+      end: 94
+- Ok:
+    kind: CloseBrace
+    lexeme: "}"
+    span:
+      start: 95
+      end: 96
+

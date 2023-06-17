@@ -1,8 +1,9 @@
+use serde::{Serialize, Deserialize};
 use thiserror::Error;
 
 use crate::ast::Span;
 
-#[derive(Error, Debug, PartialEq, Clone)]
+#[derive(Error, Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct LexError {
     pub kind: LexErrorKind,
     pub span: Span,
@@ -23,7 +24,7 @@ impl std::fmt::Display for LexError {
     }
 }
 
-#[derive(Debug, Error, PartialEq, Clone, Default)]
+#[derive(Debug, Error, PartialEq, Clone, Default, Serialize, Deserialize)]
 pub enum LexErrorKind {
     #[default]
     #[error("unknown")]
