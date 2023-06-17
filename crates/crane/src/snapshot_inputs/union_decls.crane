@@ -1,0 +1,4 @@
+union Bool {
+    True,
+    False,
+}

@@ -1,0 +1,16 @@
+---
+source: crates/crane/src/typer.rs
+expression: typer.type_check_module(module)
+input_file: crates/crane/src/snapshot_inputs/union_decls.crane
+---
+Ok:
+  items:
+    - kind:
+        Union:
+          variants: []
+      name:
+        name: Bool
+        span:
+          start: 6
+          end: 10
+

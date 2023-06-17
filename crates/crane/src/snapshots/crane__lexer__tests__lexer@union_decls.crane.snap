@@ -1,0 +1,54 @@
+---
+source: crates/crane/src/lexer.rs
+expression: "lexer.into_iter().collect::<Vec<_>>()"
+input_file: crates/crane/src/snapshot_inputs/union_decls.crane
+---
+- Ok:
+    kind: Ident
+    lexeme: union
+    span:
+      start: 0
+      end: 5
+- Ok:
+    kind: Ident
+    lexeme: Bool
+    span:
+      start: 6
+      end: 10
+- Ok:
+    kind: OpenBrace
+    lexeme: "{"
+    span:
+      start: 11
+      end: 12
+- Ok:
+    kind: Ident
+    lexeme: "True"
+    span:
+      start: 17
+      end: 21
+- Ok:
+    kind: Comma
+    lexeme: ","
+    span:
+      start: 21
+      end: 22
+- Ok:
+    kind: Ident
+    lexeme: "False"
+    span:
+      start: 27
+      end: 32
+- Ok:
+    kind: Comma
+    lexeme: ","
+    span:
+      start: 32
+      end: 33
+- Ok:
+    kind: CloseBrace
+    lexeme: "}"
+    span:
+      start: 34
+      end: 35
+

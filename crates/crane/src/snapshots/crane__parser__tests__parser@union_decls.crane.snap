@@ -1,0 +1,15 @@
+---
+source: crates/crane/src/parser.rs
+expression: parser.parse()
+input_file: crates/crane/src/snapshot_inputs/union_decls.crane
+---
+Ok:
+  - kind:
+      Union:
+        variants: []
+    name:
+      name: Bool
+      span:
+        start: 6
+        end: 10
+
