@@ -45,10 +45,10 @@ pub struct Expr {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum StmtKind {
     /// An item.
-    Item(Item),
+    Item(Box<Item>),
 
     /// An expression.
-    Expr(Expr),
+    Expr(Box<Expr>),
 }
 
 /// A function definition.
@@ -164,7 +164,7 @@ mod tests {
         insta::assert_snapshot!(size_of::<Fn>().to_string(), @"56");
         insta::assert_snapshot!(size_of::<Item>().to_string(), @"56");
         insta::assert_snapshot!(size_of::<ItemKind>().to_string(), @"16");
-        insta::assert_snapshot!(size_of::<Stmt>().to_string(), @"80");
-        insta::assert_snapshot!(size_of::<StmtKind>().to_string(), @"64");
+        insta::assert_snapshot!(size_of::<Stmt>().to_string(), @"32");
+        insta::assert_snapshot!(size_of::<StmtKind>().to_string(), @"16");
     }
 }
