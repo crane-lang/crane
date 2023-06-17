@@ -1,0 +1,195 @@
+---
+source: crates/crane/src/typer.rs
+expression: typer.type_check_module(module)
+input_file: crates/crane/src/snapshot_inputs/functions.crane
+---
+Ok:
+  items:
+    - kind:
+        Fn:
+          params: []
+          return_ty:
+            UserDefined:
+              module: "std::prelude"
+              name: ()
+          body:
+            - kind:
+                Expr:
+                  kind:
+                    Call:
+                      fun:
+                        kind:
+                          Variable:
+                            name:
+                              name: say_hello
+                              span:
+                                start: 20
+                                end: 29
+                        span:
+                          start: 20
+                          end: 29
+                        ty:
+                          UserDefined:
+                            module: "?"
+                            name: "?"
+                      args: []
+                  span:
+                    start: 20
+                    end: 29
+                  ty:
+                    UserDefined:
+                      module: "std::prelude"
+                      name: ()
+              span:
+                start: 20
+                end: 29
+            - kind:
+                Expr:
+                  kind:
+                    Call:
+                      fun:
+                        kind:
+                          Variable:
+                            name:
+                              name: say_goodbye
+                              span:
+                                start: 36
+                                end: 47
+                        span:
+                          start: 36
+                          end: 47
+                        ty:
+                          UserDefined:
+                            module: "?"
+                            name: "?"
+                      args: []
+                  span:
+                    start: 36
+                    end: 47
+                  ty:
+                    UserDefined:
+                      module: "std::prelude"
+                      name: ()
+              span:
+                start: 36
+                end: 47
+      name:
+        name: main
+        span:
+          start: 7
+          end: 11
+    - kind:
+        Fn:
+          params: []
+          return_ty:
+            UserDefined:
+              module: "std::prelude"
+              name: ()
+          body:
+            - kind:
+                Expr:
+                  kind:
+                    Call:
+                      fun:
+                        kind:
+                          Variable:
+                            name:
+                              name: println
+                              span:
+                                start: 74
+                                end: 81
+                        span:
+                          start: 74
+                          end: 81
+                        ty:
+                          UserDefined:
+                            module: "?"
+                            name: "?"
+                      args:
+                        - kind:
+                            Literal:
+                              kind:
+                                String: "\"Hello\""
+                              span:
+                                start: 82
+                                end: 89
+                          span:
+                            start: 82
+                            end: 89
+                          ty:
+                            UserDefined:
+                              module: "std::prelude"
+                              name: String
+                  span:
+                    start: 74
+                    end: 81
+                  ty:
+                    UserDefined:
+                      module: "std::prelude"
+                      name: ()
+              span:
+                start: 74
+                end: 81
+      name:
+        name: say_hello
+        span:
+          start: 56
+          end: 65
+    - kind:
+        Fn:
+          params: []
+          return_ty:
+            UserDefined:
+              module: "std::prelude"
+              name: ()
+          body:
+            - kind:
+                Expr:
+                  kind:
+                    Call:
+                      fun:
+                        kind:
+                          Variable:
+                            name:
+                              name: println
+                              span:
+                                start: 117
+                                end: 124
+                        span:
+                          start: 117
+                          end: 124
+                        ty:
+                          UserDefined:
+                            module: "?"
+                            name: "?"
+                      args:
+                        - kind:
+                            Literal:
+                              kind:
+                                String: "\"Goodbye\""
+                              span:
+                                start: 125
+                                end: 134
+                          span:
+                            start: 125
+                            end: 134
+                          ty:
+                            UserDefined:
+                              module: "std::prelude"
+                              name: String
+                  span:
+                    start: 117
+                    end: 124
+                  ty:
+                    UserDefined:
+                      module: "std::prelude"
+                      name: ()
+              span:
+                start: 117
+                end: 124
+      name:
+        name: say_goodbye
+        span:
+          start: 97
+          end: 108
+

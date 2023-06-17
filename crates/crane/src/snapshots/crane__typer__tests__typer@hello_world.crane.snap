@@ -1,0 +1,65 @@
+---
+source: crates/crane/src/typer.rs
+expression: typer.type_check_module(module)
+input_file: crates/crane/src/snapshot_inputs/hello_world.crane
+---
+Ok:
+  items:
+    - kind:
+        Fn:
+          params: []
+          return_ty:
+            UserDefined:
+              module: "std::prelude"
+              name: ()
+          body:
+            - kind:
+                Expr:
+                  kind:
+                    Call:
+                      fun:
+                        kind:
+                          Variable:
+                            name:
+                              name: println
+                              span:
+                                start: 70
+                                end: 77
+                        span:
+                          start: 70
+                          end: 77
+                        ty:
+                          UserDefined:
+                            module: "?"
+                            name: "?"
+                      args:
+                        - kind:
+                            Literal:
+                              kind:
+                                String: "\"Hello, world!\""
+                              span:
+                                start: 78
+                                end: 93
+                          span:
+                            start: 78
+                            end: 93
+                          ty:
+                            UserDefined:
+                              module: "std::prelude"
+                              name: String
+                  span:
+                    start: 70
+                    end: 77
+                  ty:
+                    UserDefined:
+                      module: "std::prelude"
+                      name: ()
+              span:
+                start: 70
+                end: 77
+      name:
+        name: main
+        span:
+          start: 57
+          end: 61
+
