@@ -115,10 +115,10 @@ impl Typer {
                     name: "value".into(),
                     span: DUMMY_SPAN
                 },
-                ty: uint64_ty.clone(),
+                ty: uint64_ty,
                 span: DUMMY_SPAN
             }],
-            string_ty.clone(),
+            string_ty,
         );
 
         for item in &module.items {
@@ -259,14 +259,14 @@ impl Typer {
                 let callee = match &callee.kind {
                     TyExprKind::Variable { name } => Ok(name),
                     _ => Err(TypeError {
-                        kind: TypeErrorKind::Error(format!("Not a function.")),
+                        kind: TypeErrorKind::Error("Not a function.".to_string()),
                         span: callee.span,
                     }),
                 }?;
 
                 let (callee_params, callee_return_ty) = self
                     .module_functions
-                    .get(&callee)
+                    .get(callee)
                     .ok_or_else(|| TypeError {
                         kind: TypeErrorKind::Error(format!("Function `{}` not found.", callee)),
                         span: callee.span,

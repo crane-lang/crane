@@ -31,7 +31,7 @@ pub fn walk_item<V: Visitor>(visitor: &mut V, item: &Item) {
 
     match &item.kind {
         ItemKind::Fn(fun) => {
-            visitor.visit_fn(&fun);
+            visitor.visit_fn(fun);
         }
     }
 }

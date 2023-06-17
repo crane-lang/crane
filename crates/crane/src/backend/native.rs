@@ -62,7 +62,9 @@ impl NativeBackend {
         fpm.initialize();
 
         // Define `puts`.
-        {
+        let puts = {
+            let fn_name = "puts";
+
             let i8_type = self.context.i8_type();
             let i32_type = self.context.i32_type();
             let fn_type = i32_type.fn_type(
@@ -73,13 +75,17 @@ impl NativeBackend {
                 false,
             );
 
-            let puts = module.add_function("puts", fn_type, Some(Linkage::External));
+            let puts = module.add_function(fn_name, fn_type, Some(Linkage::External));
 
-            Self::verify_fn(&fpm, "puts", &puts).unwrap();
-        }
+            Self::verify_fn(&fpm, fn_name, &puts).unwrap();
+
+            fn_name
+        };
 
         // Define `sprintf`.
-        {
+        let sprintf = {
+            let fn_name = "sprintf";
+
             let i8_type = self.context.i8_type();
             let i32_type = self.context.i32_type();
 
@@ -97,13 +103,17 @@ impl NativeBackend {
                 true,
             );
 
-            let sprintf = module.add_function("sprintf", fn_type, Some(Linkage::External));
+            let sprintf = module.add_function(fn_name, fn_type, Some(Linkage::External));
 
-            Self::verify_fn(&fpm, "sprintf", &sprintf).unwrap();
-        }
+            Self::verify_fn(&fpm, fn_name, &sprintf).unwrap();
+
+            fn_name
+        };
 
         // Define `printf`.
-        {
+        let printf = {
+            let fn_name = "printf";
+
             let i8_type = self.context.i8_type();
             let i32_type = self.context.i32_type();
 
@@ -115,10 +125,12 @@ impl NativeBackend {
                 true,
             );
 
-            let printf = module.add_function("printf", fn_type, Some(Linkage::External));
+            let printf = module.add_function(fn_name, fn_type, Some(Linkage::External));
 
-            Self::verify_fn(&fpm, "printf", &printf).unwrap();
-        }
+            Self::verify_fn(&fpm, fn_name, &printf).unwrap();
+
+            fn_name
+        };
 
         // Define `print`.
         {
@@ -134,7 +146,7 @@ impl NativeBackend {
                 false,
             );
 
-            let fn_value = module.add_function(&fn_name, fn_type, None);
+            let fn_value = module.add_function(fn_name, fn_type, None);
 
             let value_param = fn_value.get_first_param().unwrap();
 
@@ -154,19 +166,19 @@ impl NativeBackend {
             global.set_constant(true);
             global.set_initializer(&template);
 
-            if let Some(callee) = module.get_function(&"printf") {
+            if let Some(callee) = module.get_function(printf) {
                 builder.build_call(
                     callee,
                     &[global.as_basic_value_enum().into(), value_param.into()],
                     "tmp",
                 );
             } else {
-                eprintln!("Function '{}' not found.", "puts");
+                eprintln!("Function '{}' not found.", printf);
             }
 
             builder.build_return(None);
 
-            Self::verify_fn(&fpm, &fn_name, &fn_value).unwrap();
+            Self::verify_fn(&fpm, fn_name, &fn_value).unwrap();
         }
 
         // Define `println`.
@@ -183,7 +195,7 @@ impl NativeBackend {
                 false,
             );
 
-            let fn_value = module.add_function(&fn_name, fn_type, None);
+            let fn_value = module.add_function(fn_name, fn_type, None);
 
             let value_param = fn_value.get_first_param().unwrap();
 
@@ -191,15 +203,15 @@ impl NativeBackend {
 
             builder.position_at_end(entry);
 
-            if let Some(callee) = module.get_function(&"puts") {
+            if let Some(callee) = module.get_function(puts) {
                 builder.build_call(callee, &[value_param.into()], "tmp");
             } else {
-                eprintln!("Function '{}' not found.", "puts");
+                eprintln!("Function '{}' not found.", puts);
             }
 
             builder.build_return(None);
 
-            Self::verify_fn(&fpm, &fn_name, &fn_value).unwrap();
+            Self::verify_fn(&fpm, fn_name, &fn_value).unwrap();
         }
 
         // Define `int_add`.
@@ -216,7 +228,7 @@ impl NativeBackend {
                 false,
             );
 
-            let fn_value = module.add_function(&fn_name, fn_type, None);
+            let fn_value = module.add_function(fn_name, fn_type, None);
 
             let lhs_param = fn_value.get_first_param().unwrap().into_int_value();
             let rhs_param = fn_value.get_nth_param(1).unwrap().into_int_value();
@@ -229,7 +241,7 @@ impl NativeBackend {
 
             builder.build_return(Some(&sum));
 
-            Self::verify_fn(&fpm, &fn_name, &fn_value).unwrap();
+            Self::verify_fn(&fpm, fn_name, &fn_value).unwrap();
         }
 
         // Define `int_to_string`.
@@ -242,7 +254,7 @@ impl NativeBackend {
 
             let fn_type = i8_ptr_type.fn_type(&[i64_type.as_basic_type_enum().into()], false);
 
-            let fn_value = module.add_function(&fn_name, fn_type, None);
+            let fn_value = module.add_function(fn_name, fn_type, None);
 
             let int_value = fn_value.get_first_param().unwrap().into_int_value();
 
@@ -266,7 +278,7 @@ impl NativeBackend {
             global.set_constant(true);
             global.set_initializer(&template);
 
-            if let Some(callee) = module.get_function(&"sprintf") {
+            if let Some(callee) = module.get_function(sprintf) {
                 builder.build_call(
                     callee,
                     &[
@@ -277,12 +289,12 @@ impl NativeBackend {
                     "tmp",
                 );
             } else {
-                panic!("Function '{}' not found.", "sprintf");
+                panic!("Function '{}' not found.", sprintf);
             }
 
             builder.build_return(Some(&buffer));
 
-            Self::verify_fn(&fpm, &fn_name, &fn_value).unwrap();
+            Self::verify_fn(&fpm, fn_name, &fn_value).unwrap();
         }
 
         for item in program
@@ -298,7 +310,7 @@ impl NativeBackend {
                         .iter()
                         .map(|param| {
                             let param_type = match &*param.ty {
-                                Type::Fn { args, return_ty } => todo!(),
+                                Type::Fn { args: _, return_ty: _ } => todo!(),
                                 Type::UserDefined { module, name } => {
                                     match (module.as_ref(), name.as_ref()) {
                                         ("std::prelude", "String") => self
@@ -351,7 +363,7 @@ impl NativeBackend {
                                 &fn_value,
                                 expr,
                             ),
-                            TyStmtKind::Item(item) => todo!(),
+                            TyStmtKind::Item(_item) => todo!(),
                         }
                     }
 
@@ -398,7 +410,7 @@ impl NativeBackend {
         fn_value: &FunctionValue,
     ) -> Result<(), String> {
         if fn_value.verify(true) {
-            fpm.run_on(&fn_value);
+            fpm.run_on(fn_value);
 
             Ok(())
         } else {
@@ -417,11 +429,11 @@ impl NativeBackend {
         match expr.kind {
             TyExprKind::Literal(literal) => match literal.kind {
                 TyLiteralKind::String(literal) => {
-                    Self::compile_string_literal(&context, &builder, &module, literal);
+                    Self::compile_string_literal(context, builder, module, literal);
                 }
-                TyLiteralKind::Integer(literal) => {}
+                TyLiteralKind::Integer(_literal) => {}
             },
-            TyExprKind::Variable { name } => todo!(),
+            TyExprKind::Variable { name: _ } => todo!(),
             TyExprKind::Call { fun, args } => {
                 Self::compile_fn_call(
                     context,
@@ -432,14 +444,14 @@ impl NativeBackend {
                     fun.clone(),
                     args,
                 )
-                .expect(&format!("Failed to compile function call: {:?}", fun));
+                .unwrap_or_else(|_| panic!("Failed to compile function call: {:?}", fun));
             }
         }
     }
 
     fn compile_string_literal<'ctx>(
         context: &'ctx Context,
-        builder: &Builder<'ctx>,
+        _builder: &Builder<'ctx>,
         module: &Module<'ctx>,
         literal: SmolStr,
     ) -> GlobalValue<'ctx> {
@@ -499,12 +511,12 @@ impl NativeBackend {
                 .map(|arg| match arg.kind {
                     TyExprKind::Literal(literal) => match literal.kind {
                         TyLiteralKind::String(literal) => {
-                            Self::compile_string_literal(&context, &builder, &module, literal)
+                            Self::compile_string_literal(context, builder, module, literal)
                                 .as_basic_value_enum()
                                 .into()
                         }
                         TyLiteralKind::Integer(literal) => {
-                            Self::compile_integer_literal(&context, &builder, &module, literal)
+                            Self::compile_integer_literal(context, builder, module, literal)
                                 .as_basic_value_enum()
                                 .into()
                         }
@@ -514,7 +526,7 @@ impl NativeBackend {
                             .into_iter()
                             .enumerate()
                             .find(|(_, param)| param.name == name)
-                            .expect(&format!("Param '{}' not found.", name));
+                            .unwrap_or_else(|| panic!("Param '{}' not found.", name));
 
                         caller
                             .get_nth_param(param_index as u32)
@@ -523,9 +535,9 @@ impl NativeBackend {
                             .into()
                     }
                     TyExprKind::Call { fun, args } => Self::compile_fn_call(
-                        &context,
-                        &builder,
-                        &module,
+                        context,
+                        builder,
+                        module,
                         caller,
                         caller_params,
                         fun,

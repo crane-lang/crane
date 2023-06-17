@@ -48,7 +48,7 @@ fn main() {
             let _ = compile();
         }
         Command::Run => {
-            if let Ok(_) = compile() {
+            if compile().is_ok() {
                 run();
             }
         }
