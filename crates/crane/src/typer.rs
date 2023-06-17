@@ -21,12 +21,14 @@ pub type TypeCheckResult<T> = Result<T, TypeError>;
 
 pub struct Typer {
     module_functions: HashMap<Ident, ThinVec<TyFnParam>>,
+    scopes: Vec<HashMap<Ident, Arc<Type>>>,
 }
 
 impl Typer {
     pub fn new() -> Self {
         Self {
             module_functions: HashMap::new(),
+            scopes: Vec::new(),
         }
     }
 
@@ -107,7 +109,7 @@ impl Typer {
         })
     }
 
-    fn infer_item(&self, item: Item) -> TypeCheckResult<TyItem> {
+    fn infer_item(&mut self, item: Item) -> TypeCheckResult<TyItem> {
         match item.kind {
             ItemKind::Fn(fun) => Ok(TyItem {
                 kind: TyItemKind::Fn(Box::new(self.infer_function(*fun)?)),
@@ -116,15 +118,28 @@ impl Typer {
         }
     }
 
-    fn infer_function(&self, fun: Fn) -> TypeCheckResult<TyFn> {
-        Ok(TyFn {
-            params: self.infer_function_params(&fun.params)?,
+    fn infer_function(&mut self, fun: Fn) -> TypeCheckResult<TyFn> {
+        let params = self.infer_function_params(&fun.params)?;
+
+        self.scopes.push(HashMap::from_iter(
+            params
+                .clone()
+                .into_iter()
+                .map(|param| (param.name, param.ty)),
+        ));
+
+        let ty_fn = TyFn {
+            params,
             body: fun
                 .body
                 .into_iter()
                 .map(|stmt| self.infer_stmt(stmt))
                 .collect::<Result<ThinVec<_>, _>>()?,
-        })
+        };
+
+        self.scopes.pop();
+
+        Ok(ty_fn)
     }
 
     fn infer_function_params(
@@ -160,14 +175,23 @@ impl Typer {
                 LiteralKind::String => self.infer_string(literal, expr.span),
                 LiteralKind::Integer => self.infer_integer(literal, expr.span),
             },
-            ExprKind::Variable { name } => Ok(TyExpr {
-                kind: TyExprKind::Variable { name },
-                ty: Arc::new(Type::UserDefined {
-                    module: "?".into(),
-                    name: "?".into(),
-                }),
-                span: expr.span,
-            }),
+            ExprKind::Variable { name } => {
+                let ty = self
+                    .scopes
+                    .last()
+                    .and_then(|scope| scope.get(&name).cloned());
+
+                Ok(TyExpr {
+                    kind: TyExprKind::Variable { name },
+                    ty: ty.unwrap_or_else(|| {
+                        Arc::new(Type::UserDefined {
+                            module: "?".into(),
+                            name: "?".into(),
+                        })
+                    }),
+                    span: expr.span,
+                })
+            }
             ExprKind::Call { fun, args } => {
                 let callee = self.infer_expr(*fun.clone())?;
 
