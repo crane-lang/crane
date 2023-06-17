@@ -115,7 +115,7 @@ mod tests {
 
             let lexer = Lexer::new(&source);
 
-            insta::assert_yaml_snapshot!(lexer.into_iter().collect::<Vec<_>>())
+            insta::assert_yaml_snapshot!(lexer.into_iter().collect::<Vec<_>>());
         })
     }
 }
