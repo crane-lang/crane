@@ -166,3 +166,33 @@ pub struct TyItem {
 pub struct TyModule {
     pub items: ThinVec<TyItem>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Tests the size of AST nodes to ensure they don't unintentionally get bigger.
+    #[test]
+    #[cfg(target_pointer_width = "64")]
+    fn test_ast_node_sizes() {
+        use std::mem::size_of;
+
+        #[cfg(target_arch = "x86_64")]
+        {
+            // For whatever reason, `TyExpr` is a slightly smaller size on x86_64.
+            insta::assert_snapshot!(size_of::<TyExpr>().to_string(), @"72");
+        }
+
+        #[cfg(target_arch = "aarch64")]
+        {
+            insta::assert_snapshot!(size_of::<TyExpr>().to_string(), @"80");
+        }
+
+        insta::assert_snapshot!(size_of::<TyExprKind>().to_string(), @"48");
+        insta::assert_snapshot!(size_of::<TyFn>().to_string(), @"24");
+        insta::assert_snapshot!(size_of::<TyItem>().to_string(), @"56");
+        insta::assert_snapshot!(size_of::<TyItemKind>().to_string(), @"16");
+        insta::assert_snapshot!(size_of::<TyStmt>().to_string(), @"96");
+        insta::assert_snapshot!(size_of::<TyStmtKind>().to_string(), @"80");
+    }
+}

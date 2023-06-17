@@ -149,3 +149,22 @@ pub struct Item {
 pub struct Module {
     pub items: ThinVec<Item>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Tests the size of AST nodes to ensure they don't unintentionally get bigger.
+    #[test]
+    fn test_ast_node_sizes() {
+        use std::mem::size_of;
+
+        insta::assert_snapshot!(size_of::<Expr>().to_string(), @"56");
+        insta::assert_snapshot!(size_of::<ExprKind>().to_string(), @"40");
+        insta::assert_snapshot!(size_of::<Fn>().to_string(), @"56");
+        insta::assert_snapshot!(size_of::<Item>().to_string(), @"56");
+        insta::assert_snapshot!(size_of::<ItemKind>().to_string(), @"16");
+        insta::assert_snapshot!(size_of::<Stmt>().to_string(), @"80");
+        insta::assert_snapshot!(size_of::<StmtKind>().to_string(), @"64");
+    }
+}
