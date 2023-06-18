@@ -322,7 +322,7 @@ impl Typer {
         })
     }
 
-    fn infer_stmt(&self, stmt: Stmt) -> TypeCheckResult<TyStmt> {
+    fn infer_stmt(&mut self, stmt: Stmt) -> TypeCheckResult<TyStmt> {
         Ok(TyStmt {
             kind: match stmt.kind {
                 StmtKind::Local(local) => TyStmtKind::Local(self.infer_local(*local)?),
@@ -333,7 +333,7 @@ impl Typer {
         })
     }
 
-    fn infer_local(&self, local: Local) -> TypeCheckResult<TyLocal> {
+    fn infer_local(&mut self, local: Local) -> TypeCheckResult<TyLocal> {
         let ty = match local.kind.init() {
             Some(init) => self.infer_expr(init.clone())?.ty,
             None => Arc::new(Type::UserDefined {
@@ -341,6 +341,10 @@ impl Typer {
                 name: "?".into(),
             }),
         };
+
+        if let Some(scope) = self.scopes.last_mut() {
+            scope.insert(local.name.clone(), ty.clone());
+        }
 
         Ok(TyLocal {
             kind: match local.kind {
