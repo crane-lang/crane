@@ -177,6 +177,9 @@ pub enum TyItemKind {
 
     /// A union declaration (`union`).
     Union(TyUnionDecl),
+
+    /// A module declaration (`mod`).
+    Module(TyModule),
 }
 
 /// An item in a [`TyModule`].

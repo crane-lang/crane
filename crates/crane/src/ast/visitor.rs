@@ -1,6 +1,6 @@
 use crate::ast::{
-    Expr, ExprKind, FieldDecl, Fn, FnParam, Ident, Item, ItemKind, Local, Path, PathSegment, Stmt,
-    StmtKind, StructDecl, UnionDecl, UseTree, UseTreeKind, Variant, VariantData,
+    Expr, ExprKind, FieldDecl, Fn, FnParam, Ident, Item, ItemKind, Local, ModuleDecl, Path,
+    PathSegment, Stmt, StmtKind, StructDecl, UnionDecl, UseTree, UseTreeKind, Variant, VariantData,
 };
 
 pub trait Visitor: Sized {
@@ -38,6 +38,10 @@ pub trait Visitor: Sized {
 
     fn visit_union_decl(&mut self, union_decl: &UnionDecl) {
         walk_union_decl(self, union_decl);
+    }
+
+    fn visit_module_decl(&mut self, module_decl: &ModuleDecl) {
+        walk_module_decl(self, module_decl);
     }
 
     fn visit_variant(&mut self, variant: &Variant) {
@@ -80,6 +84,9 @@ pub fn walk_item<V: Visitor>(visitor: &mut V, item: &Item) {
         }
         ItemKind::Union(union_decl) => {
             visitor.visit_union_decl(union_decl);
+        }
+        ItemKind::Module(module_decl) => {
+            visitor.visit_module_decl(module_decl);
         }
     }
 }
@@ -124,6 +131,17 @@ pub fn walk_struct_decl<V: Visitor>(visitor: &mut V, struct_decl: &StructDecl) {
 pub fn walk_union_decl<V: Visitor>(visitor: &mut V, union_decl: &UnionDecl) {
     for variant in &union_decl.variants {
         visitor.visit_variant(variant);
+    }
+}
+
+pub fn walk_module_decl<V: Visitor>(visitor: &mut V, module_decl: &ModuleDecl) {
+    match &module_decl {
+        ModuleDecl::Loaded(module, _) => {
+            for item in &module.items {
+                visitor.visit_item(item);
+            }
+        }
+        ModuleDecl::Unloaded => {}
     }
 }
 

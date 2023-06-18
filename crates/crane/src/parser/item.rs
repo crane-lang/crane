@@ -1,8 +1,9 @@
 use thin_vec::ThinVec;
 
 use crate::ast::{
-    keywords, FieldDecl, Fn, FnParam, Ident, Item, ItemKind, Path, PathSegment, StructDecl,
-    UnionDecl, UseTree, UseTreeKind, Variant, VariantData, DUMMY_SPAN,
+    keywords, FieldDecl, Fn, FnParam, Ident, InlineModuleDecl, Item, ItemKind, Module, ModuleDecl,
+    Path, PathSegment, StructDecl, UnionDecl, UseTree, UseTreeKind, Variant, VariantData,
+    DUMMY_SPAN,
 };
 use crate::lexer::token::{Token, TokenKind};
 use crate::lexer::LexError;
@@ -53,6 +54,12 @@ where
             let (name, union_decl) = self.parse_union_decl()?;
 
             return Ok(Some((name, ItemKind::Union(union_decl))));
+        }
+
+        if self.consume_keyword(keywords::MOD) {
+            let (name, module_decl) = self.parse_module_decl()?;
+
+            return Ok(Some((name, ItemKind::Module(Box::new(module_decl)))));
         }
 
         Ok(None)
@@ -205,5 +212,31 @@ where
         self.consume(TokenKind::CloseBrace);
 
         Ok((ident, UnionDecl { variants }))
+    }
+
+    #[tracing::instrument(skip(self))]
+    fn parse_module_decl(&mut self) -> ParseResult<(Ident, ModuleDecl)> {
+        let ident = self.parse_ident()?;
+
+        self.consume(TokenKind::OpenBrace);
+
+        let mut items = ThinVec::new();
+
+        while !self.check(TokenKind::CloseBrace) {
+            loop {
+                if let Some(item) = self.parse_item()? {
+                    items.push(item);
+                } else {
+                    break;
+                }
+            }
+        }
+
+        self.consume(TokenKind::CloseBrace);
+
+        Ok((
+            ident,
+            ModuleDecl::Loaded(Module { items }, InlineModuleDecl::Yes),
+        ))
     }
 }

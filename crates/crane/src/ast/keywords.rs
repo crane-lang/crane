@@ -12,6 +12,11 @@ pub const LET: Ident = Ident {
     span: DUMMY_SPAN,
 };
 
+pub const MOD: Ident = Ident {
+    name: SmolStr::new_inline("mod"),
+    span: DUMMY_SPAN,
+};
+
 pub const PUB: Ident = Ident {
     name: SmolStr::new_inline("pub"),
     span: DUMMY_SPAN,

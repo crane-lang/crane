@@ -470,6 +470,7 @@ impl NativeBackend {
                 }
                 TyItemKind::Struct(_) => {}
                 TyItemKind::Union(_) => {}
+                TyItemKind::Module(_) => {}
             }
         }
 

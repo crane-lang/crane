@@ -12,11 +12,11 @@ use smol_str::SmolStr;
 use thin_vec::{thin_vec, ThinVec};
 
 use crate::ast::{
-    Expr, ExprKind, Fn, FnParam, Ident, Item, ItemKind, Literal, LiteralKind, Local, LocalKind,
-    Module, Package, Span, Stmt, StmtKind, StructDecl, TyExpr, TyExprKind, TyFieldDecl, TyFn,
-    TyFnParam, TyIntegerLiteral, TyItem, TyItemKind, TyLiteral, TyLiteralKind, TyLocal,
-    TyLocalKind, TyModule, TyPackage, TyStmt, TyStmtKind, TyStructDecl, TyUint, TyUnionDecl,
-    TyVariant, TyVariantData, UnionDecl, VariantData, DUMMY_SPAN,
+    Expr, ExprKind, Fn, FnParam, Ident, InlineModuleDecl, Item, ItemKind, Literal, LiteralKind,
+    Local, LocalKind, Module, ModuleDecl, Package, Span, Stmt, StmtKind, StructDecl, TyExpr,
+    TyExprKind, TyFieldDecl, TyFn, TyFnParam, TyIntegerLiteral, TyItem, TyItemKind, TyLiteral,
+    TyLiteralKind, TyLocal, TyLocalKind, TyModule, TyPackage, TyStmt, TyStmtKind, TyStructDecl,
+    TyUint, TyUnionDecl, TyVariant, TyVariantData, UnionDecl, VariantData, DUMMY_SPAN,
 };
 
 fn ty_to_string(ty: &Type) -> String {
@@ -171,6 +171,13 @@ impl Typer {
                 }
                 ItemKind::Struct(_) => {}
                 ItemKind::Union(_) => {}
+                ItemKind::Module(ref module_decl) => match *module_decl.clone() {
+                    ModuleDecl::Loaded(module, InlineModuleDecl::Yes) => {
+                        self.type_check_module(module.clone())?;
+                    }
+                    ModuleDecl::Loaded(_, InlineModuleDecl::No) => todo!(),
+                    ModuleDecl::Unloaded => todo!(),
+                },
             }
         }
 
@@ -219,6 +226,10 @@ impl Typer {
             }),
             ItemKind::Union(union_decl) => Ok(TyItem {
                 kind: TyItemKind::Union(self.infer_union_decl(&union_decl)?),
+                name: item.name,
+            }),
+            ItemKind::Module(module_decl) => Ok(TyItem {
+                kind: TyItemKind::Module(self.infer_module_decl(&module_decl)?),
                 name: item.name,
             }),
         }
@@ -309,6 +320,26 @@ impl Typer {
         Ok(TyUnionDecl {
             variants: ty_variants,
         })
+    }
+
+    fn infer_module_decl(&mut self, module_decl: &ModuleDecl) -> TypeCheckResult<TyModule> {
+        match &module_decl {
+            ModuleDecl::Loaded(module, InlineModuleDecl::Yes) => Ok(TyModule {
+                items: module
+                    .items
+                    .iter()
+                    .map(|item| self.infer_item(item.clone()))
+                    .collect::<Result<ThinVec<_>, _>>()?,
+            }),
+            ModuleDecl::Loaded(_, InlineModuleDecl::No) => Err(TypeError {
+                kind: TypeErrorKind::Error("Only inline modules are supported.".into()),
+                span: DUMMY_SPAN,
+            }),
+            ModuleDecl::Unloaded => Err(TypeError {
+                kind: TypeErrorKind::Error("Only inline modules are supported.".into()),
+                span: DUMMY_SPAN,
+            }),
+        }
     }
 
     fn infer_variant_data(&self, variant_data: &VariantData) -> TypeCheckResult<TyVariantData> {

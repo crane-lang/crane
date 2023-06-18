@@ -1,3 +1,7 @@
+# Build and run a Crane program.
+run:
+    cargo run -- run
+
 # Run the tests.
 test:
     cargo test

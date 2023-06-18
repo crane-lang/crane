@@ -11,6 +11,18 @@ union Bool {
     False,
 }
 
+mod foo {
+    fn do_foo() {
+        println("Hello from `foo`")
+    }
+
+    mod bar {
+        fn do_bar() {
+            println("Hello from `bar`")
+        }
+    }
+}
+
 pub fn main() {
     let twenty_three = 23
 
