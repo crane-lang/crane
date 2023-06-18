@@ -16,9 +16,8 @@ where
     TokenStream: Iterator<Item = Result<Token, LexError>>,
 {
     /// Parses an [`Item`].
+    #[tracing::instrument(skip(self))]
     pub fn parse_item(&mut self) -> ParseResult<Option<Item>> {
-        trace!("parse_item");
-
         self.consume_keyword(keywords::PUB);
 
         Ok(self
@@ -26,9 +25,8 @@ where
             .map(|(name, kind)| Item { name, kind }))
     }
 
+    #[tracing::instrument(skip(self))]
     fn parse_item_kind(&mut self) -> ParseResult<Option<ItemInfo>> {
-        trace!("parse_item_kind");
-
         if self.consume_keyword(keywords::FN) {
             let (name, fun) = self.parse_fn()?;
 
@@ -50,9 +48,8 @@ where
         Ok(None)
     }
 
+    #[tracing::instrument(skip(self))]
     fn parse_fn(&mut self) -> ParseResult<(Ident, Fn)> {
-        trace!("parse_fn");
-
         let ident = self.parse_ident()?;
 
         self.consume(TokenKind::OpenParen);
@@ -109,9 +106,8 @@ where
         ))
     }
 
+    #[tracing::instrument(skip(self))]
     fn parse_struct_decl(&mut self) -> ParseResult<(Ident, StructDecl)> {
-        trace!("parse_struct_decl");
-
         let ident = self.parse_ident()?;
 
         self.consume(TokenKind::OpenBrace);
@@ -147,9 +143,8 @@ where
         Ok((ident, StructDecl(VariantData::Struct(fields))))
     }
 
+    #[tracing::instrument(skip(self))]
     fn parse_union_decl(&mut self) -> ParseResult<(Ident, UnionDecl)> {
-        trace!("parse_union_decl");
-
         let ident = self.parse_ident()?;
 
         self.consume(TokenKind::OpenBrace);
