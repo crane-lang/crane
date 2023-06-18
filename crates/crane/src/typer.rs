@@ -325,8 +325,8 @@ impl Typer {
     fn infer_stmt(&mut self, stmt: Stmt) -> TypeCheckResult<TyStmt> {
         Ok(TyStmt {
             kind: match stmt.kind {
-                StmtKind::Local(local) => TyStmtKind::Local(self.infer_local(*local)?),
-                StmtKind::Expr(expr) => TyStmtKind::Expr(self.infer_expr(*expr)?),
+                StmtKind::Local(local) => TyStmtKind::Local(Box::new(self.infer_local(*local)?)),
+                StmtKind::Expr(expr) => TyStmtKind::Expr(Box::new(self.infer_expr(*expr)?)),
                 StmtKind::Item(_) => todo!(),
             },
             span: stmt.span,

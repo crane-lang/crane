@@ -61,13 +61,13 @@ pub struct TyExpr {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TyStmtKind {
     /// A local `let` binding.
-    Local(TyLocal),
+    Local(Box<TyLocal>),
 
     /// An item.
-    Item(TyItem),
+    Item(Box<TyItem>),
 
     /// An expression.
-    Expr(TyExpr),
+    Expr(Box<TyExpr>),
 }
 
 /// The kind of a [`TyLocal`].
@@ -214,7 +214,7 @@ mod tests {
         insta::assert_snapshot!(size_of::<TyFn>().to_string(), @"24");
         insta::assert_snapshot!(size_of::<TyItem>().to_string(), @"56");
         insta::assert_snapshot!(size_of::<TyItemKind>().to_string(), @"16");
-        insta::assert_snapshot!(size_of::<TyStmt>().to_string(), @"96");
-        insta::assert_snapshot!(size_of::<TyStmtKind>().to_string(), @"80");
+        insta::assert_snapshot!(size_of::<TyStmt>().to_string(), @"32");
+        insta::assert_snapshot!(size_of::<TyStmtKind>().to_string(), @"16");
     }
 }
