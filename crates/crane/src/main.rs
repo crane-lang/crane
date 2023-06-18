@@ -4,6 +4,9 @@ mod lexer;
 mod parser;
 mod typer;
 
+use std::io::Write;
+use std::path::PathBuf;
+
 use ariadne::{Color, Label, Report, ReportKind, Source};
 use ast::SourceSpan;
 use clap::{Parser, Subcommand};
@@ -26,6 +29,12 @@ struct Args {
 
 #[derive(Subcommand, Debug)]
 enum Command {
+    /// Creates a new Crane project.
+    New {
+        /// The path at which to create the project.
+        path: PathBuf,
+    },
+
     /// Compiles the current project.
     Build,
 
@@ -44,6 +53,30 @@ fn main() {
         .expect("failed to set default tracing subscriber");
 
     match args.command {
+        Command::New { path } => {
+            use std::fs::{self, File};
+
+            fs::create_dir(&path).expect("Failed to create directory");
+
+            let mut src_path = path.clone();
+            src_path.push("src");
+
+            fs::create_dir_all(&src_path).unwrap();
+
+            let mut main_path = src_path;
+            main_path.push("main.crane");
+
+            let mut main = File::create(&main_path).unwrap();
+
+            let hello_world_program = r#"
+fn main() {
+    println("你好，世界。")
+}
+            "#
+            .trim();
+
+            main.write_all(hello_world_program.as_bytes()).unwrap();
+        }
         Command::Build => {
             let _ = compile();
         }
