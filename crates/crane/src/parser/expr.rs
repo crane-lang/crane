@@ -40,13 +40,13 @@ where
         }
 
         if self.check_without_expect(TokenKind::Ident) {
-            let ident = self.parse_ident()?;
+            let path = self.parse_path()?;
 
             if self.check_without_expect(TokenKind::OpenParen) {
-                let span = ident.span;
+                let span = path.span;
 
                 let callee = Expr {
-                    kind: ExprKind::Variable { name: ident },
+                    kind: ExprKind::Variable(path),
                     span,
                 };
 
@@ -60,10 +60,10 @@ where
                     span,
                 }));
             } else {
-                let span = ident.span;
+                let span = path.span;
 
                 return Ok(Some(Expr {
-                    kind: ExprKind::Variable { name: ident },
+                    kind: ExprKind::Variable(path),
                     span,
                 }));
             }

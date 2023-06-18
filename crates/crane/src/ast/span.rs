@@ -19,6 +19,14 @@ impl Span {
     pub fn new(start: usize, end: usize) -> Self {
         Self { start, end }
     }
+
+    /// Returns a new [`Span`] that encloses `self and `end`.
+    pub fn to(self, end: Span) -> Self {
+        Self::new(
+            std::cmp::min(self.start, end.start),
+            std::cmp::max(self.end, end.end),
+        )
+    }
 }
 
 impl std::fmt::Debug for Span {
@@ -61,5 +69,26 @@ impl ariadne::Span for Span {
 
     fn end(&self) -> usize {
         self.end
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn span_to_works_forwards() {
+        let start = Span::new(0, 3);
+        let end = Span::new(4, 6);
+
+        assert_eq!(start.to(end), Span::new(0, 6))
+    }
+
+    #[test]
+    fn span_to_works_backwards() {
+        let start = Span::new(3, 7);
+        let end = Span::new(0, 2);
+
+        assert_eq!(start.to(end), Span::new(0, 7))
     }
 }

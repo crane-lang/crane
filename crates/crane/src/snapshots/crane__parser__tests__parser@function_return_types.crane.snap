@@ -16,11 +16,15 @@ Ok:
                     fun:
                       kind:
                         Variable:
-                          name:
-                            name: println
-                            span:
-                              start: 16
-                              end: 23
+                          segments:
+                            - ident:
+                                name: println
+                                span:
+                                  start: 16
+                                  end: 23
+                          span:
+                            start: 16
+                            end: 23
                       span:
                         start: 16
                         end: 23
@@ -30,11 +34,15 @@ Ok:
                             fun:
                               kind:
                                 Variable:
-                                  name:
-                                    name: int_to_string
-                                    span:
-                                      start: 24
-                                      end: 37
+                                  segments:
+                                    - ident:
+                                        name: int_to_string
+                                        span:
+                                          start: 24
+                                          end: 37
+                                  span:
+                                    start: 24
+                                    end: 37
                               span:
                                 start: 24
                                 end: 37
@@ -44,11 +52,15 @@ Ok:
                                     fun:
                                       kind:
                                         Variable:
-                                          name:
-                                            name: add_10
-                                            span:
-                                              start: 38
-                                              end: 44
+                                          segments:
+                                            - ident:
+                                                name: add_10
+                                                span:
+                                                  start: 38
+                                                  end: 44
+                                          span:
+                                            start: 38
+                                            end: 44
                                       span:
                                         start: 38
                                         end: 44
@@ -106,22 +118,30 @@ Ok:
                     fun:
                       kind:
                         Variable:
-                          name:
-                            name: int_add
-                            span:
-                              start: 90
-                              end: 97
+                          segments:
+                            - ident:
+                                name: int_add
+                                span:
+                                  start: 90
+                                  end: 97
+                          span:
+                            start: 90
+                            end: 97
                       span:
                         start: 90
                         end: 97
                     args:
                       - kind:
                           Variable:
-                            name:
-                              name: n
-                              span:
-                                start: 98
-                                end: 99
+                            segments:
+                              - ident:
+                                  name: n
+                                  span:
+                                    start: 98
+                                    end: 99
+                            span:
+                              start: 98
+                              end: 99
                         span:
                           start: 98
                           end: 99
