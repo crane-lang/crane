@@ -1,6 +1,5 @@
 use thin_vec::ThinVec;
 
-
 use crate::ast::{Expr, ExprKind, Literal, LiteralKind};
 use crate::lexer::token::{Token, TokenKind};
 use crate::lexer::LexError;

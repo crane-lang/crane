@@ -1,6 +1,5 @@
 use thin_vec::ThinVec;
 
-
 use crate::ast::{
     keywords, FieldDecl, Fn, FnParam, Ident, Item, ItemKind, StructDecl, UnionDecl, Variant,
     VariantData,
