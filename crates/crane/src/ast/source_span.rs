@@ -6,6 +6,15 @@ pub struct SourceSpan {
     pub span: Span,
 }
 
+impl From<(&String, Span)> for SourceSpan {
+    fn from(value: (&String, Span)) -> Self {
+        Self {
+            source: value.0.to_owned(),
+            span: value.1,
+        }
+    }
+}
+
 impl From<(&str, Span)> for SourceSpan {
     fn from(value: (&str, Span)) -> Self {
         Self {
