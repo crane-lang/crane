@@ -391,7 +391,7 @@ impl NativeBackend {
                                     &module,
                                     &fun.params,
                                     &fn_value,
-                                    expr.clone(),
+                                    *expr.clone(),
                                 );
                             }
                             TyStmtKind::Item(_item) => todo!(),
