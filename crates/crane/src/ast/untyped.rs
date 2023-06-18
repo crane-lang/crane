@@ -182,6 +182,12 @@ pub struct Module {
     pub items: ThinVec<Item>,
 }
 
+/// A package.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Package {
+    pub modules: ThinVec<Module>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

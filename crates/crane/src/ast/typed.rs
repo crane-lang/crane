@@ -189,6 +189,12 @@ pub struct TyModule {
     pub items: ThinVec<TyItem>,
 }
 
+/// A package.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TyPackage {
+    pub modules: ThinVec<TyModule>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

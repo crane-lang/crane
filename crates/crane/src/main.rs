@@ -11,11 +11,12 @@ use ariadne::{Color, Label, Report, ReportKind, Source};
 use ast::SourceSpan;
 use clap::{Parser, Subcommand};
 use lexer::Lexer;
+use thin_vec::thin_vec;
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
 use typer::TypeErrorKind;
 
-use crate::ast::Module;
+use crate::ast::{Module, Package};
 use crate::backend::native::NativeBackend;
 use crate::parser::ParseErrorKind;
 use crate::typer::Typer;
@@ -117,13 +118,17 @@ fn compile(example: Option<String>) -> Result<(), ()> {
 
             let module = Module { items };
 
-            match typer.type_check_module(module) {
-                Ok(typed_module) => {
+            let package = Package {
+                modules: thin_vec![module],
+            };
+
+            match typer.type_check_package(package) {
+                Ok(typed_package) => {
                     std::fs::create_dir_all("build").unwrap();
 
                     let backend = NativeBackend::new();
 
-                    backend.compile(typed_module.items.into());
+                    backend.compile(typed_package);
 
                     println!("Compiled!");
 
