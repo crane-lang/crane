@@ -33,6 +33,16 @@ pub fn main() {
     println(int_to_string(always_3()))
     println("")
 
+    let also_always_3 = always_3()
+    print("This value is also always ")
+    println(int_to_string(also_always_3))
+    println("")
+
+    let ten = int_add(also_always_3, 7)
+    print("This value should be 10: ")
+    println(int_to_string(ten))
+    println("")
+
     add_and_print(1, 1)
     add_and_print(2, 2)
     add_and_print(3, 3)
