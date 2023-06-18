@@ -19,7 +19,7 @@ use thin_vec::ThinVec;
 
 use crate::ast::{
     Ident, TyExpr, TyExprKind, TyFnParam, TyIntegerLiteral, TyItem, TyItemKind, TyLiteralKind,
-    TyLocal, TyLocalKind, TyStmtKind, TyUint,
+    TyLocalKind, TyStmtKind, TyUint,
 };
 use crate::typer::Type;
 
@@ -621,7 +621,8 @@ impl NativeBackend {
         if let Some(callee) = module.get_function(&callee_name.to_string()) {
             let args: Vec<BasicMetadataValueEnum> = args
                 .into_iter()
-                .map(|arg| match arg.kind {
+                .enumerate()
+                .map(|(arg_index, arg)| match arg.kind {
                     TyExprKind::Literal(literal) => match literal.kind {
                         TyLiteralKind::String(literal) => {
                             Self::compile_string_literal(context, builder, module, literal)
@@ -635,16 +636,23 @@ impl NativeBackend {
                         }
                     },
                     TyExprKind::Variable { name } => {
-                        dbg!(&locals);
-
                         let param = caller_params
                             .into_iter()
                             .enumerate()
                             .find(|(_, param)| param.name == name)
                             .and_then(|(param_index, _)| caller.get_nth_param(param_index as u32));
 
+                        let callee_param =
+                            callee.get_nth_param(arg_index as u32).unwrap_or_else(|| {
+                                panic!("No param for `{callee_name}` found at index {arg_index}");
+                            });
+
                         let variable = param
-                            .or_else(|| locals.get(&name).map(|local| local.as_basic_value_enum()))
+                            .or_else(|| {
+                                locals.get(&name).map(|local| {
+                                    builder.build_load(callee_param.get_type(), *local, "load")
+                                })
+                            })
                             .unwrap_or_else(|| panic!("Variable `{}` not found.", name));
 
                         variable.into()
