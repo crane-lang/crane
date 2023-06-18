@@ -244,9 +244,21 @@ where
             }
         }
 
+        let span = {
+            let start_span = path_segments.first().map(|segment| segment.ident.span);
+            let end_span = path_segments.last().map(|segment| segment.ident.span);
+
+            match (start_span, end_span) {
+                (Some(start), Some(end)) => start.to(end),
+                (Some(span), None) | (None, Some(span)) => span,
+                // TODO: Is this case impossible?
+                (None, None) => DUMMY_SPAN,
+            }
+        };
+
         Ok(Path {
             segments: path_segments,
-            span: DUMMY_SPAN,
+            span,
         })
     }
 }
