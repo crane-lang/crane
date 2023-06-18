@@ -49,7 +49,7 @@ mod tests {
             span: Span::new(4, 7),
         };
 
-        // Sanity: Ensure spans are not equal.
+        // SANITY: Ensure spans are not equal.
         assert_ne!(ident_a.span, ident_b.span);
 
         assert_eq!(ident_a, ident_b)
@@ -78,7 +78,7 @@ mod tests {
             span: Span::new(4, 7),
         };
 
-        // Sanity: Ensure spans are not equal.
+        // SANITY: Ensure spans are not equal.
         assert_ne!(ident_a.span, ident_b.span);
 
         assert_eq!(hash_ident(&ident_a), hash_ident(&ident_b))
