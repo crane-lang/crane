@@ -134,9 +134,9 @@ impl NativeBackend {
             fn_name
         };
 
-        // Define `print`.
+        // Define `std::io::print`.
         {
-            let fn_name = "print";
+            let fn_name = "std::io::print";
 
             let i8_type = self.context.i8_type();
 
@@ -183,9 +183,9 @@ impl NativeBackend {
             Self::verify_fn(&fpm, fn_name, &fn_value).unwrap();
         }
 
-        // Define `println`.
+        // Define `std::io::println`.
         {
-            let fn_name = "println";
+            let fn_name = "std::io::println";
 
             let i8_type = self.context.i8_type();
 
@@ -216,9 +216,9 @@ impl NativeBackend {
             Self::verify_fn(&fpm, fn_name, &fn_value).unwrap();
         }
 
-        // Define `int_add`.
+        // Define `std::int::int_add`.
         {
-            let fn_name = "int_add";
+            let fn_name = "std::int::int_add";
 
             let i64_type = self.context.i64_type();
 
@@ -246,9 +246,9 @@ impl NativeBackend {
             Self::verify_fn(&fpm, fn_name, &fn_value).unwrap();
         }
 
-        // Define `int_to_string`.
+        // Define `std::int::int_to_string`.
         {
-            let fn_name = "int_to_string";
+            let fn_name = "std::int::int_to_string";
 
             let i64_type = self.context.i64_type();
             let i8_type = self.context.i8_type();

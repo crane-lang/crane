@@ -81,8 +81,27 @@ impl Typer {
 
         // HACK: Register the functions from `std`.
         self.register_function(
-            Ident {
-                name: "print".into(),
+            TyPath {
+                segments: thin_vec![
+                    TyPathSegment {
+                        ident: Ident {
+                            name: "std".into(),
+                            span: DUMMY_SPAN,
+                        }
+                    },
+                    TyPathSegment {
+                        ident: Ident {
+                            name: "io".into(),
+                            span: DUMMY_SPAN,
+                        }
+                    },
+                    TyPathSegment {
+                        ident: Ident {
+                            name: "print".into(),
+                            span: DUMMY_SPAN,
+                        }
+                    }
+                ],
                 span: DUMMY_SPAN,
             },
             thin_vec![TyFnParam {
@@ -96,8 +115,27 @@ impl Typer {
             unit_ty.clone(),
         );
         self.register_function(
-            Ident {
-                name: "println".into(),
+            TyPath {
+                segments: thin_vec![
+                    TyPathSegment {
+                        ident: Ident {
+                            name: "std".into(),
+                            span: DUMMY_SPAN,
+                        }
+                    },
+                    TyPathSegment {
+                        ident: Ident {
+                            name: "io".into(),
+                            span: DUMMY_SPAN,
+                        }
+                    },
+                    TyPathSegment {
+                        ident: Ident {
+                            name: "println".into(),
+                            span: DUMMY_SPAN,
+                        }
+                    }
+                ],
                 span: DUMMY_SPAN,
             },
             thin_vec![TyFnParam {
@@ -111,8 +149,27 @@ impl Typer {
             unit_ty.clone(),
         );
         self.register_function(
-            Ident {
-                name: "int_add".into(),
+            TyPath {
+                segments: thin_vec![
+                    TyPathSegment {
+                        ident: Ident {
+                            name: "std".into(),
+                            span: DUMMY_SPAN,
+                        }
+                    },
+                    TyPathSegment {
+                        ident: Ident {
+                            name: "int".into(),
+                            span: DUMMY_SPAN,
+                        }
+                    },
+                    TyPathSegment {
+                        ident: Ident {
+                            name: "int_add".into(),
+                            span: DUMMY_SPAN,
+                        }
+                    }
+                ],
                 span: DUMMY_SPAN,
             },
             thin_vec![
@@ -136,8 +193,27 @@ impl Typer {
             uint64_ty.clone(),
         );
         self.register_function(
-            Ident {
-                name: "int_to_string".into(),
+            TyPath {
+                segments: thin_vec![
+                    TyPathSegment {
+                        ident: Ident {
+                            name: "std".into(),
+                            span: DUMMY_SPAN,
+                        }
+                    },
+                    TyPathSegment {
+                        ident: Ident {
+                            name: "int".into(),
+                            span: DUMMY_SPAN,
+                        }
+                    },
+                    TyPathSegment {
+                        ident: Ident {
+                            name: "int_to_string".into(),
+                            span: DUMMY_SPAN,
+                        }
+                    }
+                ],
                 span: DUMMY_SPAN,
             },
             thin_vec![TyFnParam {
@@ -168,7 +244,16 @@ impl Typer {
                         })
                         .unwrap_or(unit_ty.clone());
 
-                    self.register_function(item.name.clone(), params.clone(), return_ty);
+                    self.register_function(
+                        TyPath {
+                            segments: thin_vec![TyPathSegment {
+                                ident: item.name.clone()
+                            }],
+                            span: item.name.span,
+                        },
+                        params.clone(),
+                        return_ty,
+                    );
                 }
                 ItemKind::Struct(_) => {}
                 ItemKind::Union(_) => {}
@@ -191,16 +276,13 @@ impl Typer {
         Ok(TyModule { items: typed_items })
     }
 
-    fn register_function(&mut self, name: Ident, params: ThinVec<TyFnParam>, return_ty: Arc<Type>) {
-        self.module_functions.insert(
-            TyPath {
-                segments: thin_vec![TyPathSegment {
-                    ident: name.clone()
-                }],
-                span: name.span,
-            },
-            (params, return_ty),
-        );
+    fn register_function(
+        &mut self,
+        path: TyPath,
+        params: ThinVec<TyFnParam>,
+        return_ty: Arc<Type>,
+    ) {
+        self.module_functions.insert(path, (params, return_ty));
     }
 
     fn ensure_function_exists(

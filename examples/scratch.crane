@@ -13,12 +13,12 @@ union Bool {
 
 mod foo {
     fn do_foo() {
-        println("Hello from `foo`")
+        std::io::println("Hello from `foo`")
     }
 
     mod bar {
         fn do_bar() {
-            println("Hello from `bar`")
+            std::io::println("Hello from `bar`")
         }
     }
 }
@@ -26,40 +26,40 @@ mod foo {
 pub fn main() {
     let twenty_three = 23
 
-    print("twenty_three = ")
-    println(int_to_string(twenty_three))
-    println(" ")
+    std::io::print("twenty_three = ")
+    std::io::println(std::int::int_to_string(twenty_three))
+    std::io::println(" ")
 
     let greeting = "Hey"
 
-    print("greeting = ")
-    println(greeting)
-    println(" ")
+    std::io::print("greeting = ")
+    std::io::println(greeting)
+    std::io::println(" ")
 
     greet("world")
     greet("trees")
     greet("everyone")
     std::io::println("")
 
-    print("This value is always ")
-    println(int_to_string(always_3()))
-    println("")
+    std::io::print("This value is always ")
+    std::io::println(std::int::int_to_string(always_3()))
+    std::io::println("")
 
     let also_always_3 = always_3()
-    print("This value is also always ")
-    println(int_to_string(also_always_3))
-    println("")
+    std::io::print("This value is also always ")
+    std::io::println(std::int::int_to_string(also_always_3))
+    std::io::println("")
 
-    let ten = int_add(also_always_3, 7)
-    print("This value should be 10: ")
-    println(int_to_string(ten))
-    println("")
+    let ten = std::int::int_add(also_always_3, 7)
+    std::io::print("This value should be 10: ")
+    std::io::println(std::int::int_to_string(ten))
+    std::io::println("")
 
     add_and_print(1, 1)
     add_and_print(2, 2)
     add_and_print(3, 3)
-    print("7 + 5 = ")
-    println(int_to_string(add_5(7)))
+    std::io::print("7 + 5 = ")
+    std::io::println(std::int::int_to_string(add_5(7)))
 }
 
 fn always_3() -> Uint64 {
@@ -67,26 +67,26 @@ fn always_3() -> Uint64 {
 }
 
 fn add_5(value: Uint64) -> Uint64 {
-    int_add(value, 5)
+    std::int::int_add(value, 5)
 }
 
 fn greet(name: String) {
     join("Hello", name)
-    print("!")
-    println("")
+    std::io::print("!")
+    std::io::println("")
 }
 
 fn join(a: String, b: String) {
-    print(a)
-    print(", ")
-    print(b)
+    std::io::print(a)
+    std::io::print(", ")
+    std::io::print(b)
 }
 
 fn add_and_print(a: Uint64, b: Uint64) {
-    print(int_to_string(a))
-    print(" + ")
-    print(int_to_string(b))
-    print(" = ")
-    print(int_to_string(int_add(a, b)))
-    println("")
+    std::io::print(std::int::int_to_string(a))
+    std::io::print(" + ")
+    std::io::print(std::int::int_to_string(b))
+    std::io::print(" = ")
+    std::io::print(std::int::int_to_string(std::int::int_add(a, b)))
+    std::io::println("")
 }
