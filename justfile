@@ -21,3 +21,7 @@ build-llvm:
         -DCMAKE_INSTALL_PREFIX=/Users/maxdeviant/projects/crane/llvm-build
     ninja -C build
     popd
+
+# Count the source lines of code with `cloc` (requires `nix-shell`).
+cloc:
+    nix-shell -p cloc --command "cloc --vcs=git ."
