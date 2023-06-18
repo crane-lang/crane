@@ -15,8 +15,9 @@ use crate::ast::{
     Expr, ExprKind, Fn, FnParam, Ident, InlineModuleDecl, Item, ItemKind, Literal, LiteralKind,
     Local, LocalKind, Module, ModuleDecl, Package, Span, Stmt, StmtKind, StructDecl, TyExpr,
     TyExprKind, TyFieldDecl, TyFn, TyFnParam, TyIntegerLiteral, TyItem, TyItemKind, TyLiteral,
-    TyLiteralKind, TyLocal, TyLocalKind, TyModule, TyPackage, TyStmt, TyStmtKind, TyStructDecl,
-    TyUint, TyUnionDecl, TyVariant, TyVariantData, UnionDecl, VariantData, DUMMY_SPAN,
+    TyLiteralKind, TyLocal, TyLocalKind, TyModule, TyPackage, TyPath, TyPathSegment, TyStmt,
+    TyStmtKind, TyStructDecl, TyUint, TyUnionDecl, TyVariant, TyVariantData, UnionDecl,
+    VariantData, DUMMY_SPAN,
 };
 
 fn ty_to_string(ty: &Type) -> String {
@@ -38,8 +39,8 @@ fn ty_to_string(ty: &Type) -> String {
 pub type TypeCheckResult<T> = Result<T, TypeError>;
 
 pub struct Typer {
-    module_functions: HashMap<Ident, (ThinVec<TyFnParam>, Arc<Type>)>,
-    scopes: Vec<HashMap<Ident, Arc<Type>>>,
+    module_functions: HashMap<TyPath, (ThinVec<TyFnParam>, Arc<Type>)>,
+    scopes: Vec<HashMap<TyPath, Arc<Type>>>,
 }
 
 impl Typer {
@@ -191,22 +192,28 @@ impl Typer {
     }
 
     fn register_function(&mut self, name: Ident, params: ThinVec<TyFnParam>, return_ty: Arc<Type>) {
-        self.module_functions.insert(name, (params, return_ty));
+        self.module_functions.insert(
+            TyPath {
+                segments: thin_vec![TyPathSegment {
+                    ident: name.clone()
+                }],
+                span: name.span,
+            },
+            (params, return_ty),
+        );
     }
 
     fn ensure_function_exists(
         &self,
-        ident: &Ident,
+        path: &TyPath,
     ) -> TypeCheckResult<(&ThinVec<TyFnParam>, Arc<Type>)> {
-        if let Some((params, return_ty)) = self.module_functions.get(ident) {
+        if let Some((params, return_ty)) = self.module_functions.get(path) {
             return Ok((params, return_ty.clone()));
         }
 
         Err(TypeError {
-            kind: TypeErrorKind::UnknownFunction {
-                name: ident.clone(),
-            },
-            span: ident.span,
+            kind: TypeErrorKind::UnknownFunction(path.clone()),
+            span: path.span,
         })
     }
 
@@ -236,16 +243,29 @@ impl Typer {
     }
 
     fn infer_function(&mut self, name: &Ident, fun: Fn) -> TypeCheckResult<TyFn> {
-        let (_, return_ty) = self.ensure_function_exists(name)?;
+        let path = TyPath {
+            segments: thin_vec![TyPathSegment {
+                ident: name.clone()
+            }],
+            span: name.span,
+        };
+
+        let (_, return_ty) = self.ensure_function_exists(&path)?;
 
         let params = self.infer_function_params(&fun.params)?;
 
-        self.scopes.push(HashMap::from_iter(
-            params
-                .clone()
-                .into_iter()
-                .map(|param| (param.name, param.ty)),
-        ));
+        self.scopes
+            .push(HashMap::from_iter(params.clone().into_iter().map(
+                |param| {
+                    (
+                        TyPath {
+                            segments: thin_vec![TyPathSegment { ident: param.name }],
+                            span: param.span,
+                        },
+                        param.ty,
+                    )
+                },
+            )));
 
         let body = fun
             .body
@@ -380,7 +400,15 @@ impl Typer {
         };
 
         if let Some(scope) = self.scopes.last_mut() {
-            scope.insert(local.name.clone(), ty.clone());
+            scope.insert(
+                TyPath {
+                    segments: thin_vec![TyPathSegment {
+                        ident: local.name.clone()
+                    }],
+                    span: local.span,
+                },
+                ty.clone(),
+            );
         }
 
         Ok(TyLocal {
@@ -401,21 +429,24 @@ impl Typer {
                 LiteralKind::Integer => self.infer_integer(literal, expr.span),
             },
             ExprKind::Variable(path) => {
-                // HACK: Read the last path segment as the variable name.
-                let name = path
-                    .segments
-                    .last()
-                    .expect("Path has no segments.")
-                    .ident
-                    .clone();
+                let path = TyPath {
+                    segments: path
+                        .segments
+                        .into_iter()
+                        .map(|segment| TyPathSegment {
+                            ident: segment.ident,
+                        })
+                        .collect::<ThinVec<_>>(),
+                    span: path.span,
+                };
 
                 let ty = self
                     .scopes
                     .last()
-                    .and_then(|scope| scope.get(&name).cloned());
+                    .and_then(|scope| scope.get(&path).cloned());
 
                 Ok(TyExpr {
-                    kind: TyExprKind::Variable { name },
+                    kind: TyExprKind::Variable(path),
                     ty: ty.unwrap_or_else(|| {
                         Arc::new(Type::UserDefined {
                             module: "?".into(),
@@ -429,7 +460,7 @@ impl Typer {
                 let callee = self.infer_expr(*fun.clone())?;
 
                 let callee = match &callee.kind {
-                    TyExprKind::Variable { name } => Ok(name),
+                    TyExprKind::Variable(path) => Ok(path),
                     _ => Err(TypeError {
                         kind: TypeErrorKind::Error("Not a function.".to_string()),
                         span: callee.span,
@@ -438,7 +469,7 @@ impl Typer {
 
                 let (callee_params, callee_return_ty) =
                     self.module_functions.get(callee).ok_or_else(|| TypeError {
-                        kind: TypeErrorKind::Error(format!("Function `{}` not found.", callee)),
+                        kind: TypeErrorKind::Error(format!("Function `{callee}` not found.",)),
                         span: callee.span,
                     })?;
 
@@ -453,7 +484,7 @@ impl Typer {
 
                 if callee_arity != caller_arity {
                     return Err(TypeError {
-                        kind: TypeErrorKind::Error(format!("`{}` was called with {caller_arity} arguments when it expected {callee_arity}", callee.name )),
+                        kind: TypeErrorKind::Error(format!("`{callee}` was called with {caller_arity} arguments when it expected {callee_arity}")),
                         span: callee.span
                     });
                 }

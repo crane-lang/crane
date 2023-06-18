@@ -15,11 +15,11 @@ use inkwell::values::{
 };
 use inkwell::{AddressSpace, OptimizationLevel};
 use smol_str::SmolStr;
-use thin_vec::ThinVec;
+use thin_vec::{thin_vec, ThinVec};
 
 use crate::ast::{
     Ident, TyExpr, TyExprKind, TyFnParam, TyIntegerLiteral, TyItemKind, TyLiteralKind, TyLocalKind,
-    TyPackage, TyStmtKind, TyUint,
+    TyPackage, TyPath, TyPathSegment, TyStmtKind, TyUint,
 };
 use crate::typer::Type;
 
@@ -441,7 +441,14 @@ impl NativeBackend {
 
                                 builder.build_store(local_ptr, value);
 
-                                locals.insert(&local.name, local_ptr);
+                                let local_path = TyPath {
+                                    segments: thin_vec![TyPathSegment {
+                                        ident: local.name.clone()
+                                    }],
+                                    span: local.name.span,
+                                };
+
+                                locals.insert(local_path, local_ptr);
                             }
                             TyStmtKind::Expr(expr) => {
                                 last_stmt = Self::compile_expr(
@@ -520,7 +527,7 @@ impl NativeBackend {
         module: &Module<'ctx>,
         fn_params: &ThinVec<TyFnParam>,
         fn_value: &FunctionValue<'ctx>,
-        locals: &HashMap<&Ident, PointerValue<'ctx>>,
+        locals: &HashMap<TyPath, PointerValue<'ctx>>,
         expr: TyExpr,
     ) -> Option<BasicValueEnum<'ctx>> {
         match expr.kind {
@@ -534,7 +541,7 @@ impl NativeBackend {
                         .as_basic_value_enum(),
                 ),
             },
-            TyExprKind::Variable { name: _ } => todo!(),
+            TyExprKind::Variable(_) => todo!(),
             TyExprKind::Call { fun, args } => Self::compile_fn_call(
                 context,
                 builder,
@@ -601,10 +608,10 @@ impl NativeBackend {
         caller_params: &ThinVec<TyFnParam>,
         fun: Box<TyExpr>,
         args: ThinVec<Box<TyExpr>>,
-        locals: &HashMap<&Ident, PointerValue<'ctx>>,
+        locals: &HashMap<TyPath, PointerValue<'ctx>>,
     ) -> Result<CallSiteValue<'ctx>, String> {
         let callee_name = match fun.kind {
-            TyExprKind::Variable { name } => name,
+            TyExprKind::Variable(path) => path,
             _ => todo!(),
         };
 
@@ -625,11 +632,14 @@ impl NativeBackend {
                                 .into()
                         }
                     },
-                    TyExprKind::Variable { name } => {
+                    TyExprKind::Variable(path) => {
                         let param = caller_params
                             .into_iter()
                             .enumerate()
-                            .find(|(_, param)| param.name == name)
+                            .find(|(_, param)| {
+                                Some(param.name.clone())
+                                    == path.segments.last().map(|segment| segment.ident.clone())
+                            })
                             .and_then(|(param_index, _)| caller.get_nth_param(param_index as u32));
 
                         let callee_param =
@@ -639,11 +649,11 @@ impl NativeBackend {
 
                         let variable = param
                             .or_else(|| {
-                                locals.get(&name).map(|local| {
+                                locals.get(&path).map(|local| {
                                     builder.build_load(callee_param.get_type(), *local, "load")
                                 })
                             })
-                            .unwrap_or_else(|| panic!("Variable `{}` not found.", name));
+                            .unwrap_or_else(|| panic!("Variable `{}` not found.", path));
 
                         variable.into()
                     }

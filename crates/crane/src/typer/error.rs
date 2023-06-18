@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::ast::{Ident, Span};
+use crate::ast::{Span, TyPath};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TypeError {
@@ -10,6 +10,6 @@ pub struct TypeError {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum TypeErrorKind {
-    UnknownFunction { name: Ident },
+    UnknownFunction(TyPath),
     Error(String),
 }
