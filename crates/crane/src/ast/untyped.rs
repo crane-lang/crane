@@ -4,6 +4,21 @@ use thin_vec::ThinVec;
 
 use crate::ast::{Ident, Span};
 
+/// A path.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Path {
+    /// The segments in the path.
+    pub segments: ThinVec<PathSegment>,
+    pub span: Span,
+}
+
+/// A segment of a [`Path`].
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PathSegment {
+    /// The identifier portion of this segment.
+    pub ident: Ident,
+}
+
 /// The kind of an [`Expr`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ExprKind {
@@ -83,6 +98,19 @@ pub struct Local {
     pub span: Span,
 }
 
+/// The kind of a [`UseTree`].
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum UseTreeKind {
+    Single,
+}
+
+/// A tree of paths with a common prefix.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UseTree {
+    pub prefix: Path,
+    pub kind: UseTreeKind,
+}
+
 /// A function definition.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Fn {
@@ -159,6 +187,9 @@ pub struct UnionDecl {
 /// The kind of an [`Item`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ItemKind {
+    /// A use declaration (`use`).
+    Use(UseTree),
+
     /// A function declaration (`fn`).
     Fn(Box<Fn>),
 
@@ -200,8 +231,8 @@ mod tests {
         insta::assert_snapshot!(size_of::<Expr>().to_string(), @"56");
         insta::assert_snapshot!(size_of::<ExprKind>().to_string(), @"40");
         insta::assert_snapshot!(size_of::<Fn>().to_string(), @"56");
-        insta::assert_snapshot!(size_of::<Item>().to_string(), @"56");
-        insta::assert_snapshot!(size_of::<ItemKind>().to_string(), @"16");
+        insta::assert_snapshot!(size_of::<Item>().to_string(), @"72");
+        insta::assert_snapshot!(size_of::<ItemKind>().to_string(), @"32");
         insta::assert_snapshot!(size_of::<Stmt>().to_string(), @"32");
         insta::assert_snapshot!(size_of::<StmtKind>().to_string(), @"16");
     }

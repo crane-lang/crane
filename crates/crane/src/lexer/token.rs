@@ -32,6 +32,10 @@ pub enum TokenKind {
     #[token(":")]
     Colon,
 
+    /// `::`
+    #[token("::")]
+    ColonColon,
+
     /// `=`
     #[token("=")]
     Equal,
