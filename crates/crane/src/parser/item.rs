@@ -1,8 +1,8 @@
 use thin_vec::ThinVec;
 
 use crate::ast::{
-    keywords, FieldDecl, Fn, FnParam, Ident, Item, ItemKind, StructDecl, UnionDecl, Variant,
-    VariantData,
+    keywords, FieldDecl, Fn, FnParam, Ident, Item, ItemKind, Path, PathSegment, StructDecl,
+    UnionDecl, UseTree, UseTreeKind, Variant, VariantData, DUMMY_SPAN,
 };
 use crate::lexer::token::{Token, TokenKind};
 use crate::lexer::LexError;
@@ -26,6 +26,17 @@ where
 
     #[tracing::instrument(skip(self))]
     fn parse_item_kind(&mut self) -> ParseResult<Option<ItemInfo>> {
+        if self.consume_keyword(keywords::USE) {
+            let ident = Ident {
+                name: "".into(),
+                span: DUMMY_SPAN,
+            };
+
+            let use_tree = self.parse_use()?;
+
+            return Ok(Some((ident, ItemKind::Use(use_tree))));
+        }
+
         if self.consume_keyword(keywords::FN) {
             let (name, fun) = self.parse_fn()?;
 
@@ -45,6 +56,27 @@ where
         }
 
         Ok(None)
+    }
+
+    #[tracing::instrument(skip(self))]
+    fn parse_use(&mut self) -> ParseResult<UseTree> {
+        let mut path_segments = ThinVec::new();
+
+        while let Some(ident) = self.parse_ident().ok() {
+            path_segments.push(PathSegment { ident });
+
+            if !self.consume(TokenKind::ColonColon) {
+                break;
+            }
+        }
+
+        Ok(UseTree {
+            prefix: Path {
+                segments: path_segments,
+                span: DUMMY_SPAN,
+            },
+            kind: UseTreeKind::Single,
+        })
     }
 
     #[tracing::instrument(skip(self))]
