@@ -30,3 +30,57 @@ impl std::fmt::Display for Ident {
         write!(f, "{}", self.name)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn partial_eq_impl_ignores_spans() {
+        let name = SmolStr::new_inline("foo");
+
+        let ident_a = Ident {
+            name: name.clone(),
+            span: Span::new(0, 3),
+        };
+
+        let ident_b = Ident {
+            name,
+            span: Span::new(4, 7),
+        };
+
+        // Sanity: Ensure spans are not equal.
+        assert_ne!(ident_a.span, ident_b.span);
+
+        assert_eq!(ident_a, ident_b)
+    }
+
+    #[test]
+    fn hash_impl_ignores_spans() {
+        use std::collections::hash_map::DefaultHasher;
+
+        fn hash_ident(ident: &Ident) -> u64 {
+            let mut hasher = DefaultHasher::new();
+
+            ident.hash(&mut hasher);
+            hasher.finish()
+        }
+
+        let name = SmolStr::new_inline("foo");
+
+        let ident_a = Ident {
+            name: name.clone(),
+            span: Span::new(0, 3),
+        };
+
+        let ident_b = Ident {
+            name,
+            span: Span::new(4, 7),
+        };
+
+        // Sanity: Ensure spans are not equal.
+        assert_ne!(ident_a.span, ident_b.span);
+
+        assert_eq!(hash_ident(&ident_a), hash_ident(&ident_b))
+    }
+}
