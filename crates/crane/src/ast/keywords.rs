@@ -26,3 +26,8 @@ pub const LET: Ident = Ident {
     name: SmolStr::new_inline("let"),
     span: DUMMY_SPAN,
 };
+
+pub const MOD: Ident = Ident {
+    name: SmolStr::new_inline("mod"),
+    span: DUMMY_SPAN,
+};

@@ -66,6 +66,9 @@ pub fn walk_item<V: Visitor>(visitor: &mut V, item: &Item) {
         ItemKind::Union(union_decl) => {
             visitor.visit_union_decl(union_decl);
         }
+        ItemKind::Module(module_decl) => {
+            todo!()
+        }
     }
 }
 

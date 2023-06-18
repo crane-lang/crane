@@ -156,6 +156,25 @@ pub struct UnionDecl {
     pub variants: ThinVec<Variant>,
 }
 
+/// Denotes whether a [`ModuleDecl`] is inlined.
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+pub enum InlineModuleDecl {
+    Yes,
+    No,
+}
+
+/// A module (`mod`) declaration.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ModuleDecl {
+    /// A module declaration that either:
+    ///   1. has an inlined declaration body (`mod foo { ... }`) or
+    ///   2. refers to a module in a separate file that has already been loaded.
+    Loaded(Module, InlineModuleDecl),
+
+    /// A module declaration that refers to a separate file that has not yet been loaded.
+    Unloaded,
+}
+
 /// The kind of an [`Item`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ItemKind {
@@ -167,6 +186,9 @@ pub enum ItemKind {
 
     /// A union declaration (`union`).
     Union(UnionDecl),
+
+    /// A module declaration (`mod`).
+    Module(Box<ModuleDecl>),
 }
 
 /// An item in a [`Module`].

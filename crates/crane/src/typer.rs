@@ -171,6 +171,7 @@ impl Typer {
                 }
                 ItemKind::Struct(_) => {}
                 ItemKind::Union(_) => {}
+                ItemKind::Module(_) => {}
             }
         }
 
@@ -227,6 +228,7 @@ impl Typer {
                 kind: TyItemKind::Union(self.infer_union_decl(&union_decl)?),
                 name: item.name,
             }),
+            ItemKind::Module(module_decl) => todo!(),
         }
     }
 
