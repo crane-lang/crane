@@ -11,6 +11,14 @@ union Bool {
     False,
 }
 
+mod foo {
+    fn do_foo() {}
+
+    mod bar {
+        fn do_bar() {}
+    }
+}
+
 pub fn main() {
     let twenty_three = 23
 
