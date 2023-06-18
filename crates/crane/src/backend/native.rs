@@ -419,29 +419,15 @@ impl NativeBackend {
 
                                 let value = match &local.kind {
                                     TyLocalKind::Decl => None,
-                                    TyLocalKind::Init(init) => match &init.kind {
-                                        TyExprKind::Literal(literal) => match &literal.kind {
-                                            TyLiteralKind::String(literal) => Some(
-                                                Self::compile_string_literal(
-                                                    &self.context,
-                                                    &builder,
-                                                    &module,
-                                                    literal.clone(),
-                                                )
-                                                .as_basic_value_enum(),
-                                            ),
-                                            TyLiteralKind::Integer(literal) => Some(
-                                                Self::compile_integer_literal(
-                                                    &self.context,
-                                                    &builder,
-                                                    &module,
-                                                    literal.clone(),
-                                                )
-                                                .as_basic_value_enum(),
-                                            ),
-                                        },
-                                        _ => todo!(),
-                                    },
+                                    TyLocalKind::Init(init) => Self::compile_expr(
+                                        &self.context,
+                                        &builder,
+                                        &module,
+                                        &fun.params,
+                                        &fn_value,
+                                        &locals,
+                                        *init.clone(),
+                                    ),
                                 }
                                 .unwrap_or_else(|| {
                                     panic!(
