@@ -11,7 +11,6 @@ use std::sync::Arc;
 use smol_str::SmolStr;
 use thin_vec::{thin_vec, ThinVec};
 
-use crate::ast::visitor::{walk_expr, Visitor};
 use crate::ast::{
     Expr, ExprKind, Fn, FnParam, Ident, Item, ItemKind, Literal, LiteralKind, Local, LocalKind,
     Module, Package, Span, Stmt, StmtKind, StructDecl, TyExpr, TyExprKind, TyFieldDecl, TyFn,
@@ -173,16 +172,6 @@ impl Typer {
                 ItemKind::Struct(_) => {}
                 ItemKind::Union(_) => {}
             }
-        }
-
-        let mut called_fns_collector = CalledFnsCollector::new();
-
-        for item in &module.items {
-            called_fns_collector.visit_item(item);
-        }
-
-        for called_fn in called_fns_collector.called_fns {
-            self.ensure_function_exists(&called_fn)?;
         }
 
         let mut typed_items = ThinVec::new();
@@ -491,53 +480,6 @@ impl Typer {
                 name: "Uint64".into(),
             }),
         })
-    }
-}
-
-struct IdentCollector {
-    idents: Vec<Ident>,
-}
-
-impl IdentCollector {
-    pub fn new() -> Self {
-        Self { idents: Vec::new() }
-    }
-}
-
-impl Visitor for IdentCollector {
-    fn visit_ident(&mut self, ident: &Ident) {
-        self.idents.push(ident.clone());
-    }
-}
-
-struct CalledFnsCollector {
-    called_fns: Vec<Ident>,
-}
-
-impl CalledFnsCollector {
-    pub fn new() -> Self {
-        Self {
-            called_fns: Vec::new(),
-        }
-    }
-}
-
-impl Visitor for CalledFnsCollector {
-    fn visit_expr(&mut self, expr: &Expr) {
-        match &expr.kind {
-            ExprKind::Call { fun, .. } => {
-                let mut ident_collector = IdentCollector::new();
-
-                walk_expr(&mut ident_collector, fun);
-
-                if let Some(ident) = ident_collector.idents.first() {
-                    self.called_fns.push(ident.clone());
-                }
-            }
-            _ => {}
-        }
-
-        walk_expr(self, expr);
     }
 }
 
