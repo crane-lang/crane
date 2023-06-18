@@ -16,11 +16,15 @@ Ok:
                     fun:
                       kind:
                         Variable:
-                          name:
-                            name: println
-                            span:
-                              start: 70
-                              end: 77
+                          segments:
+                            - ident:
+                                name: println
+                                span:
+                                  start: 70
+                                  end: 77
+                          span:
+                            start: 70
+                            end: 77
                       span:
                         start: 70
                         end: 77

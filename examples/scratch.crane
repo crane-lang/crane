@@ -1,5 +1,5 @@
-// TODO: Handle imports.
-// use std::io::{print, println}
+use std::io::print
+use std::io::println
 
 struct User {
     name: String,
@@ -27,7 +27,7 @@ pub fn main() {
     greet("world")
     greet("trees")
     greet("everyone")
-    println("")
+    std::io::println("")
 
     print("This value is always ")
     println(int_to_string(always_3()))

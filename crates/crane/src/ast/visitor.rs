@@ -1,6 +1,6 @@
 use crate::ast::{
-    Expr, ExprKind, FieldDecl, Fn, FnParam, Ident, Item, ItemKind, Local, Stmt, StmtKind,
-    StructDecl, UnionDecl, Variant, VariantData,
+    Expr, ExprKind, FieldDecl, Fn, FnParam, Ident, Item, ItemKind, Local, Path, PathSegment, Stmt,
+    StmtKind, StructDecl, UnionDecl, UseTree, UseTreeKind, Variant, VariantData,
 };
 
 pub trait Visitor: Sized {
@@ -10,6 +10,18 @@ pub trait Visitor: Sized {
 
     fn visit_item(&mut self, item: &Item) {
         walk_item(self, item);
+    }
+
+    fn visit_use_tree(&mut self, use_tree: &UseTree) {
+        walk_use_tree(self, use_tree);
+    }
+
+    fn visit_path(&mut self, path: &Path) {
+        walk_path(self, path);
+    }
+
+    fn visit_path_segment(&mut self, path_segment: &PathSegment) {
+        walk_path_segment(self, path_segment);
     }
 
     fn visit_fn(&mut self, fun: &Fn) {
@@ -57,6 +69,9 @@ pub fn walk_item<V: Visitor>(visitor: &mut V, item: &Item) {
     visitor.visit_ident(&item.name);
 
     match &item.kind {
+        ItemKind::Use(use_tree) => {
+            visitor.visit_use_tree(use_tree);
+        }
         ItemKind::Fn(fun) => {
             visitor.visit_fn(fun);
         }
@@ -70,6 +85,24 @@ pub fn walk_item<V: Visitor>(visitor: &mut V, item: &Item) {
             todo!()
         }
     }
+}
+
+pub fn walk_use_tree<V: Visitor>(visitor: &mut V, use_tree: &UseTree) {
+    visitor.visit_path(&use_tree.prefix);
+
+    match &use_tree.kind {
+        UseTreeKind::Single => {}
+    }
+}
+
+pub fn walk_path<V: Visitor>(visitor: &mut V, path: &Path) {
+    for segment in &path.segments {
+        visitor.visit_path_segment(segment);
+    }
+}
+
+pub fn walk_path_segment<V: Visitor>(visitor: &mut V, path_segment: &PathSegment) {
+    visitor.visit_ident(&path_segment.ident);
 }
 
 pub fn walk_fn<V: Visitor>(visitor: &mut V, fun: &Fn) {
@@ -135,7 +168,7 @@ pub fn walk_local<V: Visitor>(visitor: &mut V, local: &Local) {
 pub fn walk_expr<V: Visitor>(visitor: &mut V, expr: &Expr) {
     match &expr.kind {
         ExprKind::Literal(_) => {}
-        ExprKind::Variable { name } => visitor.visit_ident(name),
+        ExprKind::Variable(path) => visitor.visit_path(path),
         ExprKind::Call { fun, args } => {
             visitor.visit_expr(fun);
 

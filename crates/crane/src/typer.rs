@@ -11,7 +11,6 @@ use std::sync::Arc;
 use smol_str::SmolStr;
 use thin_vec::{thin_vec, ThinVec};
 
-use crate::ast::visitor::{walk_expr, Visitor};
 use crate::ast::{
     Expr, ExprKind, Fn, FnParam, Ident, Item, ItemKind, Literal, LiteralKind, Local, LocalKind,
     Module, Package, Span, Stmt, StmtKind, StructDecl, TyExpr, TyExprKind, TyFieldDecl, TyFn,
@@ -153,6 +152,7 @@ impl Typer {
 
         for item in &module.items {
             match item.kind {
+                ItemKind::Use(_) => {}
                 ItemKind::Fn(ref fun) => {
                     let params = self.infer_function_params(&fun.params)?;
 
@@ -173,16 +173,6 @@ impl Typer {
                 ItemKind::Union(_) => {}
                 ItemKind::Module(_) => {}
             }
-        }
-
-        let mut called_fns_collector = CalledFnsCollector::new();
-
-        for item in &module.items {
-            called_fns_collector.visit_item(item);
-        }
-
-        for called_fn in called_fns_collector.called_fns {
-            self.ensure_function_exists(&called_fn)?;
         }
 
         let mut typed_items = ThinVec::new();
@@ -216,6 +206,10 @@ impl Typer {
 
     fn infer_item(&mut self, item: Item) -> TypeCheckResult<TyItem> {
         match item.kind {
+            ItemKind::Use(_) => Ok(TyItem {
+                kind: TyItemKind::Use,
+                name: item.name,
+            }),
             ItemKind::Fn(fun) => Ok(TyItem {
                 kind: TyItemKind::Fn(Box::new(self.infer_function(&item.name, *fun)?)),
                 name: item.name,
@@ -377,7 +371,15 @@ impl Typer {
                 LiteralKind::String => self.infer_string(literal, expr.span),
                 LiteralKind::Integer => self.infer_integer(literal, expr.span),
             },
-            ExprKind::Variable { name } => {
+            ExprKind::Variable(path) => {
+                // HACK: Read the last path segment as the variable name.
+                let name = path
+                    .segments
+                    .last()
+                    .expect("Path has no segments.")
+                    .ident
+                    .clone();
+
                 let ty = self
                     .scopes
                     .last()
@@ -480,53 +482,6 @@ impl Typer {
                 name: "Uint64".into(),
             }),
         })
-    }
-}
-
-struct IdentCollector {
-    idents: Vec<Ident>,
-}
-
-impl IdentCollector {
-    pub fn new() -> Self {
-        Self { idents: Vec::new() }
-    }
-}
-
-impl Visitor for IdentCollector {
-    fn visit_ident(&mut self, ident: &Ident) {
-        self.idents.push(ident.clone());
-    }
-}
-
-struct CalledFnsCollector {
-    called_fns: Vec<Ident>,
-}
-
-impl CalledFnsCollector {
-    pub fn new() -> Self {
-        Self {
-            called_fns: Vec::new(),
-        }
-    }
-}
-
-impl Visitor for CalledFnsCollector {
-    fn visit_expr(&mut self, expr: &Expr) {
-        match &expr.kind {
-            ExprKind::Call { fun, .. } => {
-                let mut ident_collector = IdentCollector::new();
-
-                walk_expr(&mut ident_collector, fun);
-
-                if let Some(ident) = ident_collector.idents.first() {
-                    self.called_fns.push(ident.clone());
-                }
-            }
-            _ => {}
-        }
-
-        walk_expr(self, expr);
     }
 }
 

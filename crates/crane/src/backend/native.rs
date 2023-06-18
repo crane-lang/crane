@@ -308,6 +308,7 @@ impl NativeBackend {
             .rev()
         {
             match item.kind {
+                TyItemKind::Use => {}
                 TyItemKind::Fn(fun) => {
                     let params = fun
                         .params

@@ -31,3 +31,8 @@ pub const UNION: Ident = Ident {
     name: SmolStr::new_inline("union"),
     span: DUMMY_SPAN,
 };
+
+pub const USE: Ident = Ident {
+    name: SmolStr::new_inline("use"),
+    span: DUMMY_SPAN,
+};

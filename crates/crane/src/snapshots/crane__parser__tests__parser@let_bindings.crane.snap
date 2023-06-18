@@ -62,11 +62,15 @@ Ok:
                     fun:
                       kind:
                         Variable:
-                          name:
-                            name: print
-                            span:
-                              start: 62
-                              end: 67
+                          segments:
+                            - ident:
+                                name: print
+                                span:
+                                  start: 62
+                                  end: 67
+                          span:
+                            start: 62
+                            end: 67
                       span:
                         start: 62
                         end: 67
@@ -91,22 +95,30 @@ Ok:
                     fun:
                       kind:
                         Variable:
-                          name:
-                            name: print
-                            span:
-                              start: 83
-                              end: 88
+                          segments:
+                            - ident:
+                                name: print
+                                span:
+                                  start: 83
+                                  end: 88
+                          span:
+                            start: 83
+                            end: 88
                       span:
                         start: 83
                         end: 88
                     args:
                       - kind:
                           Variable:
-                            name:
-                              name: name
-                              span:
-                                start: 89
-                                end: 93
+                            segments:
+                              - ident:
+                                  name: name
+                                  span:
+                                    start: 89
+                                    end: 93
+                            span:
+                              start: 89
+                              end: 93
                         span:
                           start: 89
                           end: 93
@@ -123,11 +135,15 @@ Ok:
                     fun:
                       kind:
                         Variable:
-                          name:
-                            name: println
-                            span:
-                              start: 99
-                              end: 106
+                          segments:
+                            - ident:
+                                name: println
+                                span:
+                                  start: 99
+                                  end: 106
+                          span:
+                            start: 99
+                            end: 106
                       span:
                         start: 99
                         end: 106
@@ -152,11 +168,15 @@ Ok:
                     fun:
                       kind:
                         Variable:
-                          name:
-                            name: print
-                            span:
-                              start: 117
-                              end: 122
+                          segments:
+                            - ident:
+                                name: print
+                                span:
+                                  start: 117
+                                  end: 122
+                          span:
+                            start: 117
+                            end: 122
                       span:
                         start: 117
                         end: 122
@@ -181,11 +201,15 @@ Ok:
                     fun:
                       kind:
                         Variable:
-                          name:
-                            name: print
-                            span:
-                              start: 150
-                              end: 155
+                          segments:
+                            - ident:
+                                name: print
+                                span:
+                                  start: 150
+                                  end: 155
+                          span:
+                            start: 150
+                            end: 155
                       span:
                         start: 150
                         end: 155
@@ -195,22 +219,30 @@ Ok:
                             fun:
                               kind:
                                 Variable:
-                                  name:
-                                    name: int_to_string
-                                    span:
-                                      start: 156
-                                      end: 169
+                                  segments:
+                                    - ident:
+                                        name: int_to_string
+                                        span:
+                                          start: 156
+                                          end: 169
+                                  span:
+                                    start: 156
+                                    end: 169
                               span:
                                 start: 156
                                 end: 169
                             args:
                               - kind:
                                   Variable:
-                                    name:
-                                      name: gold
-                                      span:
-                                        start: 170
-                                        end: 174
+                                    segments:
+                                      - ident:
+                                          name: gold
+                                          span:
+                                            start: 170
+                                            end: 174
+                                    span:
+                                      start: 170
+                                      end: 174
                                 span:
                                   start: 170
                                   end: 174
@@ -230,11 +262,15 @@ Ok:
                     fun:
                       kind:
                         Variable:
-                          name:
-                            name: println
-                            span:
-                              start: 181
-                              end: 188
+                          segments:
+                            - ident:
+                                name: println
+                                span:
+                                  start: 181
+                                  end: 188
+                          span:
+                            start: 181
+                            end: 188
                       span:
                         start: 181
                         end: 188
