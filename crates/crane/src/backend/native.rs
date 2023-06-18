@@ -18,8 +18,8 @@ use smol_str::SmolStr;
 use thin_vec::ThinVec;
 
 use crate::ast::{
-    Ident, TyExpr, TyExprKind, TyFnParam, TyIntegerLiteral, TyItem, TyItemKind, TyLiteralKind,
-    TyLocalKind, TyStmtKind, TyUint,
+    Ident, TyExpr, TyExprKind, TyFnParam, TyIntegerLiteral, TyItemKind, TyLiteralKind, TyLocalKind,
+    TyPackage, TyStmtKind, TyUint,
 };
 use crate::typer::Type;
 
@@ -34,7 +34,7 @@ impl NativeBackend {
         }
     }
 
-    pub fn compile(&self, program: Vec<TyItem>) {
+    pub fn compile(&self, package: TyPackage) {
         Target::initialize_aarch64(&InitializationConfig::default());
 
         let opt = OptimizationLevel::Default;
@@ -299,10 +299,12 @@ impl NativeBackend {
             Self::verify_fn(&fpm, fn_name, &fn_value).unwrap();
         }
 
-        for item in program
+        for item in package
+            .modules
+            .into_iter()
+            .flat_map(|module| module.items)
             // HACK: Reverse the items so we define the helper functions before `main`.
             // This should be replaced with a call graph.
-            .into_iter()
             .rev()
         {
             match item.kind {

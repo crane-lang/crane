@@ -14,10 +14,10 @@ use thin_vec::{thin_vec, ThinVec};
 use crate::ast::visitor::{walk_expr, Visitor};
 use crate::ast::{
     Expr, ExprKind, Fn, FnParam, Ident, Item, ItemKind, Literal, LiteralKind, Local, LocalKind,
-    Module, Span, Stmt, StmtKind, StructDecl, TyExpr, TyExprKind, TyFieldDecl, TyFn, TyFnParam,
-    TyIntegerLiteral, TyItem, TyItemKind, TyLiteral, TyLiteralKind, TyLocal, TyLocalKind, TyModule,
-    TyStmt, TyStmtKind, TyStructDecl, TyUint, TyUnionDecl, TyVariant, TyVariantData, UnionDecl,
-    VariantData, DUMMY_SPAN,
+    Module, Package, Span, Stmt, StmtKind, StructDecl, TyExpr, TyExprKind, TyFieldDecl, TyFn,
+    TyFnParam, TyIntegerLiteral, TyItem, TyItemKind, TyLiteral, TyLiteralKind, TyLocal,
+    TyLocalKind, TyModule, TyPackage, TyStmt, TyStmtKind, TyStructDecl, TyUint, TyUnionDecl,
+    TyVariant, TyVariantData, UnionDecl, VariantData, DUMMY_SPAN,
 };
 
 fn ty_to_string(ty: &Type) -> String {
@@ -49,6 +49,18 @@ impl Typer {
             module_functions: HashMap::new(),
             scopes: Vec::new(),
         }
+    }
+
+    pub fn type_check_package(&mut self, package: Package) -> TypeCheckResult<TyPackage> {
+        let mut typed_modules = ThinVec::new();
+
+        for module in package.modules {
+            typed_modules.push(self.type_check_module(module)?);
+        }
+
+        Ok(TyPackage {
+            modules: typed_modules,
+        })
     }
 
     pub fn type_check_module(&mut self, module: Module) -> TypeCheckResult<TyModule> {
