@@ -10,9 +10,8 @@ impl<TokenStream> Parser<TokenStream>
 where
     TokenStream: Iterator<Item = Result<Token, LexError>>,
 {
+    #[tracing::instrument(skip(self))]
     pub fn parse_expr(&mut self) -> ParseResult<Option<Expr>> {
-        trace!("parse_expr");
-
         if self.check(TokenKind::String) {
             let string_literal = Expr {
                 kind: ExprKind::Literal(Literal {
@@ -74,9 +73,8 @@ where
         Ok(None)
     }
 
+    #[tracing::instrument(skip(self))]
     fn parse_call_expr(&mut self) -> ParseResult<ThinVec<Expr>> {
-        trace!("parse_call_expr");
-
         self.consume(TokenKind::OpenParen);
 
         let mut args = ThinVec::new();

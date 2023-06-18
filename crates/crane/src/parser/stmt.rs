@@ -9,9 +9,8 @@ impl<TokenStream> Parser<TokenStream>
 where
     TokenStream: Iterator<Item = Result<Token, LexError>>,
 {
+    #[tracing::instrument(skip(self))]
     pub fn parse_stmt(&mut self) -> ParseResult<Option<Stmt>> {
-        trace!("parse_stmt");
-
         if self.consume_keyword(keywords::LET) {
             let local = self.parse_local()?;
 
@@ -35,9 +34,8 @@ where
         Ok(None)
     }
 
+    #[tracing::instrument(skip(self))]
     fn parse_local(&mut self) -> ParseResult<Local> {
-        trace!("parse_local");
-
         let name = self.parse_ident()?;
 
         self.consume(TokenKind::Equal);
