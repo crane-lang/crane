@@ -12,7 +12,7 @@ where
             let span = expr.span;
 
             return Ok(Some(Stmt {
-                kind: StmtKind::Expr(expr),
+                kind: StmtKind::Expr(Box::new(expr)),
                 span,
             }));
         }
