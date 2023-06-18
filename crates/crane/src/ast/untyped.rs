@@ -26,7 +26,7 @@ pub enum ExprKind {
     Literal(Literal),
 
     /// A reference to a variable.
-    Variable { name: Ident },
+    Variable(Path),
 
     /// A function call.
     Call {

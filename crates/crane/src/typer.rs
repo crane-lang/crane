@@ -380,7 +380,15 @@ impl Typer {
                 LiteralKind::String => self.infer_string(literal, expr.span),
                 LiteralKind::Integer => self.infer_integer(literal, expr.span),
             },
-            ExprKind::Variable { name } => {
+            ExprKind::Variable(path) => {
+                // HACK: Read the last path segment as the variable name.
+                let name = path
+                    .segments
+                    .last()
+                    .expect("Path has no segments.")
+                    .ident
+                    .clone();
+
                 let ty = self
                     .scopes
                     .last()

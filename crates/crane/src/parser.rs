@@ -8,7 +8,7 @@ pub use error::*;
 use thin_vec::ThinVec;
 use tracing::trace;
 
-use crate::ast::{Ident, Item, Span};
+use crate::ast::{Ident, Item, Path, PathSegment, Span, DUMMY_SPAN};
 use crate::lexer::token::{Token, TokenKind};
 use crate::lexer::LexError;
 
@@ -230,6 +230,24 @@ where
         self.advance();
 
         Ok(ident)
+    }
+
+    /// Parses a [`Path`].
+    fn parse_path(&mut self) -> ParseResult<Path> {
+        let mut path_segments = ThinVec::new();
+
+        while let Some(ident) = self.parse_ident().ok() {
+            path_segments.push(PathSegment { ident });
+
+            if !self.consume(TokenKind::ColonColon) {
+                break;
+            }
+        }
+
+        Ok(Path {
+            segments: path_segments,
+            span: DUMMY_SPAN,
+        })
     }
 }
 

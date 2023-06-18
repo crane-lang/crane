@@ -165,7 +165,7 @@ pub fn walk_local<V: Visitor>(visitor: &mut V, local: &Local) {
 pub fn walk_expr<V: Visitor>(visitor: &mut V, expr: &Expr) {
     match &expr.kind {
         ExprKind::Literal(_) => {}
-        ExprKind::Variable { name } => visitor.visit_ident(name),
+        ExprKind::Variable(path) => visitor.visit_path(path),
         ExprKind::Call { fun, args } => {
             visitor.visit_expr(fun);
 
