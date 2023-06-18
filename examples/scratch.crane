@@ -12,6 +12,18 @@ union Bool {
 }
 
 pub fn main() {
+    let twenty_three = 23
+
+    print("twenty_three = ")
+    println(int_to_string(twenty_three))
+    println(" ")
+
+    let greeting = "Hey"
+
+    print("greeting = ")
+    println(greeting)
+    println(" ")
+
     greet("world")
     greet("trees")
     greet("everyone")

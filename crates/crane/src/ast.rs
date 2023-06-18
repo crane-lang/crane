@@ -4,6 +4,7 @@ mod span;
 mod typed;
 mod untyped;
 
+pub mod keywords;
 pub mod visitor;
 
 pub use ident::*;

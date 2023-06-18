@@ -1,0 +1,258 @@
+---
+source: crates/crane/src/lexer.rs
+expression: "lexer.into_iter().collect::<Vec<_>>()"
+input_file: crates/crane/src/snapshot_inputs/let_bindings.crane
+---
+- Ok:
+    kind: Ident
+    lexeme: pub
+    span:
+      start: 0
+      end: 3
+- Ok:
+    kind: Ident
+    lexeme: fn
+    span:
+      start: 4
+      end: 6
+- Ok:
+    kind: Ident
+    lexeme: main
+    span:
+      start: 7
+      end: 11
+- Ok:
+    kind: OpenParen
+    lexeme: (
+    span:
+      start: 11
+      end: 12
+- Ok:
+    kind: CloseParen
+    lexeme: )
+    span:
+      start: 12
+      end: 13
+- Ok:
+    kind: OpenBrace
+    lexeme: "{"
+    span:
+      start: 14
+      end: 15
+- Ok:
+    kind: Ident
+    lexeme: let
+    span:
+      start: 20
+      end: 23
+- Ok:
+    kind: Ident
+    lexeme: name
+    span:
+      start: 24
+      end: 28
+- Ok:
+    kind: Equal
+    lexeme: "="
+    span:
+      start: 29
+      end: 30
+- Ok:
+    kind: String
+    lexeme: "\"Arya\""
+    span:
+      start: 31
+      end: 37
+- Ok:
+    kind: Ident
+    lexeme: let
+    span:
+      start: 42
+      end: 45
+- Ok:
+    kind: Ident
+    lexeme: gold
+    span:
+      start: 46
+      end: 50
+- Ok:
+    kind: Equal
+    lexeme: "="
+    span:
+      start: 51
+      end: 52
+- Ok:
+    kind: Integer
+    lexeme: "100"
+    span:
+      start: 53
+      end: 56
+- Ok:
+    kind: Ident
+    lexeme: print
+    span:
+      start: 62
+      end: 67
+- Ok:
+    kind: OpenParen
+    lexeme: (
+    span:
+      start: 67
+      end: 68
+- Ok:
+    kind: String
+    lexeme: "\"Hello, \""
+    span:
+      start: 68
+      end: 77
+- Ok:
+    kind: CloseParen
+    lexeme: )
+    span:
+      start: 77
+      end: 78
+- Ok:
+    kind: Ident
+    lexeme: print
+    span:
+      start: 83
+      end: 88
+- Ok:
+    kind: OpenParen
+    lexeme: (
+    span:
+      start: 88
+      end: 89
+- Ok:
+    kind: Ident
+    lexeme: name
+    span:
+      start: 89
+      end: 93
+- Ok:
+    kind: CloseParen
+    lexeme: )
+    span:
+      start: 93
+      end: 94
+- Ok:
+    kind: Ident
+    lexeme: println
+    span:
+      start: 99
+      end: 106
+- Ok:
+    kind: OpenParen
+    lexeme: (
+    span:
+      start: 106
+      end: 107
+- Ok:
+    kind: String
+    lexeme: "\".\""
+    span:
+      start: 107
+      end: 110
+- Ok:
+    kind: CloseParen
+    lexeme: )
+    span:
+      start: 110
+      end: 111
+- Ok:
+    kind: Ident
+    lexeme: print
+    span:
+      start: 117
+      end: 122
+- Ok:
+    kind: OpenParen
+    lexeme: (
+    span:
+      start: 122
+      end: 123
+- Ok:
+    kind: String
+    lexeme: "\"You currently have \""
+    span:
+      start: 123
+      end: 144
+- Ok:
+    kind: CloseParen
+    lexeme: )
+    span:
+      start: 144
+      end: 145
+- Ok:
+    kind: Ident
+    lexeme: print
+    span:
+      start: 150
+      end: 155
+- Ok:
+    kind: OpenParen
+    lexeme: (
+    span:
+      start: 155
+      end: 156
+- Ok:
+    kind: Ident
+    lexeme: int_to_string
+    span:
+      start: 156
+      end: 169
+- Ok:
+    kind: OpenParen
+    lexeme: (
+    span:
+      start: 169
+      end: 170
+- Ok:
+    kind: Ident
+    lexeme: gold
+    span:
+      start: 170
+      end: 174
+- Ok:
+    kind: CloseParen
+    lexeme: )
+    span:
+      start: 174
+      end: 175
+- Ok:
+    kind: CloseParen
+    lexeme: )
+    span:
+      start: 175
+      end: 176
+- Ok:
+    kind: Ident
+    lexeme: println
+    span:
+      start: 181
+      end: 188
+- Ok:
+    kind: OpenParen
+    lexeme: (
+    span:
+      start: 188
+      end: 189
+- Ok:
+    kind: String
+    lexeme: "\" gold at your disposal.\""
+    span:
+      start: 189
+      end: 214
+- Ok:
+    kind: CloseParen
+    lexeme: )
+    span:
+      start: 214
+      end: 215
+- Ok:
+    kind: CloseBrace
+    lexeme: "}"
+    span:
+      start: 216
+      end: 217
+

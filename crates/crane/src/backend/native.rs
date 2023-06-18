@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::process::Command;
 
 use inkwell::builder::Builder;
@@ -10,15 +11,15 @@ use inkwell::targets::{
 use inkwell::types::BasicType;
 use inkwell::values::{
     BasicMetadataValueEnum, BasicValue, BasicValueEnum, CallSiteValue, FunctionValue, GlobalValue,
-    IntValue,
+    IntValue, PointerValue,
 };
 use inkwell::{AddressSpace, OptimizationLevel};
 use smol_str::SmolStr;
 use thin_vec::ThinVec;
 
 use crate::ast::{
-    TyExpr, TyExprKind, TyFnParam, TyIntegerLiteral, TyItem, TyItemKind, TyLiteralKind, TyStmtKind,
-    TyUint,
+    Ident, TyExpr, TyExprKind, TyFnParam, TyIntegerLiteral, TyItem, TyItemKind, TyLiteralKind,
+    TyLocalKind, TyStmtKind, TyUint,
 };
 use crate::typer::Type;
 
@@ -380,10 +381,79 @@ impl NativeBackend {
 
                     builder.position_at_end(entry);
 
+                    let mut locals = HashMap::new();
+
                     let mut last_stmt: Option<BasicValueEnum> = None;
 
                     for stmt in &fun.body {
                         match &stmt.kind {
+                            TyStmtKind::Local(local) => {
+                                let ty = local.ty.as_ref().unwrap_or_else(|| {
+                                    panic!("No type for `let` binding `{}`.", local.name)
+                                });
+
+                                let ty = match &*ty.clone() {
+                                    Type::UserDefined { module, name } => {
+                                        match (module.as_str(), name.as_str()) {
+                                            ("std::prelude", "()") => todo!(),
+                                            ("std::prelude", "Uint64") => {
+                                                self.context.i64_type().as_basic_type_enum()
+                                            }
+                                            ("std::prelude", "String") => self
+                                                .context
+                                                .i8_type()
+                                                .ptr_type(AddressSpace::default())
+                                                .as_basic_type_enum(),
+                                            (module, name) => {
+                                                panic!("Unknown type {}::{}", module, name)
+                                            }
+                                        }
+                                    }
+                                    Type::Fn {
+                                        args: _,
+                                        return_ty: _,
+                                    } => todo!(),
+                                };
+
+                                let local_ptr = builder.build_alloca(ty, &local.name.to_string());
+
+                                let value = match &local.kind {
+                                    TyLocalKind::Decl => None,
+                                    TyLocalKind::Init(init) => match &init.kind {
+                                        TyExprKind::Literal(literal) => match &literal.kind {
+                                            TyLiteralKind::String(literal) => Some(
+                                                Self::compile_string_literal(
+                                                    &self.context,
+                                                    &builder,
+                                                    &module,
+                                                    literal.clone(),
+                                                )
+                                                .as_basic_value_enum(),
+                                            ),
+                                            TyLiteralKind::Integer(literal) => Some(
+                                                Self::compile_integer_literal(
+                                                    &self.context,
+                                                    &builder,
+                                                    &module,
+                                                    literal.clone(),
+                                                )
+                                                .as_basic_value_enum(),
+                                            ),
+                                        },
+                                        _ => todo!(),
+                                    },
+                                }
+                                .unwrap_or_else(|| {
+                                    panic!(
+                                        "`let` binding `{}` does not have an initializer.",
+                                        local.name
+                                    )
+                                });
+
+                                builder.build_store(local_ptr, value);
+
+                                locals.insert(&local.name, local_ptr);
+                            }
                             TyStmtKind::Expr(expr) => {
                                 last_stmt = Self::compile_expr(
                                     &self.context,
@@ -391,6 +461,7 @@ impl NativeBackend {
                                     &module,
                                     &fun.params,
                                     &fn_value,
+                                    &locals,
                                     *expr.clone(),
                                 );
                             }
@@ -459,6 +530,7 @@ impl NativeBackend {
         module: &Module<'ctx>,
         fn_params: &ThinVec<TyFnParam>,
         fn_value: &FunctionValue<'ctx>,
+        locals: &HashMap<&Ident, PointerValue<'ctx>>,
         expr: TyExpr,
     ) -> Option<BasicValueEnum<'ctx>> {
         match expr.kind {
@@ -481,6 +553,7 @@ impl NativeBackend {
                 fn_params,
                 fun.clone(),
                 args,
+                locals,
             )
             .unwrap_or_else(|_| panic!("Failed to compile function call: {:?}", fun))
             .try_as_basic_value()
@@ -538,6 +611,7 @@ impl NativeBackend {
         caller_params: &ThinVec<TyFnParam>,
         fun: Box<TyExpr>,
         args: ThinVec<Box<TyExpr>>,
+        locals: &HashMap<&Ident, PointerValue<'ctx>>,
     ) -> Result<CallSiteValue<'ctx>, String> {
         let callee_name = match fun.kind {
             TyExprKind::Variable { name } => name,
@@ -547,7 +621,8 @@ impl NativeBackend {
         if let Some(callee) = module.get_function(&callee_name.to_string()) {
             let args: Vec<BasicMetadataValueEnum> = args
                 .into_iter()
-                .map(|arg| match arg.kind {
+                .enumerate()
+                .map(|(arg_index, arg)| match arg.kind {
                     TyExprKind::Literal(literal) => match literal.kind {
                         TyLiteralKind::String(literal) => {
                             Self::compile_string_literal(context, builder, module, literal)
@@ -561,17 +636,26 @@ impl NativeBackend {
                         }
                     },
                     TyExprKind::Variable { name } => {
-                        let (param_index, _) = caller_params
+                        let param = caller_params
                             .into_iter()
                             .enumerate()
                             .find(|(_, param)| param.name == name)
-                            .unwrap_or_else(|| panic!("Param '{}' not found.", name));
+                            .and_then(|(param_index, _)| caller.get_nth_param(param_index as u32));
 
-                        caller
-                            .get_nth_param(param_index as u32)
-                            .expect("Param not found")
-                            .as_basic_value_enum()
-                            .into()
+                        let callee_param =
+                            callee.get_nth_param(arg_index as u32).unwrap_or_else(|| {
+                                panic!("No param for `{callee_name}` found at index {arg_index}");
+                            });
+
+                        let variable = param
+                            .or_else(|| {
+                                locals.get(&name).map(|local| {
+                                    builder.build_load(callee_param.get_type(), *local, "load")
+                                })
+                            })
+                            .unwrap_or_else(|| panic!("Variable `{}` not found.", name));
+
+                        variable.into()
                     }
                     TyExprKind::Call { fun, args } => Self::compile_fn_call(
                         context,
@@ -581,6 +665,7 @@ impl NativeBackend {
                         caller_params,
                         fun,
                         args,
+                        locals,
                     )
                     .unwrap()
                     .try_as_basic_value()

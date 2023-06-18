@@ -2,39 +2,14 @@ use thin_vec::ThinVec;
 use tracing::trace;
 
 use crate::ast::{
-    FieldDecl, Fn, FnParam, Ident, Item, ItemKind, StructDecl, UnionDecl, Variant, VariantData,
+    keywords, FieldDecl, Fn, FnParam, Ident, Item, ItemKind, StructDecl, UnionDecl, Variant,
+    VariantData,
 };
 use crate::lexer::token::{Token, TokenKind};
 use crate::lexer::LexError;
 use crate::parser::{ParseResult, Parser};
 
 type ItemInfo = (Ident, ItemKind);
-
-mod keywords {
-    use smol_str::SmolStr;
-
-    use crate::ast::{Ident, DUMMY_SPAN};
-
-    pub const PUB: Ident = Ident {
-        name: SmolStr::new_inline("pub"),
-        span: DUMMY_SPAN,
-    };
-
-    pub const FN: Ident = Ident {
-        name: SmolStr::new_inline("fn"),
-        span: DUMMY_SPAN,
-    };
-
-    pub const STRUCT: Ident = Ident {
-        name: SmolStr::new_inline("struct"),
-        span: DUMMY_SPAN,
-    };
-
-    pub const UNION: Ident = Ident {
-        name: SmolStr::new_inline("union"),
-        span: DUMMY_SPAN,
-    };
-}
 
 impl<TokenStream> Parser<TokenStream>
 where

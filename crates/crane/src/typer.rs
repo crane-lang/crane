@@ -13,10 +13,11 @@ use thin_vec::{thin_vec, ThinVec};
 
 use crate::ast::visitor::{walk_expr, Visitor};
 use crate::ast::{
-    Expr, ExprKind, Fn, FnParam, Ident, Item, ItemKind, Literal, LiteralKind, Module, Span, Stmt,
-    StmtKind, StructDecl, TyExpr, TyExprKind, TyFieldDecl, TyFn, TyFnParam, TyIntegerLiteral,
-    TyItem, TyItemKind, TyLiteral, TyLiteralKind, TyModule, TyStmt, TyStmtKind, TyStructDecl,
-    TyUint, TyUnionDecl, TyVariant, TyVariantData, UnionDecl, VariantData, DUMMY_SPAN,
+    Expr, ExprKind, Fn, FnParam, Ident, Item, ItemKind, Literal, LiteralKind, Local, LocalKind,
+    Module, Span, Stmt, StmtKind, StructDecl, TyExpr, TyExprKind, TyFieldDecl, TyFn, TyFnParam,
+    TyIntegerLiteral, TyItem, TyItemKind, TyLiteral, TyLiteralKind, TyLocal, TyLocalKind, TyModule,
+    TyStmt, TyStmtKind, TyStructDecl, TyUint, TyUnionDecl, TyVariant, TyVariantData, UnionDecl,
+    VariantData, DUMMY_SPAN,
 };
 
 fn ty_to_string(ty: &Type) -> String {
@@ -237,6 +238,7 @@ impl Typer {
 
         if let Some(last_stmt) = body.last() {
             let ty = match &last_stmt.kind {
+                TyStmtKind::Local(_) => todo!(),
                 TyStmtKind::Expr(expr) => &expr.ty,
                 TyStmtKind::Item(_) => todo!(),
             };
@@ -320,13 +322,38 @@ impl Typer {
         })
     }
 
-    fn infer_stmt(&self, stmt: Stmt) -> TypeCheckResult<TyStmt> {
+    fn infer_stmt(&mut self, stmt: Stmt) -> TypeCheckResult<TyStmt> {
         Ok(TyStmt {
             kind: match stmt.kind {
+                StmtKind::Local(local) => TyStmtKind::Local(Box::new(self.infer_local(*local)?)),
                 StmtKind::Expr(expr) => TyStmtKind::Expr(Box::new(self.infer_expr(*expr)?)),
                 StmtKind::Item(_) => todo!(),
             },
             span: stmt.span,
+        })
+    }
+
+    fn infer_local(&mut self, local: Local) -> TypeCheckResult<TyLocal> {
+        let ty = match local.kind.init() {
+            Some(init) => self.infer_expr(init.clone())?.ty,
+            None => Arc::new(Type::UserDefined {
+                module: "?".into(),
+                name: "?".into(),
+            }),
+        };
+
+        if let Some(scope) = self.scopes.last_mut() {
+            scope.insert(local.name.clone(), ty.clone());
+        }
+
+        Ok(TyLocal {
+            kind: match local.kind {
+                LocalKind::Decl => TyLocalKind::Decl,
+                LocalKind::Init(init) => TyLocalKind::Init(Box::new(self.infer_expr(*init)?)),
+            },
+            name: local.name,
+            ty: Some(ty),
+            span: local.span,
         })
     }
 

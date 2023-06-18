@@ -1,6 +1,6 @@
 use crate::ast::{
-    Expr, ExprKind, FieldDecl, Fn, FnParam, Ident, Item, ItemKind, Stmt, StmtKind, StructDecl,
-    UnionDecl, Variant, VariantData,
+    Expr, ExprKind, FieldDecl, Fn, FnParam, Ident, Item, ItemKind, Local, Stmt, StmtKind,
+    StructDecl, UnionDecl, Variant, VariantData,
 };
 
 pub trait Visitor: Sized {
@@ -42,6 +42,10 @@ pub trait Visitor: Sized {
 
     fn visit_stmt(&mut self, stmt: &Stmt) {
         walk_stmt(self, stmt);
+    }
+
+    fn visit_local(&mut self, local: &Local) {
+        walk_local(self, local);
     }
 
     fn visit_expr(&mut self, expr: &Expr) {
@@ -111,8 +115,17 @@ pub fn walk_field_decl<V: Visitor>(visitor: &mut V, field: &FieldDecl) {
 
 pub fn walk_stmt<V: Visitor>(visitor: &mut V, stmt: &Stmt) {
     match &stmt.kind {
+        StmtKind::Local(local) => visitor.visit_local(local),
         StmtKind::Item(item) => visitor.visit_item(item),
         StmtKind::Expr(expr) => visitor.visit_expr(expr),
+    }
+}
+
+pub fn walk_local<V: Visitor>(visitor: &mut V, local: &Local) {
+    visitor.visit_ident(&local.name);
+
+    if let Some(ty) = &local.ty {
+        visitor.visit_ty(ty);
     }
 }
 
