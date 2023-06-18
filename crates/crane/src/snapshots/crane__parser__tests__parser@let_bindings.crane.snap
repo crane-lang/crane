@@ -1,0 +1,260 @@
+---
+source: crates/crane/src/parser.rs
+expression: parser.parse()
+input_file: crates/crane/src/snapshot_inputs/let_bindings.crane
+---
+Ok:
+  - kind:
+      Fn:
+        params: []
+        return_ty: ~
+        body:
+          - kind:
+              Local:
+                kind:
+                  Init:
+                    kind:
+                      Literal:
+                        kind: String
+                        value: "\"Arya\""
+                    span:
+                      start: 31
+                      end: 37
+                name:
+                  name: name
+                  span:
+                    start: 24
+                    end: 28
+                ty: ~
+                span:
+                  start: 24
+                  end: 28
+            span:
+              start: 24
+              end: 28
+          - kind:
+              Local:
+                kind:
+                  Init:
+                    kind:
+                      Literal:
+                        kind: Integer
+                        value: "100"
+                    span:
+                      start: 53
+                      end: 56
+                name:
+                  name: gold
+                  span:
+                    start: 46
+                    end: 50
+                ty: ~
+                span:
+                  start: 46
+                  end: 50
+            span:
+              start: 46
+              end: 50
+          - kind:
+              Expr:
+                kind:
+                  Call:
+                    fun:
+                      kind:
+                        Variable:
+                          name:
+                            name: print
+                            span:
+                              start: 62
+                              end: 67
+                      span:
+                        start: 62
+                        end: 67
+                    args:
+                      - kind:
+                          Literal:
+                            kind: String
+                            value: "\"Hello, \""
+                        span:
+                          start: 68
+                          end: 77
+                span:
+                  start: 62
+                  end: 67
+            span:
+              start: 62
+              end: 67
+          - kind:
+              Expr:
+                kind:
+                  Call:
+                    fun:
+                      kind:
+                        Variable:
+                          name:
+                            name: print
+                            span:
+                              start: 83
+                              end: 88
+                      span:
+                        start: 83
+                        end: 88
+                    args:
+                      - kind:
+                          Variable:
+                            name:
+                              name: name
+                              span:
+                                start: 89
+                                end: 93
+                        span:
+                          start: 89
+                          end: 93
+                span:
+                  start: 83
+                  end: 88
+            span:
+              start: 83
+              end: 88
+          - kind:
+              Expr:
+                kind:
+                  Call:
+                    fun:
+                      kind:
+                        Variable:
+                          name:
+                            name: println
+                            span:
+                              start: 99
+                              end: 106
+                      span:
+                        start: 99
+                        end: 106
+                    args:
+                      - kind:
+                          Literal:
+                            kind: String
+                            value: "\".\""
+                        span:
+                          start: 107
+                          end: 110
+                span:
+                  start: 99
+                  end: 106
+            span:
+              start: 99
+              end: 106
+          - kind:
+              Expr:
+                kind:
+                  Call:
+                    fun:
+                      kind:
+                        Variable:
+                          name:
+                            name: print
+                            span:
+                              start: 117
+                              end: 122
+                      span:
+                        start: 117
+                        end: 122
+                    args:
+                      - kind:
+                          Literal:
+                            kind: String
+                            value: "\"You currently have \""
+                        span:
+                          start: 123
+                          end: 144
+                span:
+                  start: 117
+                  end: 122
+            span:
+              start: 117
+              end: 122
+          - kind:
+              Expr:
+                kind:
+                  Call:
+                    fun:
+                      kind:
+                        Variable:
+                          name:
+                            name: print
+                            span:
+                              start: 150
+                              end: 155
+                      span:
+                        start: 150
+                        end: 155
+                    args:
+                      - kind:
+                          Call:
+                            fun:
+                              kind:
+                                Variable:
+                                  name:
+                                    name: int_to_string
+                                    span:
+                                      start: 156
+                                      end: 169
+                              span:
+                                start: 156
+                                end: 169
+                            args:
+                              - kind:
+                                  Variable:
+                                    name:
+                                      name: gold
+                                      span:
+                                        start: 170
+                                        end: 174
+                                span:
+                                  start: 170
+                                  end: 174
+                        span:
+                          start: 156
+                          end: 169
+                span:
+                  start: 150
+                  end: 155
+            span:
+              start: 150
+              end: 155
+          - kind:
+              Expr:
+                kind:
+                  Call:
+                    fun:
+                      kind:
+                        Variable:
+                          name:
+                            name: println
+                            span:
+                              start: 181
+                              end: 188
+                      span:
+                        start: 181
+                        end: 188
+                    args:
+                      - kind:
+                          Literal:
+                            kind: String
+                            value: "\" gold at your disposal.\""
+                        span:
+                          start: 189
+                          end: 214
+                span:
+                  start: 181
+                  end: 188
+            span:
+              start: 181
+              end: 188
+    name:
+      name: main
+      span:
+        start: 7
+        end: 11
+

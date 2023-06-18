@@ -1,0 +1,12 @@
+pub fn main() {
+    let name = "Arya"
+    let gold = 100
+
+    print("Hello, ")
+    print(name)
+    println(".")
+
+    print("You currently have ")
+    print(int_to_string(gold))
+    println(" gold at your disposal.")
+}
