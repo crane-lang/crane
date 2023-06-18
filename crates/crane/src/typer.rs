@@ -323,7 +323,7 @@ impl Typer {
     fn infer_stmt(&self, stmt: Stmt) -> TypeCheckResult<TyStmt> {
         Ok(TyStmt {
             kind: match stmt.kind {
-                StmtKind::Expr(expr) => TyStmtKind::Expr(self.infer_expr(*expr)?),
+                StmtKind::Expr(expr) => TyStmtKind::Expr(Box::new(self.infer_expr(*expr)?)),
                 StmtKind::Item(_) => todo!(),
             },
             span: stmt.span,
