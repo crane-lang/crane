@@ -1,5 +1,3 @@
-use tracing::trace;
-
 use crate::ast::{keywords, Local, LocalKind, Stmt, StmtKind};
 use crate::lexer::token::{Token, TokenKind};
 use crate::lexer::LexError;

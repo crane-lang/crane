@@ -1,5 +1,4 @@
 use thin_vec::ThinVec;
-use tracing::trace;
 
 use crate::ast::{Expr, ExprKind, Literal, LiteralKind};
 use crate::lexer::token::{Token, TokenKind};
