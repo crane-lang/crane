@@ -44,11 +44,43 @@ pub struct Expr {
 /// The kind of a [`Stmt`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum StmtKind {
+    /// A local `let` binding.
+    Local(Box<Local>),
+
     /// An item.
     Item(Box<Item>),
 
     /// An expression.
     Expr(Box<Expr>),
+}
+
+/// The kind of a [`Local`].
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum LocalKind {
+    /// A local declaration.
+    Decl,
+
+    /// A local declaration with an initializer.
+    Init(Box<Expr>),
+}
+
+impl LocalKind {
+    /// Returns the initializer for this local.
+    pub fn init(&self) -> Option<&Expr> {
+        match self {
+            Self::Decl => None,
+            Self::Init(init) => Some(init),
+        }
+    }
+}
+
+/// A local `let` binding.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Local {
+    pub kind: LocalKind,
+    pub name: Ident,
+    pub ty: Option<Box<Ident>>,
+    pub span: Span,
 }
 
 /// A function definition.

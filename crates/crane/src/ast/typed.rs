@@ -60,11 +60,33 @@ pub struct TyExpr {
 /// The kind of a [`TyStmt`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TyStmtKind {
+    /// A local `let` binding.
+    Local(TyLocal),
+
     /// An item.
     Item(TyItem),
 
     /// An expression.
     Expr(TyExpr),
+}
+
+/// The kind of a [`TyLocal`].
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum TyLocalKind {
+    /// A local declaration.
+    Decl,
+
+    /// A local declaration with an initializer.
+    Init(Box<TyExpr>),
+}
+
+/// A local `let` binding.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TyLocal {
+    pub kind: TyLocalKind,
+    pub name: Ident,
+    pub ty: Option<Arc<Type>>,
+    pub span: Span,
 }
 
 /// A typed function definition.

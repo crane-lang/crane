@@ -34,6 +34,11 @@ mod keywords {
         name: SmolStr::new_inline("union"),
         span: DUMMY_SPAN,
     };
+
+    pub const LET: Ident = Ident {
+        name: SmolStr::new_inline("let"),
+        span: DUMMY_SPAN,
+    };
 }
 
 impl<TokenStream> Parser<TokenStream>

@@ -12,6 +12,11 @@ union Bool {
 }
 
 pub fn main() {
+    let greeting = "Hey"
+
+    print("greeting = ")
+    println(greeting)
+
     greet("world")
     greet("trees")
     greet("everyone")

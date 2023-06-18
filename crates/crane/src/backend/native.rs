@@ -384,6 +384,7 @@ impl NativeBackend {
 
                     for stmt in &fun.body {
                         match &stmt.kind {
+                            TyStmtKind::Local(_) => {}
                             TyStmtKind::Expr(expr) => {
                                 last_stmt = Self::compile_expr(
                                     &self.context,
