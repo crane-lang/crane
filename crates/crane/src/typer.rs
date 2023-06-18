@@ -153,6 +153,7 @@ impl Typer {
 
         for item in &module.items {
             match item.kind {
+                ItemKind::Use(_) => {}
                 ItemKind::Fn(ref fun) => {
                     let params = self.infer_function_params(&fun.params)?;
 
@@ -215,6 +216,10 @@ impl Typer {
 
     fn infer_item(&mut self, item: Item) -> TypeCheckResult<TyItem> {
         match item.kind {
+            ItemKind::Use(_) => Ok(TyItem {
+                kind: TyItemKind::Use,
+                name: item.name,
+            }),
             ItemKind::Fn(fun) => Ok(TyItem {
                 kind: TyItemKind::Fn(Box::new(self.infer_function(&item.name, *fun)?)),
                 name: item.name,

@@ -1,5 +1,5 @@
-// TODO: Handle imports.
-// use std::io::{print, println}
+use std::io::print
+use std::io::println
 
 struct User {
     name: String,

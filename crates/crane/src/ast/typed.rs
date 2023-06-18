@@ -165,6 +165,9 @@ pub struct TyUnionDecl {
 /// The kind of a [`TyItem`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TyItemKind {
+    /// A use declaration (`use`).
+    Use,
+
     // TODO: Remove `Box`?
     /// A function declaration (`fn`).
     Fn(Box<TyFn>),
