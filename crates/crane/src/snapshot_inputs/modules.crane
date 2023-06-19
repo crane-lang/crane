@@ -1,0 +1,16 @@
+use std::io::print
+use std::io::println
+use std::int::int_to_string
+
+fn main() {
+    print("Your age is ")
+    println(int_to_string(user::demographic::get_age()))
+}
+
+mod user {
+    mod demographic {
+        fn get_age() -> Uint64 {
+            28
+        }
+    }
+}
