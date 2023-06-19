@@ -1,0 +1,180 @@
+---
+source: crates/crane/src/lexer.rs
+expression: "lexer.into_iter().collect::<Vec<_>>()"
+input_file: crates/crane/src/snapshot_inputs/comments.crane
+---
+- Ok:
+    kind: Ident
+    lexeme: use
+    span:
+      start: 0
+      end: 3
+- Ok:
+    kind: Ident
+    lexeme: std
+    span:
+      start: 4
+      end: 7
+- Ok:
+    kind: ColonColon
+    lexeme: "::"
+    span:
+      start: 7
+      end: 9
+- Ok:
+    kind: Ident
+    lexeme: io
+    span:
+      start: 9
+      end: 11
+- Ok:
+    kind: ColonColon
+    lexeme: "::"
+    span:
+      start: 11
+      end: 13
+- Ok:
+    kind: Ident
+    lexeme: println
+    span:
+      start: 13
+      end: 20
+- Ok:
+    kind: Ident
+    lexeme: fn
+    span:
+      start: 22
+      end: 24
+- Ok:
+    kind: Ident
+    lexeme: main
+    span:
+      start: 25
+      end: 29
+- Ok:
+    kind: OpenParen
+    lexeme: (
+    span:
+      start: 29
+      end: 30
+- Ok:
+    kind: CloseParen
+    lexeme: )
+    span:
+      start: 30
+      end: 31
+- Ok:
+    kind: OpenBrace
+    lexeme: "{"
+    span:
+      start: 32
+      end: 33
+- Ok:
+    kind: Ident
+    lexeme: println
+    span:
+      start: 38
+      end: 45
+- Ok:
+    kind: OpenParen
+    lexeme: (
+    span:
+      start: 45
+      end: 46
+- Ok:
+    kind: Ident
+    lexeme: always_blue
+    span:
+      start: 46
+      end: 57
+- Ok:
+    kind: OpenParen
+    lexeme: (
+    span:
+      start: 57
+      end: 58
+- Ok:
+    kind: CloseParen
+    lexeme: )
+    span:
+      start: 58
+      end: 59
+- Ok:
+    kind: CloseParen
+    lexeme: )
+    span:
+      start: 59
+      end: 60
+- Ok:
+    kind: CloseBrace
+    lexeme: "}"
+    span:
+      start: 61
+      end: 62
+- Ok:
+    kind: Comment
+    lexeme: "/// Always returns the string \"blue\"."
+    span:
+      start: 64
+      end: 101
+- Ok:
+    kind: Ident
+    lexeme: fn
+    span:
+      start: 102
+      end: 104
+- Ok:
+    kind: Ident
+    lexeme: always_blue
+    span:
+      start: 105
+      end: 116
+- Ok:
+    kind: OpenParen
+    lexeme: (
+    span:
+      start: 116
+      end: 117
+- Ok:
+    kind: CloseParen
+    lexeme: )
+    span:
+      start: 117
+      end: 118
+- Ok:
+    kind: RightArrow
+    lexeme: "->"
+    span:
+      start: 119
+      end: 121
+- Ok:
+    kind: Ident
+    lexeme: String
+    span:
+      start: 122
+      end: 128
+- Ok:
+    kind: OpenBrace
+    lexeme: "{"
+    span:
+      start: 129
+      end: 130
+- Ok:
+    kind: Comment
+    lexeme: // Always blue! Always blue!
+    span:
+      start: 135
+      end: 163
+- Ok:
+    kind: String
+    lexeme: "\"blue\""
+    span:
+      start: 168
+      end: 174
+- Ok:
+    kind: CloseBrace
+    lexeme: "}"
+    span:
+      start: 175
+      end: 176
+
