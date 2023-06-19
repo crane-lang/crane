@@ -11,22 +11,11 @@ union Bool {
     False,
 }
 
-mod foo {
-    fn do_foo() {
-        std::io::println("Hello from `foo`")
-    }
-
-    mod bar {
-        fn do_bar() {
-            std::io::println("Hello from `bar`")
-        }
-    }
-}
-
 pub fn main() {
     let twenty_three = 23
 
     foo::do_foo()
+    foo::bar::do_bar()
 
     std::io::print("twenty_three = ")
     std::io::println(std::int::int_to_string(twenty_three))
@@ -91,4 +80,16 @@ fn add_and_print(a: Uint64, b: Uint64) {
     std::io::print(" = ")
     std::io::print(std::int::int_to_string(std::int::int_add(a, b)))
     std::io::println("")
+}
+
+mod foo {
+    fn do_foo() {
+        std::io::println("Hello from `foo`")
+    }
+
+    mod bar {
+        fn do_bar() {
+            std::io::println("Hello from `bar`")
+        }
+    }
 }

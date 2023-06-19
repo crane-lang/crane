@@ -83,7 +83,7 @@ impl Typer {
         let mut typed_modules = ThinVec::new();
 
         for module in package.modules {
-            typed_modules.push(self.type_check_module(module)?);
+            typed_modules.push(self.type_check_module(None, module)?);
         }
 
         Ok(TyPackage {
@@ -325,40 +325,37 @@ impl Typer {
         Ok(())
     }
 
-    pub fn type_check_module(&mut self, module: Module) -> TypeCheckResult<TyModule> {
+    pub fn type_check_module(
+        &mut self,
+        prefix: Option<&ThinVec<TyPathSegment>>,
+        module: Module,
+    ) -> TypeCheckResult<TyModule> {
         for item in &module.items {
             match item.kind {
                 ItemKind::Use(_) => {}
                 ItemKind::Fn(ref fun) => {
-                    let params = self.infer_function_params(&fun.params)?;
+                    let mut path_segments = prefix.cloned().unwrap_or(ThinVec::new());
+                    path_segments.push(TyPathSegment {
+                        ident: item.name.clone(),
+                    });
 
-                    let return_ty = fun
-                        .return_ty
-                        .as_ref()
-                        .map(|return_ty| {
-                            Arc::new(Type::UserDefined {
-                                module: "std::prelude".into(),
-                                name: return_ty.to_string().into(),
-                            })
-                        })
-                        .unwrap_or(self.unit_ty.clone());
+                    let path = TyPath {
+                        segments: path_segments,
+                        span: item.name.span,
+                    };
 
-                    self.register_function(
-                        TyPath {
-                            segments: thin_vec![TyPathSegment {
-                                ident: item.name.clone()
-                            }],
-                            span: item.name.span,
-                        },
-                        params.clone(),
-                        return_ty,
-                    );
+                    self.infer_function(&path, *fun.clone())?;
                 }
                 ItemKind::Struct(_) => {}
                 ItemKind::Union(_) => {}
                 ItemKind::Module(ref module_decl) => match *module_decl.clone() {
                     ModuleDecl::Loaded(module, InlineModuleDecl::Yes) => {
-                        self.type_check_module(module.clone())?;
+                        let mut path_segments = prefix.cloned().unwrap_or(ThinVec::new());
+                        path_segments.push(TyPathSegment {
+                            ident: item.name.clone(),
+                        });
+
+                        self.type_check_module(Some(&path_segments), module.clone())?;
                     }
                     ModuleDecl::Loaded(_, InlineModuleDecl::No) => todo!(),
                     ModuleDecl::Unloaded => todo!(),
@@ -369,22 +366,38 @@ impl Typer {
         let mut typed_items = ThinVec::new();
 
         for item in module.items {
-            typed_items.push(self.infer_item(item)?);
+            typed_items.push(self.infer_item(prefix, item)?);
         }
 
         Ok(TyModule { items: typed_items })
     }
 
-    fn infer_item(&mut self, item: Item) -> TypeCheckResult<TyItem> {
+    fn infer_item(
+        &mut self,
+        prefix: Option<&ThinVec<TyPathSegment>>,
+        item: Item,
+    ) -> TypeCheckResult<TyItem> {
         match item.kind {
             ItemKind::Use(_) => Ok(TyItem {
                 kind: TyItemKind::Use,
                 name: item.name,
             }),
-            ItemKind::Fn(fun) => Ok(TyItem {
-                kind: TyItemKind::Fn(Box::new(self.infer_function(&item.name, *fun)?)),
-                name: item.name,
-            }),
+            ItemKind::Fn(fun) => {
+                let mut path_segments = prefix.cloned().unwrap_or(ThinVec::new());
+                path_segments.push(TyPathSegment {
+                    ident: item.name.clone(),
+                });
+
+                let path = TyPath {
+                    segments: path_segments,
+                    span: item.name.span,
+                };
+
+                Ok(TyItem {
+                    kind: TyItemKind::Fn(Box::new(self.infer_function(&path, *fun)?)),
+                    name: item.name,
+                })
+            }
             ItemKind::Struct(struct_decl) => Ok(TyItem {
                 kind: TyItemKind::Struct(self.infer_struct_decl(&struct_decl)?),
                 name: item.name,
@@ -393,21 +406,23 @@ impl Typer {
                 kind: TyItemKind::Union(self.infer_union_decl(&union_decl)?),
                 name: item.name,
             }),
-            ItemKind::Module(module_decl) => Ok(TyItem {
-                kind: TyItemKind::Module(self.infer_module_decl(&module_decl)?),
-                name: item.name,
-            }),
+            ItemKind::Module(module_decl) => {
+                let mut path_segments = prefix.cloned().unwrap_or(ThinVec::new());
+                path_segments.push(TyPathSegment {
+                    ident: item.name.clone(),
+                });
+
+                Ok(TyItem {
+                    kind: TyItemKind::Module(
+                        self.infer_module_decl(Some(&path_segments), &module_decl)?,
+                    ),
+                    name: item.name,
+                })
+            }
         }
     }
 
-    fn infer_function(&mut self, name: &Ident, fun: Fn) -> TypeCheckResult<TyFn> {
-        let path = TyPath {
-            segments: thin_vec![TyPathSegment {
-                ident: name.clone()
-            }],
-            span: name.span,
-        };
-
+    fn infer_function(&mut self, path: &TyPath, fun: Fn) -> TypeCheckResult<TyFn> {
         let (_, return_ty) = self.ensure_function_exists(&path)?;
 
         let params = self.infer_function_params(&fun.params)?;
@@ -441,7 +456,7 @@ impl Typer {
             if *ty != return_ty {
                 return Err(TypeError {
                     kind: TypeErrorKind::Error(format!(
-                        "Expected `{name}` to return {} but got {}",
+                        "Expected `{path}` to return {} but got {}",
                         ty_to_string(&return_ty),
                         ty_to_string(&ty)
                     )),
@@ -451,6 +466,7 @@ impl Typer {
         }
 
         let ty_fn = TyFn {
+            path: path.clone(),
             params,
             return_ty,
             body,
@@ -500,13 +516,17 @@ impl Typer {
         })
     }
 
-    fn infer_module_decl(&mut self, module_decl: &ModuleDecl) -> TypeCheckResult<TyModule> {
+    fn infer_module_decl(
+        &mut self,
+        prefix: Option<&ThinVec<TyPathSegment>>,
+        module_decl: &ModuleDecl,
+    ) -> TypeCheckResult<TyModule> {
         match &module_decl {
             ModuleDecl::Loaded(module, InlineModuleDecl::Yes) => Ok(TyModule {
                 items: module
                     .items
                     .iter()
-                    .map(|item| self.infer_item(item.clone()))
+                    .map(|item| self.infer_item(prefix, item.clone()))
                     .collect::<Result<ThinVec<_>, _>>()?,
             }),
             ModuleDecl::Loaded(_, InlineModuleDecl::No) => Err(TypeError {
@@ -720,7 +740,7 @@ mod tests {
 
             let mut typer = Typer::new();
 
-            insta::assert_yaml_snapshot!(typer.type_check_module(module));
+            insta::assert_yaml_snapshot!(typer.type_check_module(None, module));
         })
     }
 }

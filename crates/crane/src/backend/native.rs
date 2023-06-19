@@ -299,10 +299,13 @@ impl NativeBackend {
             Self::verify_fn(&fpm, fn_name, &fn_value).unwrap();
         }
 
-        for item in package.modules.into_iter().flat_map(|module| module.items)
-        // HACK: Reverse the items so we define the helper functions before `main`.
-        // This should be replaced with a call graph.
-        // .rev()
+        for item in package
+            .modules
+            .into_iter()
+            .flat_map(|module| module.items)
+            // HACK: Reverse the items so we define the helper functions before `main`.
+            // This should be replaced with a call graph.
+            .rev()
         {
             Self::compile_item(&self.context, &builder, &module, &fpm, &item);
         }
@@ -338,8 +341,6 @@ impl NativeBackend {
         fn_name: &str,
         fn_value: &FunctionValue,
     ) -> Result<(), String> {
-        tracing::trace!("Verifying function {}", fn_name);
-
         if fn_value.verify(true) {
             fpm.run_on(fn_value);
 
@@ -368,8 +369,6 @@ impl NativeBackend {
         fpm: &PassManager<FunctionValue<'ctx>>,
         item: &TyItem,
     ) {
-        tracing::trace!("Compiling item {}", item.name);
-
         match &item.kind {
             TyItemKind::Use => {}
             TyItemKind::Fn(fun) => {
@@ -427,7 +426,7 @@ impl NativeBackend {
                     fn_type
                 };
 
-                let fn_value = module.add_function(&item.name.to_string(), fn_type, None);
+                let fn_value = module.add_function(&fun.path.to_string(), fn_type, None);
 
                 for (index, param_value) in fn_value.get_param_iter().enumerate() {
                     if let Some(param) = fun.params.get(index) {

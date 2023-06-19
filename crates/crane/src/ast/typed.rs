@@ -137,6 +137,10 @@ pub struct TyFn {
     pub params: ThinVec<TyFnParam>,
     pub return_ty: Arc<Type>,
     pub body: ThinVec<TyStmt>,
+
+    // HACK: Adding this to the node so we don't have to recompute the path in
+    // the backend. Should find a better way of doing this.
+    pub path: TyPath,
 }
 
 /// A parameter to a [`TyFn`].
