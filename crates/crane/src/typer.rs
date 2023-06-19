@@ -110,12 +110,6 @@ impl Typer {
         &self,
         path: &TyPath,
     ) -> TypeCheckResult<(&ThinVec<TyFnParam>, Arc<Type>)> {
-        let path = if let Some(use_path) = self.use_map.get(&path) {
-            use_path
-        } else {
-            path
-        };
-
         let (TyPathSegment { ident: name }, module_path_segments) =
             path.segments.split_last().unwrap();
 
@@ -685,7 +679,7 @@ impl Typer {
             ExprKind::Call { fun, args } => {
                 let callee = self.infer_expr(*fun.clone())?;
 
-                let callee = match &callee.kind {
+                let callee_path = match &callee.kind {
                     TyExprKind::Variable(path) => Ok(path),
                     _ => Err(TypeError {
                         kind: TypeErrorKind::Error("Not a function.".to_string()),
@@ -693,7 +687,15 @@ impl Typer {
                     }),
                 }?;
 
-                let (callee_params, callee_return_ty) = self.ensure_function_exists(callee)?;
+                // Check the callee's path against the items brought into scope by `use`.
+                // If we find an item that's been brought into scope we can use that as the alias.
+                let callee_path = if let Some(use_path) = self.use_map.get(&callee_path) {
+                    use_path
+                } else {
+                    callee_path
+                };
+
+                let (callee_params, callee_return_ty) = self.ensure_function_exists(callee_path)?;
 
                 let caller_args = args
                     .into_iter()
@@ -706,8 +708,8 @@ impl Typer {
 
                 if callee_arity != caller_arity {
                     return Err(TypeError {
-                        kind: TypeErrorKind::Error(format!("`{callee}` was called with {caller_arity} arguments when it expected {callee_arity}")),
-                        span: callee.span
+                        kind: TypeErrorKind::Error(format!("`{callee_path}` was called with {caller_arity} arguments when it expected {callee_arity}")),
+                        span: callee_path.span
                     });
                 }
 
@@ -726,7 +728,11 @@ impl Typer {
 
                 Ok(TyExpr {
                     kind: TyExprKind::Call {
-                        fun: Box::new(self.infer_expr(*fun)?),
+                        fun: Box::new(TyExpr {
+                            kind: TyExprKind::Variable(callee_path.clone()),
+                            ty: callee.ty,
+                            span: callee.span,
+                        }),
                         args: caller_args,
                     },
                     ty: callee_return_ty.clone(),
