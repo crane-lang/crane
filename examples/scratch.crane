@@ -62,7 +62,7 @@ fn add_5(value: Uint64) -> Uint64 {
 }
 
 fn greet(name: String) {
-    join("Hello", name)
+    join2("Hello", name)
     std::io::print("!")
     std::io::println("")
 }
