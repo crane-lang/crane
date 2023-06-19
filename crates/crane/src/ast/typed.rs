@@ -259,16 +259,16 @@ mod tests {
 
         #[cfg(target_arch = "x86_64")]
         {
-            // For whatever reason, `TyExpr` is a slightly smaller size on x86_64.
             insta::assert_snapshot!(size_of::<TyExpr>().to_string(), @"64");
+            insta::assert_snapshot!(size_of::<TyExprKind>().to_string(), @"40");
         }
 
         #[cfg(target_arch = "aarch64")]
         {
             insta::assert_snapshot!(size_of::<TyExpr>().to_string(), @"80");
+            insta::assert_snapshot!(size_of::<TyExprKind>().to_string(), @"48");
         }
 
-        insta::assert_snapshot!(size_of::<TyExprKind>().to_string(), @"48");
         insta::assert_snapshot!(size_of::<TyFn>().to_string(), @"48");
         insta::assert_snapshot!(size_of::<TyItem>().to_string(), @"56");
         insta::assert_snapshot!(size_of::<TyItemKind>().to_string(), @"16");
