@@ -260,7 +260,7 @@ mod tests {
         #[cfg(target_arch = "x86_64")]
         {
             // For whatever reason, `TyExpr` is a slightly smaller size on x86_64.
-            insta::assert_snapshot!(size_of::<TyExpr>().to_string(), @"72");
+            insta::assert_snapshot!(size_of::<TyExpr>().to_string(), @"64");
         }
 
         #[cfg(target_arch = "aarch64")]
