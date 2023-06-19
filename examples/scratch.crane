@@ -14,6 +14,8 @@ union Bool {
 pub fn main() {
     let twenty_three = 23
 
+    println("Hey")
+
     foo::do_foo()
     foo::bar::do_bar()
 
