@@ -38,8 +38,10 @@ fn ty_to_string(ty: &Type) -> String {
 
 pub type TypeCheckResult<T> = Result<T, TypeError>;
 
+type ModuleFunctions = HashMap<TyPath, (ThinVec<TyFnParam>, Arc<Type>)>;
+
 pub struct Typer {
-    module_functions: HashMap<TyPath, (ThinVec<TyFnParam>, Arc<Type>)>,
+    module_functions: ModuleFunctions,
     scopes: Vec<HashMap<TyPath, Arc<Type>>>,
 
     // Types.
@@ -93,10 +95,21 @@ impl Typer {
 
     fn register_function(
         &mut self,
-        path: TyPath,
+        module_path: TyPath,
+        name: Ident,
         params: ThinVec<TyFnParam>,
         return_ty: Arc<Type>,
     ) {
+        let mut path_segments = module_path.segments.clone();
+        path_segments.push(TyPathSegment {
+            ident: name.clone(),
+        });
+
+        let path = TyPath {
+            segments: path_segments,
+            span: DUMMY_SPAN,
+        };
+
         self.module_functions.insert(path, (params, return_ty));
     }
 
@@ -122,28 +135,46 @@ impl Typer {
     }
 
     fn register_std(&mut self) {
-        self.register_function(
-            TyPath {
-                segments: thin_vec![
-                    TyPathSegment {
-                        ident: Ident {
-                            name: "std".into(),
-                            span: DUMMY_SPAN,
-                        }
-                    },
-                    TyPathSegment {
-                        ident: Ident {
-                            name: "io".into(),
-                            span: DUMMY_SPAN,
-                        }
-                    },
-                    TyPathSegment {
-                        ident: Ident {
-                            name: "print".into(),
-                            span: DUMMY_SPAN,
-                        }
+        let std_io_path = TyPath {
+            segments: thin_vec![
+                TyPathSegment {
+                    ident: Ident {
+                        name: "std".into(),
+                        span: DUMMY_SPAN,
                     }
-                ],
+                },
+                TyPathSegment {
+                    ident: Ident {
+                        name: "io".into(),
+                        span: DUMMY_SPAN,
+                    }
+                },
+            ],
+            span: DUMMY_SPAN,
+        };
+
+        let std_int_path = TyPath {
+            segments: thin_vec![
+                TyPathSegment {
+                    ident: Ident {
+                        name: "std".into(),
+                        span: DUMMY_SPAN,
+                    }
+                },
+                TyPathSegment {
+                    ident: Ident {
+                        name: "int".into(),
+                        span: DUMMY_SPAN,
+                    }
+                },
+            ],
+            span: DUMMY_SPAN,
+        };
+
+        self.register_function(
+            std_io_path.clone(),
+            Ident {
+                name: "print".into(),
                 span: DUMMY_SPAN,
             },
             thin_vec![TyFnParam {
@@ -157,27 +188,9 @@ impl Typer {
             self.unit_ty.clone(),
         );
         self.register_function(
-            TyPath {
-                segments: thin_vec![
-                    TyPathSegment {
-                        ident: Ident {
-                            name: "std".into(),
-                            span: DUMMY_SPAN,
-                        }
-                    },
-                    TyPathSegment {
-                        ident: Ident {
-                            name: "io".into(),
-                            span: DUMMY_SPAN,
-                        }
-                    },
-                    TyPathSegment {
-                        ident: Ident {
-                            name: "println".into(),
-                            span: DUMMY_SPAN,
-                        }
-                    }
-                ],
+            std_io_path,
+            Ident {
+                name: "println".into(),
                 span: DUMMY_SPAN,
             },
             thin_vec![TyFnParam {
@@ -191,27 +204,9 @@ impl Typer {
             self.unit_ty.clone(),
         );
         self.register_function(
-            TyPath {
-                segments: thin_vec![
-                    TyPathSegment {
-                        ident: Ident {
-                            name: "std".into(),
-                            span: DUMMY_SPAN,
-                        }
-                    },
-                    TyPathSegment {
-                        ident: Ident {
-                            name: "int".into(),
-                            span: DUMMY_SPAN,
-                        }
-                    },
-                    TyPathSegment {
-                        ident: Ident {
-                            name: "int_add".into(),
-                            span: DUMMY_SPAN,
-                        }
-                    }
-                ],
+            std_int_path.clone(),
+            Ident {
+                name: "int_add".into(),
                 span: DUMMY_SPAN,
             },
             thin_vec![
@@ -235,27 +230,9 @@ impl Typer {
             self.uint64_ty.clone(),
         );
         self.register_function(
-            TyPath {
-                segments: thin_vec![
-                    TyPathSegment {
-                        ident: Ident {
-                            name: "std".into(),
-                            span: DUMMY_SPAN,
-                        }
-                    },
-                    TyPathSegment {
-                        ident: Ident {
-                            name: "int".into(),
-                            span: DUMMY_SPAN,
-                        }
-                    },
-                    TyPathSegment {
-                        ident: Ident {
-                            name: "int_to_string".into(),
-                            span: DUMMY_SPAN,
-                        }
-                    }
-                ],
+            std_int_path,
+            Ident {
+                name: "int_to_string".into(),
                 span: DUMMY_SPAN,
             },
             thin_vec![TyFnParam {
@@ -300,17 +277,14 @@ impl Typer {
                         })
                         .unwrap_or(self.unit_ty.clone());
 
-                    let mut path_segments = prefix.cloned().unwrap_or(ThinVec::new());
-                    path_segments.push(TyPathSegment {
-                        ident: item.name.clone(),
-                    });
+                    let path_segments = prefix.cloned().unwrap_or(ThinVec::new());
 
-                    let path = TyPath {
+                    let module_path = TyPath {
                         segments: path_segments,
-                        span: item.name.span,
+                        span: DUMMY_SPAN,
                     };
 
-                    self.register_function(path, typed_params, return_ty)
+                    self.register_function(module_path, item.name.clone(), typed_params, return_ty)
                 }
                 ItemKind::Struct(_) => {}
                 ItemKind::Union(_) => {}
