@@ -551,7 +551,7 @@ impl Typer {
 
                 let (callee_params, callee_return_ty) =
                     self.module_functions.get(callee).ok_or_else(|| TypeError {
-                        kind: TypeErrorKind::Error(format!("Function `{callee}` not found.",)),
+                        kind: TypeErrorKind::UnknownFunction(callee.clone()),
                         span: callee.span,
                     })?;
 
