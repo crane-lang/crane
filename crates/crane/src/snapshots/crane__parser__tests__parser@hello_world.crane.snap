@@ -18,30 +18,40 @@ Ok:
                         Variable:
                           segments:
                             - ident:
-                                name: println
+                                name: std
                                 span:
                                   start: 70
+                                  end: 73
+                            - ident:
+                                name: io
+                                span:
+                                  start: 75
                                   end: 77
+                            - ident:
+                                name: println
+                                span:
+                                  start: 79
+                                  end: 86
                           span:
                             start: 70
-                            end: 77
+                            end: 86
                       span:
                         start: 70
-                        end: 77
+                        end: 86
                     args:
                       - kind:
                           Literal:
                             kind: String
                             value: "\"Hello, world!\""
                         span:
-                          start: 78
-                          end: 93
+                          start: 87
+                          end: 102
                 span:
                   start: 70
-                  end: 77
+                  end: 86
             span:
               start: 70
-              end: 77
+              end: 86
     name:
       name: main
       span:

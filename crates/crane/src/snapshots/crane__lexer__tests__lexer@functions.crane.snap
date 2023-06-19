@@ -113,92 +113,140 @@ input_file: crates/crane/src/snapshot_inputs/functions.crane
       end: 69
 - Ok:
     kind: Ident
-    lexeme: println
+    lexeme: std
     span:
       start: 74
+      end: 77
+- Ok:
+    kind: ColonColon
+    lexeme: "::"
+    span:
+      start: 77
+      end: 79
+- Ok:
+    kind: Ident
+    lexeme: io
+    span:
+      start: 79
       end: 81
+- Ok:
+    kind: ColonColon
+    lexeme: "::"
+    span:
+      start: 81
+      end: 83
+- Ok:
+    kind: Ident
+    lexeme: println
+    span:
+      start: 83
+      end: 90
 - Ok:
     kind: OpenParen
     lexeme: (
     span:
-      start: 81
-      end: 82
+      start: 90
+      end: 91
 - Ok:
     kind: String
     lexeme: "\"Hello\""
     span:
-      start: 82
-      end: 89
+      start: 91
+      end: 98
 - Ok:
     kind: CloseParen
     lexeme: )
     span:
-      start: 89
-      end: 90
+      start: 98
+      end: 99
 - Ok:
     kind: CloseBrace
     lexeme: "}"
     span:
-      start: 91
-      end: 92
+      start: 100
+      end: 101
 - Ok:
     kind: Ident
     lexeme: fn
     span:
-      start: 94
-      end: 96
+      start: 103
+      end: 105
 - Ok:
     kind: Ident
     lexeme: say_goodbye
     span:
-      start: 97
-      end: 108
+      start: 106
+      end: 117
 - Ok:
     kind: OpenParen
     lexeme: (
     span:
-      start: 108
-      end: 109
+      start: 117
+      end: 118
 - Ok:
     kind: CloseParen
     lexeme: )
     span:
-      start: 109
-      end: 110
+      start: 118
+      end: 119
 - Ok:
     kind: OpenBrace
     lexeme: "{"
     span:
-      start: 111
-      end: 112
+      start: 120
+      end: 121
+- Ok:
+    kind: Ident
+    lexeme: std
+    span:
+      start: 126
+      end: 129
+- Ok:
+    kind: ColonColon
+    lexeme: "::"
+    span:
+      start: 129
+      end: 131
+- Ok:
+    kind: Ident
+    lexeme: io
+    span:
+      start: 131
+      end: 133
+- Ok:
+    kind: ColonColon
+    lexeme: "::"
+    span:
+      start: 133
+      end: 135
 - Ok:
     kind: Ident
     lexeme: println
     span:
-      start: 117
-      end: 124
+      start: 135
+      end: 142
 - Ok:
     kind: OpenParen
     lexeme: (
     span:
-      start: 124
-      end: 125
+      start: 142
+      end: 143
 - Ok:
     kind: String
     lexeme: "\"Goodbye\""
     span:
-      start: 125
-      end: 134
+      start: 143
+      end: 152
 - Ok:
     kind: CloseParen
     lexeme: )
     span:
-      start: 134
-      end: 135
+      start: 152
+      end: 153
 - Ok:
     kind: CloseBrace
     lexeme: "}"
     span:
-      start: 136
-      end: 137
+      start: 154
+      end: 155
 

@@ -269,7 +269,7 @@ mod tests {
         }
 
         insta::assert_snapshot!(size_of::<TyExprKind>().to_string(), @"48");
-        insta::assert_snapshot!(size_of::<TyFn>().to_string(), @"24");
+        insta::assert_snapshot!(size_of::<TyFn>().to_string(), @"48");
         insta::assert_snapshot!(size_of::<TyItem>().to_string(), @"56");
         insta::assert_snapshot!(size_of::<TyItemKind>().to_string(), @"16");
         insta::assert_snapshot!(size_of::<TyStmt>().to_string(), @"32");

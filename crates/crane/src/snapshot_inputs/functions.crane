@@ -4,9 +4,9 @@ pub fn main() {
 }
 
 fn say_hello() {
-    println("Hello")
+    std::io::println("Hello")
 }
 
 fn say_goodbye() {
-    println("Goodbye")
+    std::io::println("Goodbye")
 }

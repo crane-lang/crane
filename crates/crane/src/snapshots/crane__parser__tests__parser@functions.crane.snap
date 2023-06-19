@@ -80,30 +80,40 @@ Ok:
                         Variable:
                           segments:
                             - ident:
-                                name: println
+                                name: std
                                 span:
                                   start: 74
+                                  end: 77
+                            - ident:
+                                name: io
+                                span:
+                                  start: 79
                                   end: 81
+                            - ident:
+                                name: println
+                                span:
+                                  start: 83
+                                  end: 90
                           span:
                             start: 74
-                            end: 81
+                            end: 90
                       span:
                         start: 74
-                        end: 81
+                        end: 90
                     args:
                       - kind:
                           Literal:
                             kind: String
                             value: "\"Hello\""
                         span:
-                          start: 82
-                          end: 89
+                          start: 91
+                          end: 98
                 span:
                   start: 74
-                  end: 81
+                  end: 90
             span:
               start: 74
-              end: 81
+              end: 90
     name:
       name: say_hello
       span:
@@ -123,33 +133,43 @@ Ok:
                         Variable:
                           segments:
                             - ident:
+                                name: std
+                                span:
+                                  start: 126
+                                  end: 129
+                            - ident:
+                                name: io
+                                span:
+                                  start: 131
+                                  end: 133
+                            - ident:
                                 name: println
                                 span:
-                                  start: 117
-                                  end: 124
+                                  start: 135
+                                  end: 142
                           span:
-                            start: 117
-                            end: 124
+                            start: 126
+                            end: 142
                       span:
-                        start: 117
-                        end: 124
+                        start: 126
+                        end: 142
                     args:
                       - kind:
                           Literal:
                             kind: String
                             value: "\"Goodbye\""
                         span:
-                          start: 125
-                          end: 134
+                          start: 143
+                          end: 152
                 span:
-                  start: 117
-                  end: 124
+                  start: 126
+                  end: 142
             span:
-              start: 117
-              end: 124
+              start: 126
+              end: 142
     name:
       name: say_goodbye
       span:
-        start: 97
-        end: 108
+        start: 106
+        end: 117
 
