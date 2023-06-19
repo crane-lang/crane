@@ -1,0 +1,258 @@
+---
+source: crates/crane/src/parser.rs
+expression: parser.parse()
+input_file: crates/crane/src/snapshot_inputs/modules.crane
+---
+Ok:
+  - kind:
+      Use:
+        prefix:
+          segments:
+            - ident:
+                name: std
+                span:
+                  start: 4
+                  end: 7
+            - ident:
+                name: io
+                span:
+                  start: 9
+                  end: 11
+            - ident:
+                name: print
+                span:
+                  start: 13
+                  end: 18
+          span:
+            start: 0
+            end: 0
+        kind: Single
+    name:
+      name: ""
+      span:
+        start: 0
+        end: 0
+  - kind:
+      Use:
+        prefix:
+          segments:
+            - ident:
+                name: std
+                span:
+                  start: 23
+                  end: 26
+            - ident:
+                name: io
+                span:
+                  start: 28
+                  end: 30
+            - ident:
+                name: println
+                span:
+                  start: 32
+                  end: 39
+          span:
+            start: 0
+            end: 0
+        kind: Single
+    name:
+      name: ""
+      span:
+        start: 0
+        end: 0
+  - kind:
+      Use:
+        prefix:
+          segments:
+            - ident:
+                name: std
+                span:
+                  start: 44
+                  end: 47
+            - ident:
+                name: int
+                span:
+                  start: 49
+                  end: 52
+            - ident:
+                name: int_to_string
+                span:
+                  start: 54
+                  end: 67
+          span:
+            start: 0
+            end: 0
+        kind: Single
+    name:
+      name: ""
+      span:
+        start: 0
+        end: 0
+  - kind:
+      Fn:
+        params: []
+        return_ty: ~
+        body:
+          - kind:
+              Expr:
+                kind:
+                  Call:
+                    fun:
+                      kind:
+                        Variable:
+                          segments:
+                            - ident:
+                                name: print
+                                span:
+                                  start: 85
+                                  end: 90
+                          span:
+                            start: 85
+                            end: 90
+                      span:
+                        start: 85
+                        end: 90
+                    args:
+                      - kind:
+                          Literal:
+                            kind: String
+                            value: "\"Your age is \""
+                        span:
+                          start: 91
+                          end: 105
+                span:
+                  start: 85
+                  end: 90
+            span:
+              start: 85
+              end: 90
+          - kind:
+              Expr:
+                kind:
+                  Call:
+                    fun:
+                      kind:
+                        Variable:
+                          segments:
+                            - ident:
+                                name: println
+                                span:
+                                  start: 111
+                                  end: 118
+                          span:
+                            start: 111
+                            end: 118
+                      span:
+                        start: 111
+                        end: 118
+                    args:
+                      - kind:
+                          Call:
+                            fun:
+                              kind:
+                                Variable:
+                                  segments:
+                                    - ident:
+                                        name: int_to_string
+                                        span:
+                                          start: 119
+                                          end: 132
+                                  span:
+                                    start: 119
+                                    end: 132
+                              span:
+                                start: 119
+                                end: 132
+                            args:
+                              - kind:
+                                  Call:
+                                    fun:
+                                      kind:
+                                        Variable:
+                                          segments:
+                                            - ident:
+                                                name: user
+                                                span:
+                                                  start: 133
+                                                  end: 137
+                                            - ident:
+                                                name: demographic
+                                                span:
+                                                  start: 139
+                                                  end: 150
+                                            - ident:
+                                                name: get_age
+                                                span:
+                                                  start: 152
+                                                  end: 159
+                                          span:
+                                            start: 133
+                                            end: 159
+                                      span:
+                                        start: 133
+                                        end: 159
+                                    args: []
+                                span:
+                                  start: 133
+                                  end: 159
+                        span:
+                          start: 119
+                          end: 132
+                span:
+                  start: 111
+                  end: 118
+            span:
+              start: 111
+              end: 118
+    name:
+      name: main
+      span:
+        start: 72
+        end: 76
+  - kind:
+      Module:
+        Loaded:
+          - items:
+              - kind:
+                  Module:
+                    Loaded:
+                      - items:
+                          - kind:
+                              Fn:
+                                params: []
+                                return_ty:
+                                  name: Uint64
+                                  span:
+                                    start: 224
+                                    end: 230
+                                body:
+                                  - kind:
+                                      Expr:
+                                        kind:
+                                          Literal:
+                                            kind: Integer
+                                            value: "28"
+                                        span:
+                                          start: 245
+                                          end: 247
+                                    span:
+                                      start: 245
+                                      end: 247
+                            name:
+                              name: get_age
+                              span:
+                                start: 211
+                                end: 218
+                      - "Yes"
+                name:
+                  name: demographic
+                  span:
+                    start: 186
+                    end: 197
+          - "Yes"
+    name:
+      name: user
+      span:
+        start: 171
+        end: 175
+
