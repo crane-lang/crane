@@ -549,11 +549,7 @@ impl Typer {
                     }),
                 }?;
 
-                let (callee_params, callee_return_ty) =
-                    self.module_functions.get(callee).ok_or_else(|| TypeError {
-                        kind: TypeErrorKind::UnknownFunction(callee.clone()),
-                        span: callee.span,
-                    })?;
+                let (callee_params, callee_return_ty) = self.ensure_function_exists(callee)?;
 
                 let caller_args = args
                     .into_iter()
