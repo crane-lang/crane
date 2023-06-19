@@ -26,6 +26,8 @@ mod foo {
 pub fn main() {
     let twenty_three = 23
 
+    foo::do_foo()
+
     std::io::print("twenty_three = ")
     std::io::println(std::int::int_to_string(twenty_three))
     std::io::println(" ")

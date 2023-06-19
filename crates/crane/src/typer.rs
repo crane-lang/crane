@@ -41,29 +41,15 @@ pub type TypeCheckResult<T> = Result<T, TypeError>;
 pub struct Typer {
     module_functions: HashMap<TyPath, (ThinVec<TyFnParam>, Arc<Type>)>,
     scopes: Vec<HashMap<TyPath, Arc<Type>>>,
+
+    // Types.
+    unit_ty: Arc<Type>,
+    string_ty: Arc<Type>,
+    uint64_ty: Arc<Type>,
 }
 
 impl Typer {
     pub fn new() -> Self {
-        Self {
-            module_functions: HashMap::new(),
-            scopes: Vec::new(),
-        }
-    }
-
-    pub fn type_check_package(&mut self, package: Package) -> TypeCheckResult<TyPackage> {
-        let mut typed_modules = ThinVec::new();
-
-        for module in package.modules {
-            typed_modules.push(self.type_check_module(module)?);
-        }
-
-        Ok(TyPackage {
-            modules: typed_modules,
-        })
-    }
-
-    pub fn type_check_module(&mut self, module: Module) -> TypeCheckResult<TyModule> {
         let unit_ty = Arc::new(Type::UserDefined {
             module: SmolStr::new_inline("std::prelude"),
             name: SmolStr::new_inline("()"),
@@ -79,7 +65,56 @@ impl Typer {
             name: SmolStr::new_inline("Uint64"),
         });
 
+        Self {
+            module_functions: HashMap::new(),
+            scopes: Vec::new(),
+            unit_ty,
+            string_ty,
+            uint64_ty,
+        }
+    }
+
+    pub fn type_check_package(&mut self, package: Package) -> TypeCheckResult<TyPackage> {
         // HACK: Register the functions from `std`.
+        self.register_std();
+
+        self.perform_function_registration_pass(&package)?;
+
+        let mut typed_modules = ThinVec::new();
+
+        for module in package.modules {
+            typed_modules.push(self.type_check_module(module)?);
+        }
+
+        Ok(TyPackage {
+            modules: typed_modules,
+        })
+    }
+
+    fn register_function(
+        &mut self,
+        path: TyPath,
+        params: ThinVec<TyFnParam>,
+        return_ty: Arc<Type>,
+    ) {
+        self.module_functions.insert(path, (params, return_ty));
+    }
+
+    fn ensure_function_exists(
+        &self,
+        path: &TyPath,
+    ) -> TypeCheckResult<(&ThinVec<TyFnParam>, Arc<Type>)> {
+        if let Some((params, return_ty)) = self.module_functions.get(path) {
+            return Ok((params, return_ty.clone()));
+        }
+
+        Err(TypeError {
+            kind: TypeErrorKind::UnknownFunction(path.clone()),
+            span: path.span,
+        })
+    }
+
+    fn register_std(&mut self) {
         self.register_function(
             TyPath {
                 segments: thin_vec![
@@ -109,10 +144,10 @@ impl Typer {
                     name: "value".into(),
                     span: DUMMY_SPAN
                 },
-                ty: string_ty.clone(),
+                ty: self.string_ty.clone(),
                 span: DUMMY_SPAN
             }],
-            unit_ty.clone(),
+            self.unit_ty.clone(),
         );
         self.register_function(
             TyPath {
@@ -143,10 +178,10 @@ impl Typer {
                     name: "value".into(),
                     span: DUMMY_SPAN
                 },
-                ty: string_ty.clone(),
+                ty: self.string_ty.clone(),
                 span: DUMMY_SPAN
             }],
-            unit_ty.clone(),
+            self.unit_ty.clone(),
         );
         self.register_function(
             TyPath {
@@ -178,7 +213,7 @@ impl Typer {
                         name: "a".into(),
                         span: DUMMY_SPAN
                     },
-                    ty: uint64_ty.clone(),
+                    ty: self.uint64_ty.clone(),
                     span: DUMMY_SPAN
                 },
                 TyFnParam {
@@ -186,11 +221,11 @@ impl Typer {
                         name: "b".into(),
                         span: DUMMY_SPAN
                     },
-                    ty: uint64_ty.clone(),
+                    ty: self.uint64_ty.clone(),
                     span: DUMMY_SPAN
                 }
             ],
-            uint64_ty.clone(),
+            self.uint64_ty.clone(),
         );
         self.register_function(
             TyPath {
@@ -221,12 +256,76 @@ impl Typer {
                     name: "value".into(),
                     span: DUMMY_SPAN
                 },
-                ty: uint64_ty,
+                ty: self.uint64_ty.clone(),
                 span: DUMMY_SPAN
             }],
-            string_ty,
+            self.string_ty.clone(),
         );
+    }
 
+    fn perform_function_registration_pass(&mut self, package: &Package) -> TypeCheckResult<()> {
+        for module in &package.modules {
+            self.register_functions_in_module(None, module)?;
+        }
+
+        Ok(())
+    }
+
+    fn register_functions_in_module(
+        &mut self,
+        prefix: Option<&ThinVec<TyPathSegment>>,
+        module: &Module,
+    ) -> TypeCheckResult<()> {
+        for item in &module.items {
+            match item.kind {
+                ItemKind::Use(_) => {}
+                ItemKind::Fn(ref fun) => {
+                    let typed_params = self.infer_function_params(&fun.params)?;
+
+                    let return_ty = fun
+                        .return_ty
+                        .as_ref()
+                        .map(|return_ty| {
+                            Arc::new(Type::UserDefined {
+                                module: "std::prelude".into(),
+                                name: return_ty.to_string().into(),
+                            })
+                        })
+                        .unwrap_or(self.unit_ty.clone());
+
+                    let mut path_segments = prefix.cloned().unwrap_or(ThinVec::new());
+                    path_segments.push(TyPathSegment {
+                        ident: item.name.clone(),
+                    });
+
+                    let path = TyPath {
+                        segments: path_segments,
+                        span: item.name.span,
+                    };
+
+                    self.register_function(path, typed_params, return_ty)
+                }
+                ItemKind::Struct(_) => {}
+                ItemKind::Union(_) => {}
+                ItemKind::Module(ref module_decl) => match *module_decl.clone() {
+                    ModuleDecl::Loaded(module, InlineModuleDecl::Yes) => {
+                        let mut path_segments = prefix.cloned().unwrap_or(ThinVec::new());
+                        path_segments.push(TyPathSegment {
+                            ident: item.name.clone(),
+                        });
+
+                        self.register_functions_in_module(Some(&path_segments), &module)?;
+                    }
+                    ModuleDecl::Loaded(_, InlineModuleDecl::No) => {}
+                    ModuleDecl::Unloaded => {}
+                },
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn type_check_module(&mut self, module: Module) -> TypeCheckResult<TyModule> {
         for item in &module.items {
             match item.kind {
                 ItemKind::Use(_) => {}
@@ -242,7 +341,7 @@ impl Typer {
                                 name: return_ty.to_string().into(),
                             })
                         })
-                        .unwrap_or(unit_ty.clone());
+                        .unwrap_or(self.unit_ty.clone());
 
                     self.register_function(
                         TyPath {
@@ -274,29 +373,6 @@ impl Typer {
         }
 
         Ok(TyModule { items: typed_items })
-    }
-
-    fn register_function(
-        &mut self,
-        path: TyPath,
-        params: ThinVec<TyFnParam>,
-        return_ty: Arc<Type>,
-    ) {
-        self.module_functions.insert(path, (params, return_ty));
-    }
-
-    fn ensure_function_exists(
-        &self,
-        path: &TyPath,
-    ) -> TypeCheckResult<(&ThinVec<TyFnParam>, Arc<Type>)> {
-        if let Some((params, return_ty)) = self.module_functions.get(path) {
-            return Ok((params, return_ty.clone()));
-        }
-
-        Err(TypeError {
-            kind: TypeErrorKind::UnknownFunction(path.clone()),
-            span: path.span,
-        })
     }
 
     fn infer_item(&mut self, item: Item) -> TypeCheckResult<TyItem> {
