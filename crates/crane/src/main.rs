@@ -141,6 +141,37 @@ fn compile(example: Option<String>) -> Result<(), ()> {
                     let example_file = example_file.display().to_string();
 
                     let error_report = match type_error.kind {
+                        TypeErrorKind::UnknownModule { path, options } => {
+                            let report = Report::build(ReportKind::Error, &example_file, 1)
+                                .with_message("A type error occurred.")
+                                .with_label(
+                                    Label::new(SourceSpan::from((&example_file, span)))
+                                        .with_message(format!("Module `{path}` does not exist.",))
+                                        .with_color(Color::Red),
+                                );
+
+                            let suggestion = options
+                                .iter()
+                                .sorted_by_key(|option| option.to_string())
+                                .min_by_key(|option| {
+                                    strsim::levenshtein(&option.to_string(), &path.to_string())
+                                });
+
+                            let report = if let Some(suggestion) = suggestion {
+                                report.with_label(
+                                    Label::new(SourceSpan::from((&example_file, suggestion.span)))
+                                        .with_message(format!(
+                                            "There is a module with a similar name: `{}`.",
+                                            suggestion.clone()
+                                        ))
+                                        .with_color(Color::Cyan),
+                                )
+                            } else {
+                                report
+                            };
+
+                            report.finish()
+                        }
                         TypeErrorKind::UnknownFunction { path, options } => {
                             let report = Report::build(ReportKind::Error, &example_file, 1)
                                 .with_message("A type error occurred.")

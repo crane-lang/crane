@@ -13,11 +13,11 @@ use thin_vec::{thin_vec, ThinVec};
 
 use crate::ast::{
     Expr, ExprKind, Fn, FnParam, Ident, InlineModuleDecl, Item, ItemKind, Literal, LiteralKind,
-    Local, LocalKind, Module, ModuleDecl, Package, Span, Stmt, StmtKind, StructDecl, TyExpr,
-    TyExprKind, TyFieldDecl, TyFn, TyFnParam, TyIntegerLiteral, TyItem, TyItemKind, TyLiteral,
-    TyLiteralKind, TyLocal, TyLocalKind, TyModule, TyPackage, TyPath, TyPathSegment, TyStmt,
-    TyStmtKind, TyStructDecl, TyUint, TyUnionDecl, TyVariant, TyVariantData, UnionDecl,
-    VariantData, DUMMY_SPAN,
+    Local, LocalKind, Module, ModuleDecl, Package, PathSegment, Span, Stmt, StmtKind, StructDecl,
+    TyExpr, TyExprKind, TyFieldDecl, TyFn, TyFnParam, TyIntegerLiteral, TyItem, TyItemKind,
+    TyLiteral, TyLiteralKind, TyLocal, TyLocalKind, TyModule, TyPackage, TyPath, TyPathSegment,
+    TyStmt, TyStmtKind, TyStructDecl, TyUint, TyUnionDecl, TyVariant, TyVariantData, UnionDecl,
+    UseTree, UseTreeKind, VariantData, DUMMY_SPAN,
 };
 
 fn ty_to_string(ty: &Type) -> String {
@@ -42,6 +42,7 @@ type ModuleFunctions = HashMap<Ident, (ThinVec<TyFnParam>, Arc<Type>)>;
 
 pub struct Typer {
     modules: HashMap<TyPath, ModuleFunctions>,
+    use_map: HashMap<TyPath, TyPath>,
     scopes: Vec<HashMap<TyPath, Arc<Type>>>,
 
     // Types.
@@ -69,6 +70,7 @@ impl Typer {
 
         Self {
             modules: HashMap::new(),
+            use_map: HashMap::new(),
             scopes: Vec::new(),
             unit_ty,
             string_ty,
@@ -117,7 +119,10 @@ impl Typer {
         };
 
         let module = self.modules.get(&module_path).ok_or_else(|| TypeError {
-            kind: TypeErrorKind::Error(format!("Unknown module `{}`.", module_path)),
+            kind: TypeErrorKind::UnknownModule {
+                path: module_path,
+                options: self.modules.keys().cloned().collect::<ThinVec<_>>(),
+            },
             span: path.span,
         })?;
 
@@ -321,7 +326,9 @@ impl Typer {
     ) -> TypeCheckResult<TyModule> {
         for item in &module.items {
             match item.kind {
-                ItemKind::Use(_) => {}
+                ItemKind::Use(ref use_tree) => {
+                    self.infer_use_tree(use_tree)?;
+                }
                 ItemKind::Fn(ref fun) => {
                     let mut path_segments = prefix.cloned().unwrap_or(ThinVec::new());
                     path_segments.push(TyPathSegment {
@@ -367,10 +374,14 @@ impl Typer {
         item: Item,
     ) -> TypeCheckResult<TyItem> {
         match item.kind {
-            ItemKind::Use(_) => Ok(TyItem {
-                kind: TyItemKind::Use,
-                name: item.name,
-            }),
+            ItemKind::Use(use_tree) => {
+                self.infer_use_tree(&use_tree)?;
+
+                Ok(TyItem {
+                    kind: TyItemKind::Use,
+                    name: item.name,
+                })
+            }
             ItemKind::Fn(fun) => {
                 let mut path_segments = prefix.cloned().unwrap_or(ThinVec::new());
                 path_segments.push(TyPathSegment {
@@ -409,6 +420,48 @@ impl Typer {
                 })
             }
         }
+    }
+
+    fn infer_use_tree(&mut self, use_tree: &UseTree) -> TypeCheckResult<()> {
+        match use_tree.kind {
+            UseTreeKind::Single => {
+                let (PathSegment { ident }, module_path_segments) =
+                    use_tree.prefix.segments.split_last().unwrap();
+
+                let module_path = TyPath {
+                    segments: module_path_segments
+                        .iter()
+                        .map(|segment| TyPathSegment {
+                            ident: segment.ident.clone(),
+                        })
+                        .collect::<ThinVec<_>>(),
+                    span: DUMMY_SPAN,
+                };
+
+                let mut fn_path_segments = module_path.segments.clone();
+                fn_path_segments.push(TyPathSegment {
+                    ident: ident.clone(),
+                });
+
+                let fn_path = TyPath {
+                    segments: fn_path_segments,
+                    span: ident.span,
+                };
+
+                self.ensure_function_exists(&fn_path)?;
+
+                let imported_path = TyPath {
+                    segments: thin_vec![TyPathSegment {
+                        ident: ident.clone()
+                    }],
+                    span: ident.span,
+                };
+
+                self.use_map.insert(imported_path, fn_path);
+            }
+        }
+
+        Ok(())
     }
 
     fn infer_function(&mut self, path: &TyPath, fun: Fn) -> TypeCheckResult<TyFn> {
@@ -626,7 +679,7 @@ impl Typer {
             ExprKind::Call { fun, args } => {
                 let callee = self.infer_expr(*fun.clone())?;
 
-                let callee = match &callee.kind {
+                let callee_path = match &callee.kind {
                     TyExprKind::Variable(path) => Ok(path),
                     _ => Err(TypeError {
                         kind: TypeErrorKind::Error("Not a function.".to_string()),
@@ -634,7 +687,15 @@ impl Typer {
                     }),
                 }?;
 
-                let (callee_params, callee_return_ty) = self.ensure_function_exists(callee)?;
+                // Check the callee's path against the items brought into scope by `use`.
+                // If we find an item that's been brought into scope we can use that as the alias.
+                let callee_path = if let Some(use_path) = self.use_map.get(&callee_path) {
+                    use_path
+                } else {
+                    callee_path
+                };
+
+                let (callee_params, callee_return_ty) = self.ensure_function_exists(callee_path)?;
 
                 let caller_args = args
                     .into_iter()
@@ -647,8 +708,8 @@ impl Typer {
 
                 if callee_arity != caller_arity {
                     return Err(TypeError {
-                        kind: TypeErrorKind::Error(format!("`{callee}` was called with {caller_arity} arguments when it expected {callee_arity}")),
-                        span: callee.span
+                        kind: TypeErrorKind::Error(format!("`{callee_path}` was called with {caller_arity} arguments when it expected {callee_arity}")),
+                        span: callee_path.span
                     });
                 }
 
@@ -667,7 +728,11 @@ impl Typer {
 
                 Ok(TyExpr {
                     kind: TyExprKind::Call {
-                        fun: Box::new(self.infer_expr(*fun)?),
+                        fun: Box::new(TyExpr {
+                            kind: TyExprKind::Variable(callee_path.clone()),
+                            ty: callee.ty,
+                            span: callee.span,
+                        }),
                         args: caller_args,
                     },
                     ty: callee_return_ty.clone(),

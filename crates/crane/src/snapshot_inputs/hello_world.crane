@@ -1,6 +1,5 @@
-// TODO: Handle imports.
-// use std::io::println
+use std::io::println
 
 pub fn main() {
-    std::io::println("Hello, world!")
+    println("Hello, world!")
 }

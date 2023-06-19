@@ -5,6 +5,34 @@ input_file: crates/crane/src/snapshot_inputs/hello_world.crane
 ---
 Ok:
   - kind:
+      Use:
+        prefix:
+          segments:
+            - ident:
+                name: std
+                span:
+                  start: 4
+                  end: 7
+            - ident:
+                name: io
+                span:
+                  start: 9
+                  end: 11
+            - ident:
+                name: println
+                span:
+                  start: 13
+                  end: 20
+          span:
+            start: 0
+            end: 0
+        kind: Single
+    name:
+      name: ""
+      span:
+        start: 0
+        end: 0
+  - kind:
       Fn:
         params: []
         return_ty: ~
@@ -18,43 +46,33 @@ Ok:
                         Variable:
                           segments:
                             - ident:
-                                name: std
-                                span:
-                                  start: 70
-                                  end: 73
-                            - ident:
-                                name: io
-                                span:
-                                  start: 75
-                                  end: 77
-                            - ident:
                                 name: println
                                 span:
-                                  start: 79
-                                  end: 86
+                                  start: 42
+                                  end: 49
                           span:
-                            start: 70
-                            end: 86
+                            start: 42
+                            end: 49
                       span:
-                        start: 70
-                        end: 86
+                        start: 42
+                        end: 49
                     args:
                       - kind:
                           Literal:
                             kind: String
                             value: "\"Hello, world!\""
                         span:
-                          start: 87
-                          end: 102
+                          start: 50
+                          end: 65
                 span:
-                  start: 70
-                  end: 86
+                  start: 42
+                  end: 49
             span:
-              start: 70
-              end: 86
+              start: 42
+              end: 49
     name:
       name: main
       span:
-        start: 57
-        end: 61
+        start: 29
+        end: 33
 

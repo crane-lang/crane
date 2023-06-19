@@ -6,6 +6,12 @@ input_file: crates/crane/src/snapshot_inputs/hello_world.crane
 Ok:
   modules:
     - items:
+        - kind: Use
+          name:
+            name: ""
+            span:
+              start: 0
+              end: 0
         - kind:
             Fn:
               params: []
@@ -25,24 +31,24 @@ Ok:
                                   - ident:
                                       name: std
                                       span:
-                                        start: 70
-                                        end: 73
+                                        start: 4
+                                        end: 7
                                   - ident:
                                       name: io
                                       span:
-                                        start: 75
-                                        end: 77
+                                        start: 9
+                                        end: 11
                                   - ident:
                                       name: println
                                       span:
-                                        start: 79
-                                        end: 86
+                                        start: 13
+                                        end: 20
                                 span:
-                                  start: 70
-                                  end: 86
+                                  start: 13
+                                  end: 20
                             span:
-                              start: 70
-                              end: 86
+                              start: 42
+                              end: 49
                             ty:
                               UserDefined:
                                 module: "?"
@@ -53,38 +59,38 @@ Ok:
                                   kind:
                                     String: "\"Hello, world!\""
                                   span:
-                                    start: 87
-                                    end: 102
+                                    start: 50
+                                    end: 65
                               span:
-                                start: 87
-                                end: 102
+                                start: 50
+                                end: 65
                               ty:
                                 UserDefined:
                                   module: "std::prelude"
                                   name: String
                       span:
-                        start: 70
-                        end: 86
+                        start: 42
+                        end: 49
                       ty:
                         UserDefined:
                           module: "std::prelude"
                           name: ()
                   span:
-                    start: 70
-                    end: 86
+                    start: 42
+                    end: 49
               path:
                 segments:
                   - ident:
                       name: main
                       span:
-                        start: 57
-                        end: 61
+                        start: 29
+                        end: 33
                 span:
-                  start: 57
-                  end: 61
+                  start: 29
+                  end: 33
           name:
             name: main
             span:
-              start: 57
-              end: 61
+              start: 29
+              end: 33
 

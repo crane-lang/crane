@@ -1,12 +1,16 @@
+use std::int::int_to_string
+use std::io::print
+use std::io::println
+
 pub fn main() {
     let name = "Arya"
     let gold = 100
 
-    std::io::print("Hello, ")
-    std::io::print(name)
-    std::io::println(".")
+    print("Hello, ")
+    print(name)
+    println(".")
 
-    std::io::print("You currently have ")
-    std::io::print(std::int::int_to_string(gold))
-    std::io::println(" gold at your disposal.")
+    print("You currently have ")
+    print(int_to_string(gold))
+    println(" gold at your disposal.")
 }

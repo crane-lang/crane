@@ -6,6 +6,24 @@ input_file: crates/crane/src/snapshot_inputs/let_bindings.crane
 Ok:
   modules:
     - items:
+        - kind: Use
+          name:
+            name: ""
+            span:
+              start: 0
+              end: 0
+        - kind: Use
+          name:
+            name: ""
+            span:
+              start: 0
+              end: 0
+        - kind: Use
+          name:
+            name: ""
+            span:
+              start: 0
+              end: 0
         - kind:
             Fn:
               params: []
@@ -23,11 +41,11 @@ Ok:
                               kind:
                                 String: "\"Arya\""
                               span:
-                                start: 31
-                                end: 37
+                                start: 100
+                                end: 106
                           span:
-                            start: 31
-                            end: 37
+                            start: 100
+                            end: 106
                           ty:
                             UserDefined:
                               module: "std::prelude"
@@ -35,18 +53,18 @@ Ok:
                       name:
                         name: name
                         span:
-                          start: 24
-                          end: 28
+                          start: 93
+                          end: 97
                       ty:
                         UserDefined:
                           module: "std::prelude"
                           name: String
                       span:
-                        start: 24
-                        end: 28
+                        start: 93
+                        end: 97
                   span:
-                    start: 24
-                    end: 28
+                    start: 93
+                    end: 97
                 - kind:
                     Local:
                       kind:
@@ -59,11 +77,11 @@ Ok:
                                     - 100
                                     - Uint64
                               span:
-                                start: 53
-                                end: 56
+                                start: 122
+                                end: 125
                           span:
-                            start: 53
-                            end: 56
+                            start: 122
+                            end: 125
                           ty:
                             UserDefined:
                               module: "std::prelude"
@@ -71,18 +89,18 @@ Ok:
                       name:
                         name: gold
                         span:
-                          start: 46
-                          end: 50
+                          start: 115
+                          end: 119
                       ty:
                         UserDefined:
                           module: "std::prelude"
                           name: Uint64
                       span:
-                        start: 46
-                        end: 50
+                        start: 115
+                        end: 119
                   span:
-                    start: 46
-                    end: 50
+                    start: 115
+                    end: 119
                 - kind:
                     Expr:
                       kind:
@@ -94,24 +112,24 @@ Ok:
                                   - ident:
                                       name: std
                                       span:
-                                        start: 62
-                                        end: 65
+                                        start: 32
+                                        end: 35
                                   - ident:
                                       name: io
                                       span:
-                                        start: 67
-                                        end: 69
+                                        start: 37
+                                        end: 39
                                   - ident:
                                       name: print
                                       span:
-                                        start: 71
-                                        end: 76
+                                        start: 41
+                                        end: 46
                                 span:
-                                  start: 62
-                                  end: 76
+                                  start: 41
+                                  end: 46
                             span:
-                              start: 62
-                              end: 76
+                              start: 131
+                              end: 136
                             ty:
                               UserDefined:
                                 module: "?"
@@ -122,25 +140,25 @@ Ok:
                                   kind:
                                     String: "\"Hello, \""
                                   span:
-                                    start: 77
-                                    end: 86
+                                    start: 137
+                                    end: 146
                               span:
-                                start: 77
-                                end: 86
+                                start: 137
+                                end: 146
                               ty:
                                 UserDefined:
                                   module: "std::prelude"
                                   name: String
                       span:
-                        start: 62
-                        end: 76
+                        start: 131
+                        end: 136
                       ty:
                         UserDefined:
                           module: "std::prelude"
                           name: ()
                   span:
-                    start: 62
-                    end: 76
+                    start: 131
+                    end: 136
                 - kind:
                     Expr:
                       kind:
@@ -152,24 +170,24 @@ Ok:
                                   - ident:
                                       name: std
                                       span:
-                                        start: 92
-                                        end: 95
+                                        start: 32
+                                        end: 35
                                   - ident:
                                       name: io
                                       span:
-                                        start: 97
-                                        end: 99
+                                        start: 37
+                                        end: 39
                                   - ident:
                                       name: print
                                       span:
-                                        start: 101
-                                        end: 106
+                                        start: 41
+                                        end: 46
                                 span:
-                                  start: 92
-                                  end: 106
+                                  start: 41
+                                  end: 46
                             span:
-                              start: 92
-                              end: 106
+                              start: 152
+                              end: 157
                             ty:
                               UserDefined:
                                 module: "?"
@@ -181,28 +199,28 @@ Ok:
                                     - ident:
                                         name: name
                                         span:
-                                          start: 107
-                                          end: 111
+                                          start: 158
+                                          end: 162
                                   span:
-                                    start: 107
-                                    end: 111
+                                    start: 158
+                                    end: 162
                               span:
-                                start: 107
-                                end: 111
+                                start: 158
+                                end: 162
                               ty:
                                 UserDefined:
                                   module: "std::prelude"
                                   name: String
                       span:
-                        start: 92
-                        end: 106
+                        start: 152
+                        end: 157
                       ty:
                         UserDefined:
                           module: "std::prelude"
                           name: ()
                   span:
-                    start: 92
-                    end: 106
+                    start: 152
+                    end: 157
                 - kind:
                     Expr:
                       kind:
@@ -214,24 +232,24 @@ Ok:
                                   - ident:
                                       name: std
                                       span:
-                                        start: 117
-                                        end: 120
+                                        start: 51
+                                        end: 54
                                   - ident:
                                       name: io
                                       span:
-                                        start: 122
-                                        end: 124
+                                        start: 56
+                                        end: 58
                                   - ident:
                                       name: println
                                       span:
-                                        start: 126
-                                        end: 133
+                                        start: 60
+                                        end: 67
                                 span:
-                                  start: 117
-                                  end: 133
+                                  start: 60
+                                  end: 67
                             span:
-                              start: 117
-                              end: 133
+                              start: 168
+                              end: 175
                             ty:
                               UserDefined:
                                 module: "?"
@@ -242,25 +260,25 @@ Ok:
                                   kind:
                                     String: "\".\""
                                   span:
-                                    start: 134
-                                    end: 137
+                                    start: 176
+                                    end: 179
                               span:
-                                start: 134
-                                end: 137
+                                start: 176
+                                end: 179
                               ty:
                                 UserDefined:
                                   module: "std::prelude"
                                   name: String
                       span:
-                        start: 117
-                        end: 133
+                        start: 168
+                        end: 175
                       ty:
                         UserDefined:
                           module: "std::prelude"
                           name: ()
                   span:
-                    start: 117
-                    end: 133
+                    start: 168
+                    end: 175
                 - kind:
                     Expr:
                       kind:
@@ -272,24 +290,24 @@ Ok:
                                   - ident:
                                       name: std
                                       span:
-                                        start: 144
-                                        end: 147
+                                        start: 32
+                                        end: 35
                                   - ident:
                                       name: io
                                       span:
-                                        start: 149
-                                        end: 151
+                                        start: 37
+                                        end: 39
                                   - ident:
                                       name: print
                                       span:
-                                        start: 153
-                                        end: 158
+                                        start: 41
+                                        end: 46
                                 span:
-                                  start: 144
-                                  end: 158
+                                  start: 41
+                                  end: 46
                             span:
-                              start: 144
-                              end: 158
+                              start: 186
+                              end: 191
                             ty:
                               UserDefined:
                                 module: "?"
@@ -300,25 +318,25 @@ Ok:
                                   kind:
                                     String: "\"You currently have \""
                                   span:
-                                    start: 159
-                                    end: 180
+                                    start: 192
+                                    end: 213
                               span:
-                                start: 159
-                                end: 180
+                                start: 192
+                                end: 213
                               ty:
                                 UserDefined:
                                   module: "std::prelude"
                                   name: String
                       span:
-                        start: 144
-                        end: 158
+                        start: 186
+                        end: 191
                       ty:
                         UserDefined:
                           module: "std::prelude"
                           name: ()
                   span:
-                    start: 144
-                    end: 158
+                    start: 186
+                    end: 191
                 - kind:
                     Expr:
                       kind:
@@ -330,24 +348,24 @@ Ok:
                                   - ident:
                                       name: std
                                       span:
-                                        start: 186
-                                        end: 189
+                                        start: 32
+                                        end: 35
                                   - ident:
                                       name: io
                                       span:
-                                        start: 191
-                                        end: 193
+                                        start: 37
+                                        end: 39
                                   - ident:
                                       name: print
                                       span:
-                                        start: 195
-                                        end: 200
+                                        start: 41
+                                        end: 46
                                 span:
-                                  start: 186
-                                  end: 200
+                                  start: 41
+                                  end: 46
                             span:
-                              start: 186
-                              end: 200
+                              start: 219
+                              end: 224
                             ty:
                               UserDefined:
                                 module: "?"
@@ -362,24 +380,24 @@ Ok:
                                           - ident:
                                               name: std
                                               span:
-                                                start: 201
-                                                end: 204
+                                                start: 4
+                                                end: 7
                                           - ident:
                                               name: int
                                               span:
-                                                start: 206
-                                                end: 209
+                                                start: 9
+                                                end: 12
                                           - ident:
                                               name: int_to_string
                                               span:
-                                                start: 211
-                                                end: 224
+                                                start: 14
+                                                end: 27
                                         span:
-                                          start: 201
-                                          end: 224
+                                          start: 14
+                                          end: 27
                                     span:
-                                      start: 201
-                                      end: 224
+                                      start: 225
+                                      end: 238
                                     ty:
                                       UserDefined:
                                         module: "?"
@@ -391,35 +409,35 @@ Ok:
                                             - ident:
                                                 name: gold
                                                 span:
-                                                  start: 225
-                                                  end: 229
+                                                  start: 239
+                                                  end: 243
                                           span:
-                                            start: 225
-                                            end: 229
+                                            start: 239
+                                            end: 243
                                       span:
-                                        start: 225
-                                        end: 229
+                                        start: 239
+                                        end: 243
                                       ty:
                                         UserDefined:
                                           module: "std::prelude"
                                           name: Uint64
                               span:
-                                start: 201
-                                end: 224
+                                start: 225
+                                end: 238
                               ty:
                                 UserDefined:
                                   module: "std::prelude"
                                   name: String
                       span:
-                        start: 186
-                        end: 200
+                        start: 219
+                        end: 224
                       ty:
                         UserDefined:
                           module: "std::prelude"
                           name: ()
                   span:
-                    start: 186
-                    end: 200
+                    start: 219
+                    end: 224
                 - kind:
                     Expr:
                       kind:
@@ -431,24 +449,24 @@ Ok:
                                   - ident:
                                       name: std
                                       span:
-                                        start: 236
-                                        end: 239
+                                        start: 51
+                                        end: 54
                                   - ident:
                                       name: io
                                       span:
-                                        start: 241
-                                        end: 243
+                                        start: 56
+                                        end: 58
                                   - ident:
                                       name: println
                                       span:
-                                        start: 245
-                                        end: 252
+                                        start: 60
+                                        end: 67
                                 span:
-                                  start: 236
-                                  end: 252
+                                  start: 60
+                                  end: 67
                             span:
-                              start: 236
-                              end: 252
+                              start: 250
+                              end: 257
                             ty:
                               UserDefined:
                                 module: "?"
@@ -459,38 +477,38 @@ Ok:
                                   kind:
                                     String: "\" gold at your disposal.\""
                                   span:
-                                    start: 253
-                                    end: 278
+                                    start: 258
+                                    end: 283
                               span:
-                                start: 253
-                                end: 278
+                                start: 258
+                                end: 283
                               ty:
                                 UserDefined:
                                   module: "std::prelude"
                                   name: String
                       span:
-                        start: 236
-                        end: 252
+                        start: 250
+                        end: 257
                       ty:
                         UserDefined:
                           module: "std::prelude"
                           name: ()
                   span:
-                    start: 236
-                    end: 252
+                    start: 250
+                    end: 257
               path:
                 segments:
                   - ident:
                       name: main
                       span:
-                        start: 7
-                        end: 11
+                        start: 76
+                        end: 80
                 span:
-                  start: 7
-                  end: 11
+                  start: 76
+                  end: 80
           name:
             name: main
             span:
-              start: 7
-              end: 11
+              start: 76
+              end: 80
 
