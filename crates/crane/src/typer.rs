@@ -109,7 +109,14 @@ impl Typer {
         }
 
         Err(TypeError {
-            kind: TypeErrorKind::UnknownFunction(path.clone()),
+            kind: TypeErrorKind::UnknownFunction {
+                path: path.clone(),
+                options: self
+                    .module_functions
+                    .keys()
+                    .cloned()
+                    .collect::<ThinVec<_>>(),
+            },
             span: path.span,
         })
     }

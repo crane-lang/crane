@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use thin_vec::ThinVec;
 
 use crate::ast::{Span, TyPath};
 
@@ -10,6 +11,9 @@ pub struct TypeError {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum TypeErrorKind {
-    UnknownFunction(TyPath),
+    UnknownFunction {
+        path: TyPath,
+        options: ThinVec<TyPath>,
+    },
     Error(String),
 }
