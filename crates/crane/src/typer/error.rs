@@ -11,6 +11,10 @@ pub struct TypeError {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum TypeErrorKind {
+    UnknownModule {
+        path: TyPath,
+        options: ThinVec<TyPath>,
+    },
     UnknownFunction {
         path: TyPath,
         options: ThinVec<TyPath>,

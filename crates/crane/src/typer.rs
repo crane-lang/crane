@@ -13,11 +13,11 @@ use thin_vec::{thin_vec, ThinVec};
 
 use crate::ast::{
     Expr, ExprKind, Fn, FnParam, Ident, InlineModuleDecl, Item, ItemKind, Literal, LiteralKind,
-    Local, LocalKind, Module, ModuleDecl, Package, Span, Stmt, StmtKind, StructDecl, TyExpr,
-    TyExprKind, TyFieldDecl, TyFn, TyFnParam, TyIntegerLiteral, TyItem, TyItemKind, TyLiteral,
-    TyLiteralKind, TyLocal, TyLocalKind, TyModule, TyPackage, TyPath, TyPathSegment, TyStmt,
-    TyStmtKind, TyStructDecl, TyUint, TyUnionDecl, TyVariant, TyVariantData, UnionDecl,
-    VariantData, DUMMY_SPAN,
+    Local, LocalKind, Module, ModuleDecl, Package, PathSegment, Span, Stmt, StmtKind, StructDecl,
+    TyExpr, TyExprKind, TyFieldDecl, TyFn, TyFnParam, TyIntegerLiteral, TyItem, TyItemKind,
+    TyLiteral, TyLiteralKind, TyLocal, TyLocalKind, TyModule, TyPackage, TyPath, TyPathSegment,
+    TyStmt, TyStmtKind, TyStructDecl, TyUint, TyUnionDecl, TyVariant, TyVariantData, UnionDecl,
+    UseTreeKind, VariantData, DUMMY_SPAN,
 };
 
 fn ty_to_string(ty: &Type) -> String {
@@ -42,6 +42,7 @@ type ModuleFunctions = HashMap<Ident, (ThinVec<TyFnParam>, Arc<Type>)>;
 
 pub struct Typer {
     modules: HashMap<TyPath, ModuleFunctions>,
+    use_map: HashMap<TyPath, TyPath>,
     scopes: Vec<HashMap<TyPath, Arc<Type>>>,
 
     // Types.
@@ -69,6 +70,7 @@ impl Typer {
 
         Self {
             modules: HashMap::new(),
+            use_map: HashMap::new(),
             scopes: Vec::new(),
             unit_ty,
             string_ty,
@@ -117,7 +119,10 @@ impl Typer {
         };
 
         let module = self.modules.get(&module_path).ok_or_else(|| TypeError {
-            kind: TypeErrorKind::Error(format!("Unknown module `{}`.", module_path)),
+            kind: TypeErrorKind::UnknownModule {
+                path: module_path,
+                options: self.modules.keys().cloned().collect::<ThinVec<_>>(),
+            },
             span: path.span,
         })?;
 
@@ -367,10 +372,60 @@ impl Typer {
         item: Item,
     ) -> TypeCheckResult<TyItem> {
         match item.kind {
-            ItemKind::Use(_) => Ok(TyItem {
-                kind: TyItemKind::Use,
-                name: item.name,
-            }),
+            ItemKind::Use(use_tree) => {
+                match use_tree.kind {
+                    UseTreeKind::Single => {
+                        let (PathSegment { ident }, module_path_segments) =
+                            use_tree.prefix.segments.split_last().unwrap();
+
+                        let module_path = TyPath {
+                            segments: module_path_segments
+                                .iter()
+                                .map(|segment| TyPathSegment {
+                                    ident: segment.ident.clone(),
+                                })
+                                .collect::<ThinVec<_>>(),
+                            span: DUMMY_SPAN,
+                        };
+
+                        // self.modules.get(&module_path).ok_or_else(|| TypeError {
+                        //     kind: TypeErrorKind::UnknownModule {
+                        //         path: module_path.clone(),
+                        //         options: self.modules.keys().cloned().collect::<ThinVec<_>>(),
+                        //     },
+                        //     span: module_path.span,
+                        // })?;
+
+                        let mut fn_path_segments = module_path.segments.clone();
+                        fn_path_segments.push(TyPathSegment {
+                            ident: ident.clone(),
+                        });
+
+                        let fn_path = TyPath {
+                            segments: fn_path_segments,
+                            span: ident.span,
+                        };
+
+                        self.ensure_function_exists(&fn_path)?;
+
+                        let imported_path = TyPath {
+                            segments: thin_vec![TyPathSegment {
+                                ident: ident.clone()
+                            }],
+                            span: ident.span,
+                        };
+
+                        self.use_map.insert(imported_path, fn_path);
+                    }
+                }
+
+                // self.use_map.insert()
+
+                Ok(TyItem {
+                    kind: TyItemKind::Use,
+                    name: item.name,
+                })
+            }
             ItemKind::Fn(fun) => {
                 let mut path_segments = prefix.cloned().unwrap_or(ThinVec::new());
                 path_segments.push(TyPathSegment {
