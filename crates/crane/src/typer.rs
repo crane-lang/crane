@@ -100,8 +100,6 @@ impl Typer {
         params: ThinVec<TyFnParam>,
         return_ty: Arc<Type>,
     ) {
-        tracing::trace!("Registering function {}::{}", &module_path, &name);
-
         let module = self.modules.entry(module_path).or_default();
         module.insert(name, (params, return_ty));
     }
