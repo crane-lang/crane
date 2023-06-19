@@ -1,65 +1,90 @@
 ---
 source: crates/crane/src/typer.rs
-expression: typer.type_check_module(module)
+expression: typer.type_check_package(package)
 input_file: crates/crane/src/snapshot_inputs/hello_world.crane
 ---
 Ok:
-  items:
-    - kind:
-        Fn:
-          params: []
-          return_ty:
-            UserDefined:
-              module: "std::prelude"
-              name: ()
-          body:
-            - kind:
-                Expr:
-                  kind:
-                    Call:
-                      fun:
-                        kind:
-                          Variable:
-                            name:
-                              name: println
+  modules:
+    - items:
+        - kind:
+            Fn:
+              params: []
+              return_ty:
+                UserDefined:
+                  module: "std::prelude"
+                  name: ()
+              body:
+                - kind:
+                    Expr:
+                      kind:
+                        Call:
+                          fun:
+                            kind:
+                              Variable:
+                                segments:
+                                  - ident:
+                                      name: std
+                                      span:
+                                        start: 70
+                                        end: 73
+                                  - ident:
+                                      name: io
+                                      span:
+                                        start: 75
+                                        end: 77
+                                  - ident:
+                                      name: println
+                                      span:
+                                        start: 79
+                                        end: 86
+                                span:
+                                  start: 70
+                                  end: 86
+                            span:
+                              start: 70
+                              end: 86
+                            ty:
+                              UserDefined:
+                                module: "?"
+                                name: "?"
+                          args:
+                            - kind:
+                                Literal:
+                                  kind:
+                                    String: "\"Hello, world!\""
+                                  span:
+                                    start: 87
+                                    end: 102
                               span:
-                                start: 70
-                                end: 77
-                        span:
-                          start: 70
-                          end: 77
-                        ty:
-                          UserDefined:
-                            module: "?"
-                            name: "?"
-                      args:
-                        - kind:
-                            Literal:
-                              kind:
-                                String: "\"Hello, world!\""
-                              span:
-                                start: 78
-                                end: 93
-                          span:
-                            start: 78
-                            end: 93
-                          ty:
-                            UserDefined:
-                              module: "std::prelude"
-                              name: String
+                                start: 87
+                                end: 102
+                              ty:
+                                UserDefined:
+                                  module: "std::prelude"
+                                  name: String
+                      span:
+                        start: 70
+                        end: 86
+                      ty:
+                        UserDefined:
+                          module: "std::prelude"
+                          name: ()
                   span:
                     start: 70
-                    end: 77
-                  ty:
-                    UserDefined:
-                      module: "std::prelude"
-                      name: ()
-              span:
-                start: 70
-                end: 77
-      name:
-        name: main
-        span:
-          start: 57
-          end: 61
+                    end: 86
+              path:
+                segments:
+                  - ident:
+                      name: main
+                      span:
+                        start: 57
+                        end: 61
+                span:
+                  start: 57
+                  end: 61
+          name:
+            name: main
+            span:
+              start: 57
+              end: 61
 

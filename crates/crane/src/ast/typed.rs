@@ -1,3 +1,4 @@
+use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
@@ -6,6 +7,47 @@ use thin_vec::ThinVec;
 
 use crate::ast::{Ident, Span};
 use crate::typer::Type;
+
+/// A path.
+#[derive(Debug, Eq, Clone, Serialize, Deserialize)]
+pub struct TyPath {
+    /// The segments in the path.
+    pub segments: ThinVec<TyPathSegment>,
+    pub span: Span,
+}
+
+impl PartialEq for TyPath {
+    fn eq(&self, other: &Self) -> bool {
+        self.segments == other.segments
+    }
+}
+
+impl Hash for TyPath {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.segments.hash(state);
+    }
+}
+
+impl std::fmt::Display for TyPath {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            self.segments
+                .iter()
+                .map(|segment| segment.ident.to_string())
+                .collect::<ThinVec<_>>()
+                .join("::")
+        )
+    }
+}
+
+/// A segment of a [`TyPath`].
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Serialize, Deserialize)]
+pub struct TyPathSegment {
+    /// The identifier portion of this segment.
+    pub ident: Ident,
+}
 
 /// The type of an unsigned integer.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -40,7 +82,7 @@ pub enum TyExprKind {
     Literal(TyLiteral),
 
     /// A reference to a variable.
-    Variable { name: Ident },
+    Variable(TyPath),
 
     /// A function call.
     Call {
@@ -95,6 +137,10 @@ pub struct TyFn {
     pub params: ThinVec<TyFnParam>,
     pub return_ty: Arc<Type>,
     pub body: ThinVec<TyStmt>,
+
+    // HACK: Adding this to the node so we don't have to recompute the path in
+    // the backend. Should find a better way of doing this.
+    pub path: TyPath,
 }
 
 /// A parameter to a [`TyFn`].
@@ -213,17 +259,17 @@ mod tests {
 
         #[cfg(target_arch = "x86_64")]
         {
-            // For whatever reason, `TyExpr` is a slightly smaller size on x86_64.
-            insta::assert_snapshot!(size_of::<TyExpr>().to_string(), @"72");
+            insta::assert_snapshot!(size_of::<TyExpr>().to_string(), @"64");
+            insta::assert_snapshot!(size_of::<TyExprKind>().to_string(), @"40");
         }
 
         #[cfg(target_arch = "aarch64")]
         {
             insta::assert_snapshot!(size_of::<TyExpr>().to_string(), @"80");
+            insta::assert_snapshot!(size_of::<TyExprKind>().to_string(), @"48");
         }
 
-        insta::assert_snapshot!(size_of::<TyExprKind>().to_string(), @"48");
-        insta::assert_snapshot!(size_of::<TyFn>().to_string(), @"24");
+        insta::assert_snapshot!(size_of::<TyFn>().to_string(), @"48");
         insta::assert_snapshot!(size_of::<TyItem>().to_string(), @"56");
         insta::assert_snapshot!(size_of::<TyItemKind>().to_string(), @"16");
         insta::assert_snapshot!(size_of::<TyStmt>().to_string(), @"32");

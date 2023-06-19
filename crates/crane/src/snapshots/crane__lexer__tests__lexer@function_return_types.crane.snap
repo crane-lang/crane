@@ -35,170 +35,242 @@ input_file: crates/crane/src/snapshot_inputs/function_return_types.crane
       end: 11
 - Ok:
     kind: Ident
-    lexeme: println
+    lexeme: std
     span:
       start: 16
+      end: 19
+- Ok:
+    kind: ColonColon
+    lexeme: "::"
+    span:
+      start: 19
+      end: 21
+- Ok:
+    kind: Ident
+    lexeme: io
+    span:
+      start: 21
       end: 23
+- Ok:
+    kind: ColonColon
+    lexeme: "::"
+    span:
+      start: 23
+      end: 25
+- Ok:
+    kind: Ident
+    lexeme: println
+    span:
+      start: 25
+      end: 32
 - Ok:
     kind: OpenParen
     lexeme: (
     span:
-      start: 23
-      end: 24
+      start: 32
+      end: 33
+- Ok:
+    kind: Ident
+    lexeme: std
+    span:
+      start: 33
+      end: 36
+- Ok:
+    kind: ColonColon
+    lexeme: "::"
+    span:
+      start: 36
+      end: 38
+- Ok:
+    kind: Ident
+    lexeme: int
+    span:
+      start: 38
+      end: 41
+- Ok:
+    kind: ColonColon
+    lexeme: "::"
+    span:
+      start: 41
+      end: 43
 - Ok:
     kind: Ident
     lexeme: int_to_string
     span:
-      start: 24
-      end: 37
+      start: 43
+      end: 56
 - Ok:
     kind: OpenParen
     lexeme: (
-    span:
-      start: 37
-      end: 38
-- Ok:
-    kind: Ident
-    lexeme: add_10
-    span:
-      start: 38
-      end: 44
-- Ok:
-    kind: OpenParen
-    lexeme: (
-    span:
-      start: 44
-      end: 45
-- Ok:
-    kind: Integer
-    lexeme: "5"
-    span:
-      start: 45
-      end: 46
-- Ok:
-    kind: CloseParen
-    lexeme: )
-    span:
-      start: 46
-      end: 47
-- Ok:
-    kind: CloseParen
-    lexeme: )
-    span:
-      start: 47
-      end: 48
-- Ok:
-    kind: CloseParen
-    lexeme: )
-    span:
-      start: 48
-      end: 49
-- Ok:
-    kind: CloseBrace
-    lexeme: "}"
-    span:
-      start: 50
-      end: 51
-- Ok:
-    kind: Ident
-    lexeme: fn
-    span:
-      start: 53
-      end: 55
-- Ok:
-    kind: Ident
-    lexeme: add_10
     span:
       start: 56
-      end: 62
+      end: 57
+- Ok:
+    kind: Ident
+    lexeme: add_10
+    span:
+      start: 57
+      end: 63
 - Ok:
     kind: OpenParen
     lexeme: (
-    span:
-      start: 62
-      end: 63
-- Ok:
-    kind: Ident
-    lexeme: n
     span:
       start: 63
       end: 64
 - Ok:
-    kind: Colon
-    lexeme: ":"
+    kind: Integer
+    lexeme: "5"
     span:
       start: 64
       end: 65
 - Ok:
-    kind: Ident
-    lexeme: Uint64
+    kind: CloseParen
+    lexeme: )
+    span:
+      start: 65
+      end: 66
+- Ok:
+    kind: CloseParen
+    lexeme: )
     span:
       start: 66
-      end: 72
+      end: 67
 - Ok:
     kind: CloseParen
     lexeme: )
     span:
-      start: 72
-      end: 73
-- Ok:
-    kind: RightArrow
-    lexeme: "->"
-    span:
-      start: 74
-      end: 76
-- Ok:
-    kind: Ident
-    lexeme: Uint64
-    span:
-      start: 77
-      end: 83
-- Ok:
-    kind: OpenBrace
-    lexeme: "{"
-    span:
-      start: 84
-      end: 85
-- Ok:
-    kind: Ident
-    lexeme: int_add
-    span:
-      start: 90
-      end: 97
-- Ok:
-    kind: OpenParen
-    lexeme: (
-    span:
-      start: 97
-      end: 98
-- Ok:
-    kind: Ident
-    lexeme: n
-    span:
-      start: 98
-      end: 99
-- Ok:
-    kind: Comma
-    lexeme: ","
-    span:
-      start: 99
-      end: 100
-- Ok:
-    kind: Integer
-    lexeme: "10"
-    span:
-      start: 101
-      end: 103
-- Ok:
-    kind: CloseParen
-    lexeme: )
-    span:
-      start: 103
-      end: 104
+      start: 67
+      end: 68
 - Ok:
     kind: CloseBrace
     lexeme: "}"
     span:
-      start: 105
-      end: 106
+      start: 69
+      end: 70
+- Ok:
+    kind: Ident
+    lexeme: fn
+    span:
+      start: 72
+      end: 74
+- Ok:
+    kind: Ident
+    lexeme: add_10
+    span:
+      start: 75
+      end: 81
+- Ok:
+    kind: OpenParen
+    lexeme: (
+    span:
+      start: 81
+      end: 82
+- Ok:
+    kind: Ident
+    lexeme: n
+    span:
+      start: 82
+      end: 83
+- Ok:
+    kind: Colon
+    lexeme: ":"
+    span:
+      start: 83
+      end: 84
+- Ok:
+    kind: Ident
+    lexeme: Uint64
+    span:
+      start: 85
+      end: 91
+- Ok:
+    kind: CloseParen
+    lexeme: )
+    span:
+      start: 91
+      end: 92
+- Ok:
+    kind: RightArrow
+    lexeme: "->"
+    span:
+      start: 93
+      end: 95
+- Ok:
+    kind: Ident
+    lexeme: Uint64
+    span:
+      start: 96
+      end: 102
+- Ok:
+    kind: OpenBrace
+    lexeme: "{"
+    span:
+      start: 103
+      end: 104
+- Ok:
+    kind: Ident
+    lexeme: std
+    span:
+      start: 109
+      end: 112
+- Ok:
+    kind: ColonColon
+    lexeme: "::"
+    span:
+      start: 112
+      end: 114
+- Ok:
+    kind: Ident
+    lexeme: int
+    span:
+      start: 114
+      end: 117
+- Ok:
+    kind: ColonColon
+    lexeme: "::"
+    span:
+      start: 117
+      end: 119
+- Ok:
+    kind: Ident
+    lexeme: int_add
+    span:
+      start: 119
+      end: 126
+- Ok:
+    kind: OpenParen
+    lexeme: (
+    span:
+      start: 126
+      end: 127
+- Ok:
+    kind: Ident
+    lexeme: n
+    span:
+      start: 127
+      end: 128
+- Ok:
+    kind: Comma
+    lexeme: ","
+    span:
+      start: 128
+      end: 129
+- Ok:
+    kind: Integer
+    lexeme: "10"
+    span:
+      start: 130
+      end: 132
+- Ok:
+    kind: CloseParen
+    lexeme: )
+    span:
+      start: 132
+      end: 133
+- Ok:
+    kind: CloseBrace
+    lexeme: "}"
+    span:
+      start: 134
+      end: 135
 

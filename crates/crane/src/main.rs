@@ -140,12 +140,12 @@ fn compile(example: Option<String>) -> Result<(), ()> {
                     let example_file = example_file.display().to_string();
 
                     let error_report = match type_error.kind {
-                        TypeErrorKind::UnknownFunction { name } => {
+                        TypeErrorKind::UnknownFunction(path) => {
                             Report::build(ReportKind::Error, &example_file, 1)
                                 .with_message("A type error occurred.")
                                 .with_label(
                                     Label::new(SourceSpan::from((&example_file, span)))
-                                        .with_message(format!("Function `{name}` does not exist."))
+                                        .with_message(format!("Function `{path}` does not exist.",))
                                         .with_color(Color::Red),
                                 )
                                 .finish()

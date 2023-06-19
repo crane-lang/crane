@@ -18,16 +18,26 @@ Ok:
                         Variable:
                           segments:
                             - ident:
-                                name: println
+                                name: std
                                 span:
                                   start: 16
+                                  end: 19
+                            - ident:
+                                name: io
+                                span:
+                                  start: 21
                                   end: 23
+                            - ident:
+                                name: println
+                                span:
+                                  start: 25
+                                  end: 32
                           span:
                             start: 16
-                            end: 23
+                            end: 32
                       span:
                         start: 16
-                        end: 23
+                        end: 32
                     args:
                       - kind:
                           Call:
@@ -36,16 +46,26 @@ Ok:
                                 Variable:
                                   segments:
                                     - ident:
+                                        name: std
+                                        span:
+                                          start: 33
+                                          end: 36
+                                    - ident:
+                                        name: int
+                                        span:
+                                          start: 38
+                                          end: 41
+                                    - ident:
                                         name: int_to_string
                                         span:
-                                          start: 24
-                                          end: 37
+                                          start: 43
+                                          end: 56
                                   span:
-                                    start: 24
-                                    end: 37
+                                    start: 33
+                                    end: 56
                               span:
-                                start: 24
-                                end: 37
+                                start: 33
+                                end: 56
                             args:
                               - kind:
                                   Call:
@@ -56,34 +76,34 @@ Ok:
                                             - ident:
                                                 name: add_10
                                                 span:
-                                                  start: 38
-                                                  end: 44
+                                                  start: 57
+                                                  end: 63
                                           span:
-                                            start: 38
-                                            end: 44
+                                            start: 57
+                                            end: 63
                                       span:
-                                        start: 38
-                                        end: 44
+                                        start: 57
+                                        end: 63
                                     args:
                                       - kind:
                                           Literal:
                                             kind: Integer
                                             value: "5"
                                         span:
-                                          start: 45
-                                          end: 46
+                                          start: 64
+                                          end: 65
                                 span:
-                                  start: 38
-                                  end: 44
+                                  start: 57
+                                  end: 63
                         span:
-                          start: 24
-                          end: 37
+                          start: 33
+                          end: 56
                 span:
                   start: 16
-                  end: 23
+                  end: 32
             span:
               start: 16
-              end: 23
+              end: 32
     name:
       name: main
       span:
@@ -95,21 +115,21 @@ Ok:
           - name:
               name: n
               span:
-                start: 63
-                end: 64
+                start: 82
+                end: 83
             ty:
               name: Uint64
               span:
-                start: 66
-                end: 72
+                start: 85
+                end: 91
             span:
-              start: 63
-              end: 64
+              start: 82
+              end: 83
         return_ty:
           name: Uint64
           span:
-            start: 77
-            end: 83
+            start: 96
+            end: 102
         body:
           - kind:
               Expr:
@@ -120,16 +140,26 @@ Ok:
                         Variable:
                           segments:
                             - ident:
+                                name: std
+                                span:
+                                  start: 109
+                                  end: 112
+                            - ident:
+                                name: int
+                                span:
+                                  start: 114
+                                  end: 117
+                            - ident:
                                 name: int_add
                                 span:
-                                  start: 90
-                                  end: 97
+                                  start: 119
+                                  end: 126
                           span:
-                            start: 90
-                            end: 97
+                            start: 109
+                            end: 126
                       span:
-                        start: 90
-                        end: 97
+                        start: 109
+                        end: 126
                     args:
                       - kind:
                           Variable:
@@ -137,30 +167,30 @@ Ok:
                               - ident:
                                   name: n
                                   span:
-                                    start: 98
-                                    end: 99
+                                    start: 127
+                                    end: 128
                             span:
-                              start: 98
-                              end: 99
+                              start: 127
+                              end: 128
                         span:
-                          start: 98
-                          end: 99
+                          start: 127
+                          end: 128
                       - kind:
                           Literal:
                             kind: Integer
                             value: "10"
                         span:
-                          start: 101
-                          end: 103
+                          start: 130
+                          end: 132
                 span:
-                  start: 90
-                  end: 97
+                  start: 109
+                  end: 126
             span:
-              start: 90
-              end: 97
+              start: 109
+              end: 126
     name:
       name: add_10
       span:
-        start: 56
-        end: 62
+        start: 75
+        end: 81
 

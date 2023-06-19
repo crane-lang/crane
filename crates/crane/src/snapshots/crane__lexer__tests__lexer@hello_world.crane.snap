@@ -53,32 +53,56 @@ input_file: crates/crane/src/snapshot_inputs/hello_world.crane
       end: 65
 - Ok:
     kind: Ident
-    lexeme: println
+    lexeme: std
     span:
       start: 70
+      end: 73
+- Ok:
+    kind: ColonColon
+    lexeme: "::"
+    span:
+      start: 73
+      end: 75
+- Ok:
+    kind: Ident
+    lexeme: io
+    span:
+      start: 75
       end: 77
+- Ok:
+    kind: ColonColon
+    lexeme: "::"
+    span:
+      start: 77
+      end: 79
+- Ok:
+    kind: Ident
+    lexeme: println
+    span:
+      start: 79
+      end: 86
 - Ok:
     kind: OpenParen
     lexeme: (
     span:
-      start: 77
-      end: 78
+      start: 86
+      end: 87
 - Ok:
     kind: String
     lexeme: "\"Hello, world!\""
     span:
-      start: 78
-      end: 93
+      start: 87
+      end: 102
 - Ok:
     kind: CloseParen
     lexeme: )
     span:
-      start: 93
-      end: 94
+      start: 102
+      end: 103
 - Ok:
     kind: CloseBrace
     lexeme: "}"
     span:
-      start: 95
-      end: 96
+      start: 104
+      end: 105
 
