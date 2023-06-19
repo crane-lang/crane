@@ -112,7 +112,7 @@ input_file: crates/crane/src/snapshot_inputs/comments.crane
       start: 61
       end: 62
 - Ok:
-    kind: Comment
+    kind: DocComment
     lexeme: "/// Always returns the string \"blue\"."
     span:
       start: 64
