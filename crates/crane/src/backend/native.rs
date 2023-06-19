@@ -18,8 +18,8 @@ use smol_str::SmolStr;
 use thin_vec::{thin_vec, ThinVec};
 
 use crate::ast::{
-    Ident, TyExpr, TyExprKind, TyFnParam, TyIntegerLiteral, TyItemKind, TyLiteralKind, TyLocalKind,
-    TyPackage, TyPath, TyPathSegment, TyStmtKind, TyUint,
+    TyExpr, TyExprKind, TyFnParam, TyIntegerLiteral, TyItem, TyItemKind, TyLiteralKind,
+    TyLocalKind, TyModule, TyPackage, TyPath, TyPathSegment, TyStmtKind, TyUint,
 };
 use crate::typer::Type;
 
@@ -299,186 +299,12 @@ impl NativeBackend {
             Self::verify_fn(&fpm, fn_name, &fn_value).unwrap();
         }
 
-        for item in package
-            .modules
-            .into_iter()
-            .flat_map(|module| module.items)
-            // HACK: Reverse the items so we define the helper functions before `main`.
-            // This should be replaced with a call graph.
-            .rev()
+        for item in package.modules.into_iter().flat_map(|module| module.items)
+        // HACK: Reverse the items so we define the helper functions before `main`.
+        // This should be replaced with a call graph.
+        // .rev()
         {
-            match item.kind {
-                TyItemKind::Use => {}
-                TyItemKind::Fn(fun) => {
-                    let params = fun
-                        .params
-                        .iter()
-                        .map(|param| {
-                            let param_type = match &*param.ty {
-                                Type::Fn {
-                                    args: _,
-                                    return_ty: _,
-                                } => todo!(),
-                                Type::UserDefined { module, name } => {
-                                    match (module.as_ref(), name.as_ref()) {
-                                        ("std::prelude", "String") => self
-                                            .context
-                                            .i8_type()
-                                            .ptr_type(AddressSpace::default())
-                                            .as_basic_type_enum(),
-                                        ("std::prelude", "Uint64") => {
-                                            self.context.i64_type().as_basic_type_enum()
-                                        }
-                                        (module, name) => panic!(
-                                            "Unknown function parameter type: {}::{}",
-                                            module, name
-                                        ),
-                                    }
-                                }
-                            };
-
-                            param_type.into()
-                        })
-                        .collect::<Vec<_>>();
-
-                    let fn_type = match &*fun.return_ty {
-                        Type::UserDefined { module, name } => {
-                            match (module.as_str(), name.as_str()) {
-                                ("std::prelude", "()") => {
-                                    self.context.void_type().fn_type(&params, false)
-                                }
-                                ("std::prelude", "Uint64") => {
-                                    self.context.i64_type().fn_type(&params, false)
-                                }
-                                ("std::prelude", "String") => self
-                                    .context
-                                    .i8_type()
-                                    .ptr_type(AddressSpace::default())
-                                    .fn_type(&params, false),
-                                (module, name) => panic!("Unknown type {}::{}", module, name),
-                            }
-                        }
-                        Type::Fn {
-                            args: _,
-                            return_ty: _,
-                        } => todo!(),
-                    };
-
-                    let is_main_fn = item.name.name == "main";
-
-                    let fn_type = if is_main_fn {
-                        self.context.i32_type().fn_type(&params, false)
-                    } else {
-                        fn_type
-                    };
-
-                    let fn_value = module.add_function(&item.name.to_string(), fn_type, None);
-
-                    for (index, param_value) in fn_value.get_param_iter().enumerate() {
-                        if let Some(param) = fun.params.get(index) {
-                            param_value.set_name(&param.name.to_string());
-                        }
-                    }
-
-                    let entry = self.context.append_basic_block(fn_value, "entry");
-
-                    builder.position_at_end(entry);
-
-                    let mut locals = HashMap::new();
-
-                    let mut last_stmt: Option<BasicValueEnum> = None;
-
-                    for stmt in &fun.body {
-                        match &stmt.kind {
-                            TyStmtKind::Local(local) => {
-                                let ty = local.ty.as_ref().unwrap_or_else(|| {
-                                    panic!("No type for `let` binding `{}`.", local.name)
-                                });
-
-                                let ty = match &*ty.clone() {
-                                    Type::UserDefined { module, name } => {
-                                        match (module.as_str(), name.as_str()) {
-                                            ("std::prelude", "()") => todo!(),
-                                            ("std::prelude", "Uint64") => {
-                                                self.context.i64_type().as_basic_type_enum()
-                                            }
-                                            ("std::prelude", "String") => self
-                                                .context
-                                                .i8_type()
-                                                .ptr_type(AddressSpace::default())
-                                                .as_basic_type_enum(),
-                                            (module, name) => {
-                                                panic!("Unknown type {}::{}", module, name)
-                                            }
-                                        }
-                                    }
-                                    Type::Fn {
-                                        args: _,
-                                        return_ty: _,
-                                    } => todo!(),
-                                };
-
-                                let local_ptr = builder.build_alloca(ty, &local.name.to_string());
-
-                                let value = match &local.kind {
-                                    TyLocalKind::Decl => None,
-                                    TyLocalKind::Init(init) => Self::compile_expr(
-                                        &self.context,
-                                        &builder,
-                                        &module,
-                                        &fun.params,
-                                        &fn_value,
-                                        &locals,
-                                        *init.clone(),
-                                    ),
-                                }
-                                .unwrap_or_else(|| {
-                                    panic!(
-                                        "`let` binding `{}` does not have an initializer.",
-                                        local.name
-                                    )
-                                });
-
-                                builder.build_store(local_ptr, value);
-
-                                let local_path = TyPath {
-                                    segments: thin_vec![TyPathSegment {
-                                        ident: local.name.clone()
-                                    }],
-                                    span: local.name.span,
-                                };
-
-                                locals.insert(local_path, local_ptr);
-                            }
-                            TyStmtKind::Expr(expr) => {
-                                last_stmt = Self::compile_expr(
-                                    &self.context,
-                                    &builder,
-                                    &module,
-                                    &fun.params,
-                                    &fn_value,
-                                    &locals,
-                                    *expr.clone(),
-                                );
-                            }
-                            TyStmtKind::Item(_item) => todo!(),
-                        }
-                    }
-
-                    if is_main_fn {
-                        builder.build_return(Some(&self.context.i32_type().const_int(0, false)));
-                    } else if let Some(last_stmt) = last_stmt {
-                        builder.build_return(Some(&last_stmt));
-                    } else {
-                        builder.build_return(None);
-                    }
-
-                    Self::verify_fn(&fpm, &item.name.to_string(), &fn_value).unwrap();
-                }
-                TyItemKind::Struct(_) => {}
-                TyItemKind::Union(_) => {}
-                TyItemKind::Module(_) => {}
-            }
+            Self::compile_item(&self.context, &builder, &module, &fpm, &item);
         }
 
         module
@@ -512,12 +338,202 @@ impl NativeBackend {
         fn_name: &str,
         fn_value: &FunctionValue,
     ) -> Result<(), String> {
+        tracing::trace!("Verifying function {}", fn_name);
+
         if fn_value.verify(true) {
             fpm.run_on(fn_value);
 
             Ok(())
         } else {
             Err(format!("`{}` not verified", fn_name))
+        }
+    }
+
+    fn compile_module<'ctx>(
+        context: &'ctx Context,
+        builder: &Builder<'ctx>,
+        module: &Module<'ctx>,
+        fpm: &PassManager<FunctionValue<'ctx>>,
+        ty_module: &TyModule,
+    ) {
+        for item in &ty_module.items {
+            Self::compile_item(context, builder, module, fpm, item);
+        }
+    }
+
+    fn compile_item<'ctx>(
+        context: &'ctx Context,
+        builder: &Builder<'ctx>,
+        module: &Module<'ctx>,
+        fpm: &PassManager<FunctionValue<'ctx>>,
+        item: &TyItem,
+    ) {
+        tracing::trace!("Compiling item {}", item.name);
+
+        match &item.kind {
+            TyItemKind::Use => {}
+            TyItemKind::Fn(fun) => {
+                let params = fun
+                    .params
+                    .iter()
+                    .map(|param| {
+                        let param_type = match &*param.ty {
+                            Type::Fn {
+                                args: _,
+                                return_ty: _,
+                            } => todo!(),
+                            Type::UserDefined { module, name } => {
+                                match (module.as_ref(), name.as_ref()) {
+                                    ("std::prelude", "String") => context
+                                        .i8_type()
+                                        .ptr_type(AddressSpace::default())
+                                        .as_basic_type_enum(),
+                                    ("std::prelude", "Uint64") => {
+                                        context.i64_type().as_basic_type_enum()
+                                    }
+                                    (module, name) => panic!(
+                                        "Unknown function parameter type: {}::{}",
+                                        module, name
+                                    ),
+                                }
+                            }
+                        };
+
+                        param_type.into()
+                    })
+                    .collect::<Vec<_>>();
+
+                let fn_type = match &*fun.return_ty {
+                    Type::UserDefined { module, name } => match (module.as_str(), name.as_str()) {
+                        ("std::prelude", "()") => context.void_type().fn_type(&params, false),
+                        ("std::prelude", "Uint64") => context.i64_type().fn_type(&params, false),
+                        ("std::prelude", "String") => context
+                            .i8_type()
+                            .ptr_type(AddressSpace::default())
+                            .fn_type(&params, false),
+                        (module, name) => panic!("Unknown type {}::{}", module, name),
+                    },
+                    Type::Fn {
+                        args: _,
+                        return_ty: _,
+                    } => todo!(),
+                };
+
+                let is_main_fn = item.name.name == "main";
+
+                let fn_type = if is_main_fn {
+                    context.i32_type().fn_type(&params, false)
+                } else {
+                    fn_type
+                };
+
+                let fn_value = module.add_function(&item.name.to_string(), fn_type, None);
+
+                for (index, param_value) in fn_value.get_param_iter().enumerate() {
+                    if let Some(param) = fun.params.get(index) {
+                        param_value.set_name(&param.name.to_string());
+                    }
+                }
+
+                let entry = context.append_basic_block(fn_value, "entry");
+
+                builder.position_at_end(entry);
+
+                let mut locals = HashMap::new();
+
+                let mut last_stmt: Option<BasicValueEnum> = None;
+
+                for stmt in &fun.body {
+                    match &stmt.kind {
+                        TyStmtKind::Local(local) => {
+                            let ty = local.ty.as_ref().unwrap_or_else(|| {
+                                panic!("No type for `let` binding `{}`.", local.name)
+                            });
+
+                            let ty = match &*ty.clone() {
+                                Type::UserDefined { module, name } => {
+                                    match (module.as_str(), name.as_str()) {
+                                        ("std::prelude", "()") => todo!(),
+                                        ("std::prelude", "Uint64") => {
+                                            context.i64_type().as_basic_type_enum()
+                                        }
+                                        ("std::prelude", "String") => context
+                                            .i8_type()
+                                            .ptr_type(AddressSpace::default())
+                                            .as_basic_type_enum(),
+                                        (module, name) => {
+                                            panic!("Unknown type {}::{}", module, name)
+                                        }
+                                    }
+                                }
+                                Type::Fn {
+                                    args: _,
+                                    return_ty: _,
+                                } => todo!(),
+                            };
+
+                            let local_ptr = builder.build_alloca(ty, &local.name.to_string());
+
+                            let value = match &local.kind {
+                                TyLocalKind::Decl => None,
+                                TyLocalKind::Init(init) => Self::compile_expr(
+                                    &context,
+                                    &builder,
+                                    &module,
+                                    &fun.params,
+                                    &fn_value,
+                                    &locals,
+                                    *init.clone(),
+                                ),
+                            }
+                            .unwrap_or_else(|| {
+                                panic!(
+                                    "`let` binding `{}` does not have an initializer.",
+                                    local.name
+                                )
+                            });
+
+                            builder.build_store(local_ptr, value);
+
+                            let local_path = TyPath {
+                                segments: thin_vec![TyPathSegment {
+                                    ident: local.name.clone()
+                                }],
+                                span: local.name.span,
+                            };
+
+                            locals.insert(local_path, local_ptr);
+                        }
+                        TyStmtKind::Expr(expr) => {
+                            last_stmt = Self::compile_expr(
+                                &context,
+                                &builder,
+                                &module,
+                                &fun.params,
+                                &fn_value,
+                                &locals,
+                                *expr.clone(),
+                            );
+                        }
+                        TyStmtKind::Item(_item) => todo!(),
+                    }
+                }
+
+                if is_main_fn {
+                    builder.build_return(Some(&context.i32_type().const_int(0, false)));
+                } else if let Some(last_stmt) = last_stmt {
+                    builder.build_return(Some(&last_stmt));
+                } else {
+                    builder.build_return(None);
+                }
+
+                Self::verify_fn(&fpm, &item.name.to_string(), &fn_value).unwrap();
+            }
+            TyItemKind::Struct(_) => {}
+            TyItemKind::Union(_) => {}
+            TyItemKind::Module(ty_module) => {
+                Self::compile_module(context, builder, module, fpm, &ty_module);
+            }
         }
     }
 
