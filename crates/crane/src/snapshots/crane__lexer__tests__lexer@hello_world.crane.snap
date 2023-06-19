@@ -4,105 +4,105 @@ expression: "lexer.into_iter().collect::<Vec<_>>()"
 input_file: crates/crane/src/snapshot_inputs/hello_world.crane
 ---
 - Ok:
-    kind: Comment
-    lexeme: "// TODO: Handle imports."
+    kind: Ident
+    lexeme: use
     span:
       start: 0
-      end: 24
-- Ok:
-    kind: Comment
-    lexeme: "// use std::io::println"
-    span:
-      start: 25
-      end: 48
-- Ok:
-    kind: Ident
-    lexeme: pub
-    span:
-      start: 50
-      end: 53
-- Ok:
-    kind: Ident
-    lexeme: fn
-    span:
-      start: 54
-      end: 56
-- Ok:
-    kind: Ident
-    lexeme: main
-    span:
-      start: 57
-      end: 61
-- Ok:
-    kind: OpenParen
-    lexeme: (
-    span:
-      start: 61
-      end: 62
-- Ok:
-    kind: CloseParen
-    lexeme: )
-    span:
-      start: 62
-      end: 63
-- Ok:
-    kind: OpenBrace
-    lexeme: "{"
-    span:
-      start: 64
-      end: 65
+      end: 3
 - Ok:
     kind: Ident
     lexeme: std
     span:
-      start: 70
-      end: 73
+      start: 4
+      end: 7
 - Ok:
     kind: ColonColon
     lexeme: "::"
     span:
-      start: 73
-      end: 75
+      start: 7
+      end: 9
 - Ok:
     kind: Ident
     lexeme: io
     span:
-      start: 75
-      end: 77
+      start: 9
+      end: 11
 - Ok:
     kind: ColonColon
     lexeme: "::"
     span:
-      start: 77
-      end: 79
+      start: 11
+      end: 13
 - Ok:
     kind: Ident
     lexeme: println
     span:
-      start: 79
-      end: 86
+      start: 13
+      end: 20
+- Ok:
+    kind: Ident
+    lexeme: pub
+    span:
+      start: 22
+      end: 25
+- Ok:
+    kind: Ident
+    lexeme: fn
+    span:
+      start: 26
+      end: 28
+- Ok:
+    kind: Ident
+    lexeme: main
+    span:
+      start: 29
+      end: 33
 - Ok:
     kind: OpenParen
     lexeme: (
     span:
-      start: 86
-      end: 87
-- Ok:
-    kind: String
-    lexeme: "\"Hello, world!\""
-    span:
-      start: 87
-      end: 102
+      start: 33
+      end: 34
 - Ok:
     kind: CloseParen
     lexeme: )
     span:
-      start: 102
-      end: 103
+      start: 34
+      end: 35
+- Ok:
+    kind: OpenBrace
+    lexeme: "{"
+    span:
+      start: 36
+      end: 37
+- Ok:
+    kind: Ident
+    lexeme: println
+    span:
+      start: 42
+      end: 49
+- Ok:
+    kind: OpenParen
+    lexeme: (
+    span:
+      start: 49
+      end: 50
+- Ok:
+    kind: String
+    lexeme: "\"Hello, world!\""
+    span:
+      start: 50
+      end: 65
+- Ok:
+    kind: CloseParen
+    lexeme: )
+    span:
+      start: 65
+      end: 66
 - Ok:
     kind: CloseBrace
     lexeme: "}"
     span:
-      start: 104
-      end: 105
+      start: 67
+      end: 68
 

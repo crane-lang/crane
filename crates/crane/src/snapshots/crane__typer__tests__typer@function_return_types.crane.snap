@@ -6,6 +6,24 @@ input_file: crates/crane/src/snapshot_inputs/function_return_types.crane
 Ok:
   modules:
     - items:
+        - kind: Use
+          name:
+            name: ""
+            span:
+              start: 0
+              end: 0
+        - kind: Use
+          name:
+            name: ""
+            span:
+              start: 0
+              end: 0
+        - kind: Use
+          name:
+            name: ""
+            span:
+              start: 0
+              end: 0
         - kind:
             Fn:
               params: []
@@ -25,24 +43,24 @@ Ok:
                                   - ident:
                                       name: std
                                       span:
-                                        start: 16
-                                        end: 19
+                                        start: 54
+                                        end: 57
                                   - ident:
                                       name: io
                                       span:
-                                        start: 21
-                                        end: 23
+                                        start: 59
+                                        end: 61
                                   - ident:
                                       name: println
                                       span:
-                                        start: 25
-                                        end: 32
+                                        start: 63
+                                        end: 70
                                 span:
-                                  start: 16
-                                  end: 32
+                                  start: 63
+                                  end: 70
                             span:
-                              start: 16
-                              end: 32
+                              start: 88
+                              end: 95
                             ty:
                               UserDefined:
                                 module: "?"
@@ -57,24 +75,24 @@ Ok:
                                           - ident:
                                               name: std
                                               span:
-                                                start: 33
-                                                end: 36
+                                                start: 26
+                                                end: 29
                                           - ident:
                                               name: int
                                               span:
-                                                start: 38
-                                                end: 41
+                                                start: 31
+                                                end: 34
                                           - ident:
                                               name: int_to_string
                                               span:
-                                                start: 43
-                                                end: 56
+                                                start: 36
+                                                end: 49
                                         span:
-                                          start: 33
-                                          end: 56
+                                          start: 36
+                                          end: 49
                                     span:
-                                      start: 33
-                                      end: 56
+                                      start: 96
+                                      end: 109
                                     ty:
                                       UserDefined:
                                         module: "?"
@@ -89,14 +107,14 @@ Ok:
                                                   - ident:
                                                       name: add_10
                                                       span:
-                                                        start: 57
-                                                        end: 63
+                                                        start: 110
+                                                        end: 116
                                                 span:
-                                                  start: 57
-                                                  end: 63
+                                                  start: 110
+                                                  end: 116
                                             span:
-                                              start: 57
-                                              end: 63
+                                              start: 110
+                                              end: 116
                                             ty:
                                               UserDefined:
                                                 module: "?"
@@ -110,69 +128,69 @@ Ok:
                                                         - 5
                                                         - Uint64
                                                   span:
-                                                    start: 64
-                                                    end: 65
+                                                    start: 117
+                                                    end: 118
                                               span:
-                                                start: 64
-                                                end: 65
+                                                start: 117
+                                                end: 118
                                               ty:
                                                 UserDefined:
                                                   module: "std::prelude"
                                                   name: Uint64
                                       span:
-                                        start: 57
-                                        end: 63
+                                        start: 110
+                                        end: 116
                                       ty:
                                         UserDefined:
                                           module: "std::prelude"
                                           name: Uint64
                               span:
-                                start: 33
-                                end: 56
+                                start: 96
+                                end: 109
                               ty:
                                 UserDefined:
                                   module: "std::prelude"
                                   name: String
                       span:
-                        start: 16
-                        end: 32
+                        start: 88
+                        end: 95
                       ty:
                         UserDefined:
                           module: "std::prelude"
                           name: ()
                   span:
-                    start: 16
-                    end: 32
+                    start: 88
+                    end: 95
               path:
                 segments:
                   - ident:
                       name: main
                       span:
-                        start: 3
-                        end: 7
+                        start: 75
+                        end: 79
                 span:
-                  start: 3
-                  end: 7
+                  start: 75
+                  end: 79
           name:
             name: main
             span:
-              start: 3
-              end: 7
+              start: 75
+              end: 79
         - kind:
             Fn:
               params:
                 - name:
                     name: n
                     span:
-                      start: 82
-                      end: 83
+                      start: 135
+                      end: 136
                   ty:
                     UserDefined:
                       module: "std::prelude"
                       name: Uint64
                   span:
-                    start: 82
-                    end: 83
+                    start: 135
+                    end: 136
               return_ty:
                 UserDefined:
                   module: "std::prelude"
@@ -189,24 +207,24 @@ Ok:
                                   - ident:
                                       name: std
                                       span:
-                                        start: 109
-                                        end: 112
+                                        start: 4
+                                        end: 7
                                   - ident:
                                       name: int
                                       span:
-                                        start: 114
-                                        end: 117
+                                        start: 9
+                                        end: 12
                                   - ident:
                                       name: int_add
                                       span:
-                                        start: 119
-                                        end: 126
+                                        start: 14
+                                        end: 21
                                 span:
-                                  start: 109
-                                  end: 126
+                                  start: 14
+                                  end: 21
                             span:
-                              start: 109
-                              end: 126
+                              start: 162
+                              end: 169
                             ty:
                               UserDefined:
                                 module: "?"
@@ -218,14 +236,14 @@ Ok:
                                     - ident:
                                         name: n
                                         span:
-                                          start: 127
-                                          end: 128
+                                          start: 170
+                                          end: 171
                                   span:
-                                    start: 127
-                                    end: 128
+                                    start: 170
+                                    end: 171
                               span:
-                                start: 127
-                                end: 128
+                                start: 170
+                                end: 171
                               ty:
                                 UserDefined:
                                   module: "std::prelude"
@@ -238,38 +256,38 @@ Ok:
                                         - 10
                                         - Uint64
                                   span:
-                                    start: 130
-                                    end: 132
+                                    start: 173
+                                    end: 175
                               span:
-                                start: 130
-                                end: 132
+                                start: 173
+                                end: 175
                               ty:
                                 UserDefined:
                                   module: "std::prelude"
                                   name: Uint64
                       span:
-                        start: 109
-                        end: 126
+                        start: 162
+                        end: 169
                       ty:
                         UserDefined:
                           module: "std::prelude"
                           name: Uint64
                   span:
-                    start: 109
-                    end: 126
+                    start: 162
+                    end: 169
               path:
                 segments:
                   - ident:
                       name: add_10
                       span:
-                        start: 75
-                        end: 81
+                        start: 128
+                        end: 134
                 span:
-                  start: 75
-                  end: 81
+                  start: 128
+                  end: 134
           name:
             name: add_10
             span:
-              start: 75
-              end: 81
+              start: 128
+              end: 134
 

@@ -5,6 +5,90 @@ input_file: crates/crane/src/snapshot_inputs/let_bindings.crane
 ---
 Ok:
   - kind:
+      Use:
+        prefix:
+          segments:
+            - ident:
+                name: std
+                span:
+                  start: 4
+                  end: 7
+            - ident:
+                name: int
+                span:
+                  start: 9
+                  end: 12
+            - ident:
+                name: int_to_string
+                span:
+                  start: 14
+                  end: 27
+          span:
+            start: 0
+            end: 0
+        kind: Single
+    name:
+      name: ""
+      span:
+        start: 0
+        end: 0
+  - kind:
+      Use:
+        prefix:
+          segments:
+            - ident:
+                name: std
+                span:
+                  start: 32
+                  end: 35
+            - ident:
+                name: io
+                span:
+                  start: 37
+                  end: 39
+            - ident:
+                name: print
+                span:
+                  start: 41
+                  end: 46
+          span:
+            start: 0
+            end: 0
+        kind: Single
+    name:
+      name: ""
+      span:
+        start: 0
+        end: 0
+  - kind:
+      Use:
+        prefix:
+          segments:
+            - ident:
+                name: std
+                span:
+                  start: 51
+                  end: 54
+            - ident:
+                name: io
+                span:
+                  start: 56
+                  end: 58
+            - ident:
+                name: println
+                span:
+                  start: 60
+                  end: 67
+          span:
+            start: 0
+            end: 0
+        kind: Single
+    name:
+      name: ""
+      span:
+        start: 0
+        end: 0
+  - kind:
       Fn:
         params: []
         return_ty: ~
@@ -18,20 +102,20 @@ Ok:
                         kind: String
                         value: "\"Arya\""
                     span:
-                      start: 31
-                      end: 37
+                      start: 100
+                      end: 106
                 name:
                   name: name
                   span:
-                    start: 24
-                    end: 28
+                    start: 93
+                    end: 97
                 ty: ~
                 span:
-                  start: 24
-                  end: 28
+                  start: 93
+                  end: 97
             span:
-              start: 24
-              end: 28
+              start: 93
+              end: 97
           - kind:
               Local:
                 kind:
@@ -41,20 +125,20 @@ Ok:
                         kind: Integer
                         value: "100"
                     span:
-                      start: 53
-                      end: 56
+                      start: 122
+                      end: 125
                 name:
                   name: gold
                   span:
-                    start: 46
-                    end: 50
+                    start: 115
+                    end: 119
                 ty: ~
                 span:
-                  start: 46
-                  end: 50
+                  start: 115
+                  end: 119
             span:
-              start: 46
-              end: 50
+              start: 115
+              end: 119
           - kind:
               Expr:
                 kind:
@@ -64,40 +148,30 @@ Ok:
                         Variable:
                           segments:
                             - ident:
-                                name: std
-                                span:
-                                  start: 62
-                                  end: 65
-                            - ident:
-                                name: io
-                                span:
-                                  start: 67
-                                  end: 69
-                            - ident:
                                 name: print
                                 span:
-                                  start: 71
-                                  end: 76
+                                  start: 131
+                                  end: 136
                           span:
-                            start: 62
-                            end: 76
+                            start: 131
+                            end: 136
                       span:
-                        start: 62
-                        end: 76
+                        start: 131
+                        end: 136
                     args:
                       - kind:
                           Literal:
                             kind: String
                             value: "\"Hello, \""
                         span:
-                          start: 77
-                          end: 86
+                          start: 137
+                          end: 146
                 span:
-                  start: 62
-                  end: 76
+                  start: 131
+                  end: 136
             span:
-              start: 62
-              end: 76
+              start: 131
+              end: 136
           - kind:
               Expr:
                 kind:
@@ -107,26 +181,16 @@ Ok:
                         Variable:
                           segments:
                             - ident:
-                                name: std
-                                span:
-                                  start: 92
-                                  end: 95
-                            - ident:
-                                name: io
-                                span:
-                                  start: 97
-                                  end: 99
-                            - ident:
                                 name: print
                                 span:
-                                  start: 101
-                                  end: 106
+                                  start: 152
+                                  end: 157
                           span:
-                            start: 92
-                            end: 106
+                            start: 152
+                            end: 157
                       span:
-                        start: 92
-                        end: 106
+                        start: 152
+                        end: 157
                     args:
                       - kind:
                           Variable:
@@ -134,20 +198,20 @@ Ok:
                               - ident:
                                   name: name
                                   span:
-                                    start: 107
-                                    end: 111
+                                    start: 158
+                                    end: 162
                             span:
-                              start: 107
-                              end: 111
+                              start: 158
+                              end: 162
                         span:
-                          start: 107
-                          end: 111
+                          start: 158
+                          end: 162
                 span:
-                  start: 92
-                  end: 106
+                  start: 152
+                  end: 157
             span:
-              start: 92
-              end: 106
+              start: 152
+              end: 157
           - kind:
               Expr:
                 kind:
@@ -157,40 +221,30 @@ Ok:
                         Variable:
                           segments:
                             - ident:
-                                name: std
-                                span:
-                                  start: 117
-                                  end: 120
-                            - ident:
-                                name: io
-                                span:
-                                  start: 122
-                                  end: 124
-                            - ident:
                                 name: println
                                 span:
-                                  start: 126
-                                  end: 133
+                                  start: 168
+                                  end: 175
                           span:
-                            start: 117
-                            end: 133
+                            start: 168
+                            end: 175
                       span:
-                        start: 117
-                        end: 133
+                        start: 168
+                        end: 175
                     args:
                       - kind:
                           Literal:
                             kind: String
                             value: "\".\""
                         span:
-                          start: 134
-                          end: 137
+                          start: 176
+                          end: 179
                 span:
-                  start: 117
-                  end: 133
+                  start: 168
+                  end: 175
             span:
-              start: 117
-              end: 133
+              start: 168
+              end: 175
           - kind:
               Expr:
                 kind:
@@ -200,40 +254,30 @@ Ok:
                         Variable:
                           segments:
                             - ident:
-                                name: std
-                                span:
-                                  start: 144
-                                  end: 147
-                            - ident:
-                                name: io
-                                span:
-                                  start: 149
-                                  end: 151
-                            - ident:
                                 name: print
                                 span:
-                                  start: 153
-                                  end: 158
+                                  start: 186
+                                  end: 191
                           span:
-                            start: 144
-                            end: 158
+                            start: 186
+                            end: 191
                       span:
-                        start: 144
-                        end: 158
+                        start: 186
+                        end: 191
                     args:
                       - kind:
                           Literal:
                             kind: String
                             value: "\"You currently have \""
                         span:
-                          start: 159
-                          end: 180
+                          start: 192
+                          end: 213
                 span:
-                  start: 144
-                  end: 158
+                  start: 186
+                  end: 191
             span:
-              start: 144
-              end: 158
+              start: 186
+              end: 191
           - kind:
               Expr:
                 kind:
@@ -243,26 +287,16 @@ Ok:
                         Variable:
                           segments:
                             - ident:
-                                name: std
-                                span:
-                                  start: 186
-                                  end: 189
-                            - ident:
-                                name: io
-                                span:
-                                  start: 191
-                                  end: 193
-                            - ident:
                                 name: print
                                 span:
-                                  start: 195
-                                  end: 200
+                                  start: 219
+                                  end: 224
                           span:
-                            start: 186
-                            end: 200
+                            start: 219
+                            end: 224
                       span:
-                        start: 186
-                        end: 200
+                        start: 219
+                        end: 224
                     args:
                       - kind:
                           Call:
@@ -271,26 +305,16 @@ Ok:
                                 Variable:
                                   segments:
                                     - ident:
-                                        name: std
-                                        span:
-                                          start: 201
-                                          end: 204
-                                    - ident:
-                                        name: int
-                                        span:
-                                          start: 206
-                                          end: 209
-                                    - ident:
                                         name: int_to_string
                                         span:
-                                          start: 211
-                                          end: 224
+                                          start: 225
+                                          end: 238
                                   span:
-                                    start: 201
-                                    end: 224
+                                    start: 225
+                                    end: 238
                               span:
-                                start: 201
-                                end: 224
+                                start: 225
+                                end: 238
                             args:
                               - kind:
                                   Variable:
@@ -298,23 +322,23 @@ Ok:
                                       - ident:
                                           name: gold
                                           span:
-                                            start: 225
-                                            end: 229
+                                            start: 239
+                                            end: 243
                                     span:
-                                      start: 225
-                                      end: 229
+                                      start: 239
+                                      end: 243
                                 span:
-                                  start: 225
-                                  end: 229
+                                  start: 239
+                                  end: 243
                         span:
-                          start: 201
-                          end: 224
+                          start: 225
+                          end: 238
                 span:
-                  start: 186
-                  end: 200
+                  start: 219
+                  end: 224
             span:
-              start: 186
-              end: 200
+              start: 219
+              end: 224
           - kind:
               Expr:
                 kind:
@@ -324,43 +348,33 @@ Ok:
                         Variable:
                           segments:
                             - ident:
-                                name: std
-                                span:
-                                  start: 236
-                                  end: 239
-                            - ident:
-                                name: io
-                                span:
-                                  start: 241
-                                  end: 243
-                            - ident:
                                 name: println
                                 span:
-                                  start: 245
-                                  end: 252
+                                  start: 250
+                                  end: 257
                           span:
-                            start: 236
-                            end: 252
+                            start: 250
+                            end: 257
                       span:
-                        start: 236
-                        end: 252
+                        start: 250
+                        end: 257
                     args:
                       - kind:
                           Literal:
                             kind: String
                             value: "\" gold at your disposal.\""
                         span:
-                          start: 253
-                          end: 278
+                          start: 258
+                          end: 283
                 span:
-                  start: 236
-                  end: 252
+                  start: 250
+                  end: 257
             span:
-              start: 236
-              end: 252
+              start: 250
+              end: 257
     name:
       name: main
       span:
-        start: 7
-        end: 11
+        start: 76
+        end: 80
 

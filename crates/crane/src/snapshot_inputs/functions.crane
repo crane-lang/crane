@@ -1,12 +1,14 @@
+use std::io::println
+
 pub fn main() {
     say_hello()
     say_goodbye()
 }
 
 fn say_hello() {
-    std::io::println("Hello")
+    println("Hello")
 }
 
 fn say_goodbye() {
-    std::io::println("Goodbye")
+    println("Goodbye")
 }

@@ -5,6 +5,34 @@ input_file: crates/crane/src/snapshot_inputs/functions.crane
 ---
 Ok:
   - kind:
+      Use:
+        prefix:
+          segments:
+            - ident:
+                name: std
+                span:
+                  start: 4
+                  end: 7
+            - ident:
+                name: io
+                span:
+                  start: 9
+                  end: 11
+            - ident:
+                name: println
+                span:
+                  start: 13
+                  end: 20
+          span:
+            start: 0
+            end: 0
+        kind: Single
+    name:
+      name: ""
+      span:
+        start: 0
+        end: 0
+  - kind:
       Fn:
         params: []
         return_ty: ~
@@ -20,21 +48,21 @@ Ok:
                             - ident:
                                 name: say_hello
                                 span:
-                                  start: 20
-                                  end: 29
+                                  start: 42
+                                  end: 51
                           span:
-                            start: 20
-                            end: 29
+                            start: 42
+                            end: 51
                       span:
-                        start: 20
-                        end: 29
+                        start: 42
+                        end: 51
                     args: []
                 span:
-                  start: 20
-                  end: 29
+                  start: 42
+                  end: 51
             span:
-              start: 20
-              end: 29
+              start: 42
+              end: 51
           - kind:
               Expr:
                 kind:
@@ -46,26 +74,26 @@ Ok:
                             - ident:
                                 name: say_goodbye
                                 span:
-                                  start: 36
-                                  end: 47
+                                  start: 58
+                                  end: 69
                           span:
-                            start: 36
-                            end: 47
+                            start: 58
+                            end: 69
                       span:
-                        start: 36
-                        end: 47
+                        start: 58
+                        end: 69
                     args: []
                 span:
-                  start: 36
-                  end: 47
+                  start: 58
+                  end: 69
             span:
-              start: 36
-              end: 47
+              start: 58
+              end: 69
     name:
       name: main
       span:
-        start: 7
-        end: 11
+        start: 29
+        end: 33
   - kind:
       Fn:
         params: []
@@ -80,45 +108,35 @@ Ok:
                         Variable:
                           segments:
                             - ident:
-                                name: std
-                                span:
-                                  start: 74
-                                  end: 77
-                            - ident:
-                                name: io
-                                span:
-                                  start: 79
-                                  end: 81
-                            - ident:
                                 name: println
                                 span:
-                                  start: 83
-                                  end: 90
+                                  start: 96
+                                  end: 103
                           span:
-                            start: 74
-                            end: 90
+                            start: 96
+                            end: 103
                       span:
-                        start: 74
-                        end: 90
+                        start: 96
+                        end: 103
                     args:
                       - kind:
                           Literal:
                             kind: String
                             value: "\"Hello\""
                         span:
-                          start: 91
-                          end: 98
+                          start: 104
+                          end: 111
                 span:
-                  start: 74
-                  end: 90
+                  start: 96
+                  end: 103
             span:
-              start: 74
-              end: 90
+              start: 96
+              end: 103
     name:
       name: say_hello
       span:
-        start: 56
-        end: 65
+        start: 78
+        end: 87
   - kind:
       Fn:
         params: []
@@ -133,43 +151,33 @@ Ok:
                         Variable:
                           segments:
                             - ident:
-                                name: std
-                                span:
-                                  start: 126
-                                  end: 129
-                            - ident:
-                                name: io
-                                span:
-                                  start: 131
-                                  end: 133
-                            - ident:
                                 name: println
                                 span:
-                                  start: 135
-                                  end: 142
+                                  start: 139
+                                  end: 146
                           span:
-                            start: 126
-                            end: 142
+                            start: 139
+                            end: 146
                       span:
-                        start: 126
-                        end: 142
+                        start: 139
+                        end: 146
                     args:
                       - kind:
                           Literal:
                             kind: String
                             value: "\"Goodbye\""
                         span:
-                          start: 143
-                          end: 152
+                          start: 147
+                          end: 156
                 span:
-                  start: 126
-                  end: 142
+                  start: 139
+                  end: 146
             span:
-              start: 126
-              end: 142
+              start: 139
+              end: 146
     name:
       name: say_goodbye
       span:
-        start: 106
-        end: 117
+        start: 119
+        end: 130
 
