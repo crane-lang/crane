@@ -749,10 +749,7 @@ impl Typer {
                 span,
             }),
             span,
-            ty: Arc::new(Type::UserDefined {
-                module: "std::prelude".into(),
-                name: "String".into(),
-            }),
+            ty: self.string_ty.clone(),
         })
     }
 
@@ -765,10 +762,7 @@ impl Typer {
                 span,
             }),
             span,
-            ty: Arc::new(Type::UserDefined {
-                module: "std::prelude".into(),
-                name: "Uint64".into(),
-            }),
+            ty: self.uint64_ty.clone(),
         })
     }
 }
