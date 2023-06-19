@@ -1,0 +1,118 @@
+---
+source: crates/crane/src/parser.rs
+expression: parser.parse()
+input_file: crates/crane/src/snapshot_inputs/comments.crane
+---
+Ok:
+  - kind:
+      Use:
+        prefix:
+          segments:
+            - ident:
+                name: std
+                span:
+                  start: 4
+                  end: 7
+            - ident:
+                name: io
+                span:
+                  start: 9
+                  end: 11
+            - ident:
+                name: println
+                span:
+                  start: 13
+                  end: 20
+          span:
+            start: 0
+            end: 0
+        kind: Single
+    name:
+      name: ""
+      span:
+        start: 0
+        end: 0
+  - kind:
+      Fn:
+        params: []
+        return_ty: ~
+        body:
+          - kind:
+              Expr:
+                kind:
+                  Call:
+                    fun:
+                      kind:
+                        Variable:
+                          segments:
+                            - ident:
+                                name: println
+                                span:
+                                  start: 38
+                                  end: 45
+                          span:
+                            start: 38
+                            end: 45
+                      span:
+                        start: 38
+                        end: 45
+                    args:
+                      - kind:
+                          Call:
+                            fun:
+                              kind:
+                                Variable:
+                                  segments:
+                                    - ident:
+                                        name: always_blue
+                                        span:
+                                          start: 46
+                                          end: 57
+                                  span:
+                                    start: 46
+                                    end: 57
+                              span:
+                                start: 46
+                                end: 57
+                            args: []
+                        span:
+                          start: 46
+                          end: 57
+                span:
+                  start: 38
+                  end: 45
+            span:
+              start: 38
+              end: 45
+    name:
+      name: main
+      span:
+        start: 25
+        end: 29
+  - kind:
+      Fn:
+        params: []
+        return_ty:
+          name: String
+          span:
+            start: 122
+            end: 128
+        body:
+          - kind:
+              Expr:
+                kind:
+                  Literal:
+                    kind: String
+                    value: "\"blue\""
+                span:
+                  start: 168
+                  end: 174
+            span:
+              start: 168
+              end: 174
+    name:
+      name: always_blue
+      span:
+        start: 105
+        end: 116
+

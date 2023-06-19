@@ -123,7 +123,7 @@ where
             match self.tokens.next() {
                 // Ignore any comment tokens.
                 Some(Ok(Token {
-                    kind: TokenKind::Comment,
+                    kind: TokenKind::Comment | TokenKind::DocComment,
                     ..
                 })) => {
                     continue;

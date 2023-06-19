@@ -60,6 +60,10 @@ pub enum TokenKind {
     #[regex(r"//.*")]
     Comment,
 
+    /// A documentation comment.
+    #[regex(r"///.*")]
+    DocComment,
+
     /// Any sequence of whitespace characters.
     #[regex(r"[ \n]+", logos::skip)]
     Whitespace,

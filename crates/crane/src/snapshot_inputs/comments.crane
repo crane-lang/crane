@@ -1,0 +1,11 @@
+use std::io::println
+
+fn main() {
+    println(always_blue())
+}
+
+/// Always returns the string "blue".
+fn always_blue() -> String {
+    // Always blue! Always blue!
+    "blue"
+}
