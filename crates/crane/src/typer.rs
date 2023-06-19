@@ -38,10 +38,10 @@ fn ty_to_string(ty: &Type) -> String {
 
 pub type TypeCheckResult<T> = Result<T, TypeError>;
 
-type ModuleFunctions = HashMap<TyPath, (ThinVec<TyFnParam>, Arc<Type>)>;
+type ModuleFunctions = HashMap<Ident, (ThinVec<TyFnParam>, Arc<Type>)>;
 
 pub struct Typer {
-    module_functions: ModuleFunctions,
+    modules: HashMap<TyPath, ModuleFunctions>,
     scopes: Vec<HashMap<TyPath, Arc<Type>>>,
 
     // Types.
@@ -68,7 +68,7 @@ impl Typer {
         });
 
         Self {
-            module_functions: HashMap::new(),
+            modules: HashMap::new(),
             scopes: Vec::new(),
             unit_ty,
             string_ty,
@@ -100,34 +100,42 @@ impl Typer {
         params: ThinVec<TyFnParam>,
         return_ty: Arc<Type>,
     ) {
-        let mut path_segments = module_path.segments.clone();
-        path_segments.push(TyPathSegment {
-            ident: name.clone(),
-        });
-
-        let path = TyPath {
-            segments: path_segments,
-            span: DUMMY_SPAN,
-        };
-
-        self.module_functions.insert(path, (params, return_ty));
+        let module = self.modules.entry(module_path).or_default();
+        module.insert(name, (params, return_ty));
     }
 
     fn ensure_function_exists(
         &self,
         path: &TyPath,
     ) -> TypeCheckResult<(&ThinVec<TyFnParam>, Arc<Type>)> {
-        if let Some((params, return_ty)) = self.module_functions.get(path) {
+        let (TyPathSegment { ident: name }, module_path_segments) =
+            path.segments.split_last().unwrap();
+
+        let module_path = TyPath {
+            segments: module_path_segments.into(),
+            span: path.span,
+        };
+
+        let module = self.modules.get(&module_path).ok_or_else(|| TypeError {
+            kind: TypeErrorKind::Error(format!("Unknown module `{}`.", module_path)),
+            span: path.span,
+        })?;
+
+        if let Some((params, return_ty)) = module.get(name) {
             return Ok((params, return_ty.clone()));
         }
 
         Err(TypeError {
             kind: TypeErrorKind::UnknownFunction {
                 path: path.clone(),
-                options: self
-                    .module_functions
+                options: module
                     .keys()
-                    .cloned()
+                    .map(|name| TyPath {
+                        segments: thin_vec![TyPathSegment {
+                            ident: name.clone()
+                        }],
+                        span: name.span,
+                    })
                     .collect::<ThinVec<_>>(),
             },
             span: path.span,
