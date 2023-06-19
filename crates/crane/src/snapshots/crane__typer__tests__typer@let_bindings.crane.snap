@@ -1,379 +1,496 @@
 ---
 source: crates/crane/src/typer.rs
-expression: typer.type_check_module(module)
+expression: typer.type_check_package(package)
 input_file: crates/crane/src/snapshot_inputs/let_bindings.crane
 ---
 Ok:
-  items:
-    - kind:
-        Fn:
-          params: []
-          return_ty:
-            UserDefined:
-              module: "std::prelude"
-              name: ()
-          body:
-            - kind:
-                Local:
-                  kind:
-                    Init:
+  modules:
+    - items:
+        - kind:
+            Fn:
+              params: []
+              return_ty:
+                UserDefined:
+                  module: "std::prelude"
+                  name: ()
+              body:
+                - kind:
+                    Local:
                       kind:
-                        Literal:
+                        Init:
                           kind:
-                            String: "\"Arya\""
+                            Literal:
+                              kind:
+                                String: "\"Arya\""
+                              span:
+                                start: 31
+                                end: 37
                           span:
                             start: 31
                             end: 37
-                      span:
-                        start: 31
-                        end: 37
+                          ty:
+                            UserDefined:
+                              module: "std::prelude"
+                              name: String
+                      name:
+                        name: name
+                        span:
+                          start: 24
+                          end: 28
                       ty:
                         UserDefined:
                           module: "std::prelude"
                           name: String
-                  name:
-                    name: name
-                    span:
-                      start: 24
-                      end: 28
-                  ty:
-                    UserDefined:
-                      module: "std::prelude"
-                      name: String
+                      span:
+                        start: 24
+                        end: 28
                   span:
                     start: 24
                     end: 28
-              span:
-                start: 24
-                end: 28
-            - kind:
-                Local:
-                  kind:
-                    Init:
+                - kind:
+                    Local:
                       kind:
-                        Literal:
+                        Init:
                           kind:
-                            Integer:
-                              Unsigned:
-                                - 100
-                                - Uint64
+                            Literal:
+                              kind:
+                                Integer:
+                                  Unsigned:
+                                    - 100
+                                    - Uint64
+                              span:
+                                start: 53
+                                end: 56
                           span:
                             start: 53
                             end: 56
-                      span:
-                        start: 53
-                        end: 56
+                          ty:
+                            UserDefined:
+                              module: "std::prelude"
+                              name: Uint64
+                      name:
+                        name: gold
+                        span:
+                          start: 46
+                          end: 50
                       ty:
                         UserDefined:
                           module: "std::prelude"
                           name: Uint64
-                  name:
-                    name: gold
-                    span:
-                      start: 46
-                      end: 50
-                  ty:
-                    UserDefined:
-                      module: "std::prelude"
-                      name: Uint64
+                      span:
+                        start: 46
+                        end: 50
                   span:
                     start: 46
                     end: 50
-              span:
-                start: 46
-                end: 50
-            - kind:
-                Expr:
-                  kind:
-                    Call:
-                      fun:
-                        kind:
-                          Variable:
-                            name:
-                              name: print
+                - kind:
+                    Expr:
+                      kind:
+                        Call:
+                          fun:
+                            kind:
+                              Variable:
+                                segments:
+                                  - ident:
+                                      name: std
+                                      span:
+                                        start: 62
+                                        end: 65
+                                  - ident:
+                                      name: io
+                                      span:
+                                        start: 67
+                                        end: 69
+                                  - ident:
+                                      name: print
+                                      span:
+                                        start: 71
+                                        end: 76
+                                span:
+                                  start: 62
+                                  end: 76
+                            span:
+                              start: 62
+                              end: 76
+                            ty:
+                              UserDefined:
+                                module: "?"
+                                name: "?"
+                          args:
+                            - kind:
+                                Literal:
+                                  kind:
+                                    String: "\"Hello, \""
+                                  span:
+                                    start: 77
+                                    end: 86
                               span:
-                                start: 62
-                                end: 67
-                        span:
-                          start: 62
-                          end: 67
-                        ty:
-                          UserDefined:
-                            module: "?"
-                            name: "?"
-                      args:
-                        - kind:
-                            Literal:
-                              kind:
-                                String: "\"Hello, \""
-                              span:
-                                start: 68
-                                end: 77
-                          span:
-                            start: 68
-                            end: 77
-                          ty:
-                            UserDefined:
-                              module: "std::prelude"
-                              name: String
+                                start: 77
+                                end: 86
+                              ty:
+                                UserDefined:
+                                  module: "std::prelude"
+                                  name: String
+                      span:
+                        start: 62
+                        end: 76
+                      ty:
+                        UserDefined:
+                          module: "std::prelude"
+                          name: ()
                   span:
                     start: 62
-                    end: 67
-                  ty:
-                    UserDefined:
-                      module: "std::prelude"
-                      name: ()
-              span:
-                start: 62
-                end: 67
-            - kind:
-                Expr:
-                  kind:
-                    Call:
-                      fun:
-                        kind:
-                          Variable:
-                            name:
-                              name: print
-                              span:
-                                start: 83
-                                end: 88
-                        span:
-                          start: 83
-                          end: 88
-                        ty:
-                          UserDefined:
-                            module: "?"
-                            name: "?"
-                      args:
-                        - kind:
-                            Variable:
-                              name:
-                                name: name
+                    end: 76
+                - kind:
+                    Expr:
+                      kind:
+                        Call:
+                          fun:
+                            kind:
+                              Variable:
+                                segments:
+                                  - ident:
+                                      name: std
+                                      span:
+                                        start: 92
+                                        end: 95
+                                  - ident:
+                                      name: io
+                                      span:
+                                        start: 97
+                                        end: 99
+                                  - ident:
+                                      name: print
+                                      span:
+                                        start: 101
+                                        end: 106
                                 span:
-                                  start: 89
-                                  end: 93
-                          span:
-                            start: 89
-                            end: 93
-                          ty:
-                            UserDefined:
-                              module: "std::prelude"
-                              name: String
-                  span:
-                    start: 83
-                    end: 88
-                  ty:
-                    UserDefined:
-                      module: "std::prelude"
-                      name: ()
-              span:
-                start: 83
-                end: 88
-            - kind:
-                Expr:
-                  kind:
-                    Call:
-                      fun:
-                        kind:
-                          Variable:
-                            name:
-                              name: println
-                              span:
-                                start: 99
-                                end: 106
-                        span:
-                          start: 99
-                          end: 106
-                        ty:
-                          UserDefined:
-                            module: "?"
-                            name: "?"
-                      args:
-                        - kind:
-                            Literal:
-                              kind:
-                                String: "\".\""
+                                  start: 92
+                                  end: 106
+                            span:
+                              start: 92
+                              end: 106
+                            ty:
+                              UserDefined:
+                                module: "?"
+                                name: "?"
+                          args:
+                            - kind:
+                                Variable:
+                                  segments:
+                                    - ident:
+                                        name: name
+                                        span:
+                                          start: 107
+                                          end: 111
+                                  span:
+                                    start: 107
+                                    end: 111
                               span:
                                 start: 107
-                                end: 110
-                          span:
-                            start: 107
-                            end: 110
-                          ty:
-                            UserDefined:
-                              module: "std::prelude"
-                              name: String
+                                end: 111
+                              ty:
+                                UserDefined:
+                                  module: "std::prelude"
+                                  name: String
+                      span:
+                        start: 92
+                        end: 106
+                      ty:
+                        UserDefined:
+                          module: "std::prelude"
+                          name: ()
                   span:
-                    start: 99
+                    start: 92
                     end: 106
-                  ty:
-                    UserDefined:
-                      module: "std::prelude"
-                      name: ()
-              span:
-                start: 99
-                end: 106
-            - kind:
-                Expr:
-                  kind:
-                    Call:
-                      fun:
-                        kind:
-                          Variable:
-                            name:
-                              name: print
+                - kind:
+                    Expr:
+                      kind:
+                        Call:
+                          fun:
+                            kind:
+                              Variable:
+                                segments:
+                                  - ident:
+                                      name: std
+                                      span:
+                                        start: 117
+                                        end: 120
+                                  - ident:
+                                      name: io
+                                      span:
+                                        start: 122
+                                        end: 124
+                                  - ident:
+                                      name: println
+                                      span:
+                                        start: 126
+                                        end: 133
+                                span:
+                                  start: 117
+                                  end: 133
+                            span:
+                              start: 117
+                              end: 133
+                            ty:
+                              UserDefined:
+                                module: "?"
+                                name: "?"
+                          args:
+                            - kind:
+                                Literal:
+                                  kind:
+                                    String: "\".\""
+                                  span:
+                                    start: 134
+                                    end: 137
                               span:
-                                start: 117
-                                end: 122
-                        span:
-                          start: 117
-                          end: 122
-                        ty:
-                          UserDefined:
-                            module: "?"
-                            name: "?"
-                      args:
-                        - kind:
-                            Literal:
-                              kind:
-                                String: "\"You currently have \""
-                              span:
-                                start: 123
-                                end: 144
-                          span:
-                            start: 123
-                            end: 144
-                          ty:
-                            UserDefined:
-                              module: "std::prelude"
-                              name: String
+                                start: 134
+                                end: 137
+                              ty:
+                                UserDefined:
+                                  module: "std::prelude"
+                                  name: String
+                      span:
+                        start: 117
+                        end: 133
+                      ty:
+                        UserDefined:
+                          module: "std::prelude"
+                          name: ()
                   span:
                     start: 117
-                    end: 122
-                  ty:
-                    UserDefined:
-                      module: "std::prelude"
-                      name: ()
-              span:
-                start: 117
-                end: 122
-            - kind:
-                Expr:
-                  kind:
-                    Call:
-                      fun:
-                        kind:
-                          Variable:
-                            name:
-                              name: print
-                              span:
-                                start: 150
-                                end: 155
-                        span:
-                          start: 150
-                          end: 155
-                        ty:
-                          UserDefined:
-                            module: "?"
-                            name: "?"
-                      args:
-                        - kind:
-                            Call:
-                              fun:
-                                kind:
-                                  Variable:
-                                    name:
-                                      name: int_to_string
+                    end: 133
+                - kind:
+                    Expr:
+                      kind:
+                        Call:
+                          fun:
+                            kind:
+                              Variable:
+                                segments:
+                                  - ident:
+                                      name: std
                                       span:
-                                        start: 156
-                                        end: 169
+                                        start: 144
+                                        end: 147
+                                  - ident:
+                                      name: io
+                                      span:
+                                        start: 149
+                                        end: 151
+                                  - ident:
+                                      name: print
+                                      span:
+                                        start: 153
+                                        end: 158
                                 span:
-                                  start: 156
-                                  end: 169
-                                ty:
-                                  UserDefined:
-                                    module: "?"
-                                    name: "?"
-                              args:
-                                - kind:
-                                    Variable:
-                                      name:
-                                        name: gold
-                                        span:
-                                          start: 170
-                                          end: 174
+                                  start: 144
+                                  end: 158
+                            span:
+                              start: 144
+                              end: 158
+                            ty:
+                              UserDefined:
+                                module: "?"
+                                name: "?"
+                          args:
+                            - kind:
+                                Literal:
+                                  kind:
+                                    String: "\"You currently have \""
                                   span:
-                                    start: 170
-                                    end: 174
-                                  ty:
-                                    UserDefined:
-                                      module: "std::prelude"
-                                      name: Uint64
-                          span:
-                            start: 156
-                            end: 169
-                          ty:
-                            UserDefined:
-                              module: "std::prelude"
-                              name: String
-                  span:
-                    start: 150
-                    end: 155
-                  ty:
-                    UserDefined:
-                      module: "std::prelude"
-                      name: ()
-              span:
-                start: 150
-                end: 155
-            - kind:
-                Expr:
-                  kind:
-                    Call:
-                      fun:
-                        kind:
-                          Variable:
-                            name:
-                              name: println
+                                    start: 159
+                                    end: 180
                               span:
-                                start: 181
-                                end: 188
-                        span:
-                          start: 181
-                          end: 188
-                        ty:
-                          UserDefined:
-                            module: "?"
-                            name: "?"
-                      args:
-                        - kind:
-                            Literal:
-                              kind:
-                                String: "\" gold at your disposal.\""
-                              span:
-                                start: 189
-                                end: 214
-                          span:
-                            start: 189
-                            end: 214
-                          ty:
-                            UserDefined:
-                              module: "std::prelude"
-                              name: String
+                                start: 159
+                                end: 180
+                              ty:
+                                UserDefined:
+                                  module: "std::prelude"
+                                  name: String
+                      span:
+                        start: 144
+                        end: 158
+                      ty:
+                        UserDefined:
+                          module: "std::prelude"
+                          name: ()
                   span:
-                    start: 181
-                    end: 188
-                  ty:
-                    UserDefined:
-                      module: "std::prelude"
-                      name: ()
-              span:
-                start: 181
-                end: 188
-      name:
-        name: main
-        span:
-          start: 7
-          end: 11
+                    start: 144
+                    end: 158
+                - kind:
+                    Expr:
+                      kind:
+                        Call:
+                          fun:
+                            kind:
+                              Variable:
+                                segments:
+                                  - ident:
+                                      name: std
+                                      span:
+                                        start: 186
+                                        end: 189
+                                  - ident:
+                                      name: io
+                                      span:
+                                        start: 191
+                                        end: 193
+                                  - ident:
+                                      name: print
+                                      span:
+                                        start: 195
+                                        end: 200
+                                span:
+                                  start: 186
+                                  end: 200
+                            span:
+                              start: 186
+                              end: 200
+                            ty:
+                              UserDefined:
+                                module: "?"
+                                name: "?"
+                          args:
+                            - kind:
+                                Call:
+                                  fun:
+                                    kind:
+                                      Variable:
+                                        segments:
+                                          - ident:
+                                              name: std
+                                              span:
+                                                start: 201
+                                                end: 204
+                                          - ident:
+                                              name: int
+                                              span:
+                                                start: 206
+                                                end: 209
+                                          - ident:
+                                              name: int_to_string
+                                              span:
+                                                start: 211
+                                                end: 224
+                                        span:
+                                          start: 201
+                                          end: 224
+                                    span:
+                                      start: 201
+                                      end: 224
+                                    ty:
+                                      UserDefined:
+                                        module: "?"
+                                        name: "?"
+                                  args:
+                                    - kind:
+                                        Variable:
+                                          segments:
+                                            - ident:
+                                                name: gold
+                                                span:
+                                                  start: 225
+                                                  end: 229
+                                          span:
+                                            start: 225
+                                            end: 229
+                                      span:
+                                        start: 225
+                                        end: 229
+                                      ty:
+                                        UserDefined:
+                                          module: "std::prelude"
+                                          name: Uint64
+                              span:
+                                start: 201
+                                end: 224
+                              ty:
+                                UserDefined:
+                                  module: "std::prelude"
+                                  name: String
+                      span:
+                        start: 186
+                        end: 200
+                      ty:
+                        UserDefined:
+                          module: "std::prelude"
+                          name: ()
+                  span:
+                    start: 186
+                    end: 200
+                - kind:
+                    Expr:
+                      kind:
+                        Call:
+                          fun:
+                            kind:
+                              Variable:
+                                segments:
+                                  - ident:
+                                      name: std
+                                      span:
+                                        start: 236
+                                        end: 239
+                                  - ident:
+                                      name: io
+                                      span:
+                                        start: 241
+                                        end: 243
+                                  - ident:
+                                      name: println
+                                      span:
+                                        start: 245
+                                        end: 252
+                                span:
+                                  start: 236
+                                  end: 252
+                            span:
+                              start: 236
+                              end: 252
+                            ty:
+                              UserDefined:
+                                module: "?"
+                                name: "?"
+                          args:
+                            - kind:
+                                Literal:
+                                  kind:
+                                    String: "\" gold at your disposal.\""
+                                  span:
+                                    start: 253
+                                    end: 278
+                              span:
+                                start: 253
+                                end: 278
+                              ty:
+                                UserDefined:
+                                  module: "std::prelude"
+                                  name: String
+                      span:
+                        start: 236
+                        end: 252
+                      ty:
+                        UserDefined:
+                          module: "std::prelude"
+                          name: ()
+                  span:
+                    start: 236
+                    end: 252
+              path:
+                segments:
+                  - ident:
+                      name: main
+                      span:
+                        start: 7
+                        end: 11
+                span:
+                  start: 7
+                  end: 11
+          name:
+            name: main
+            span:
+              start: 7
+              end: 11
 

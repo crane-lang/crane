@@ -325,7 +325,7 @@ impl Typer {
         Ok(())
     }
 
-    pub fn type_check_module(
+    fn type_check_module(
         &mut self,
         prefix: Option<&ThinVec<TyPathSegment>>,
         module: Module,
@@ -738,9 +738,13 @@ mod tests {
 
             let module = Module { items };
 
+            let package = Package {
+                modules: thin_vec![module],
+            };
+
             let mut typer = Typer::new();
 
-            insta::assert_yaml_snapshot!(typer.type_check_module(None, module));
+            insta::assert_yaml_snapshot!(typer.type_check_package(package));
         })
     }
 }

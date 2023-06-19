@@ -271,16 +271,26 @@ Ok:
                                 Variable:
                                   segments:
                                     - ident:
-                                        name: int_to_string
+                                        name: std
                                         span:
                                           start: 201
-                                          end: 214
+                                          end: 204
+                                    - ident:
+                                        name: int
+                                        span:
+                                          start: 206
+                                          end: 209
+                                    - ident:
+                                        name: int_to_string
+                                        span:
+                                          start: 211
+                                          end: 224
                                   span:
                                     start: 201
-                                    end: 214
+                                    end: 224
                               span:
                                 start: 201
-                                end: 214
+                                end: 224
                             args:
                               - kind:
                                   Variable:
@@ -288,17 +298,17 @@ Ok:
                                       - ident:
                                           name: gold
                                           span:
-                                            start: 215
-                                            end: 219
+                                            start: 225
+                                            end: 229
                                     span:
-                                      start: 215
-                                      end: 219
+                                      start: 225
+                                      end: 229
                                 span:
-                                  start: 215
-                                  end: 219
+                                  start: 225
+                                  end: 229
                         span:
                           start: 201
-                          end: 214
+                          end: 224
                 span:
                   start: 186
                   end: 200
@@ -316,38 +326,38 @@ Ok:
                             - ident:
                                 name: std
                                 span:
-                                  start: 226
-                                  end: 229
+                                  start: 236
+                                  end: 239
                             - ident:
                                 name: io
                                 span:
-                                  start: 231
-                                  end: 233
+                                  start: 241
+                                  end: 243
                             - ident:
                                 name: println
                                 span:
-                                  start: 235
-                                  end: 242
+                                  start: 245
+                                  end: 252
                           span:
-                            start: 226
-                            end: 242
+                            start: 236
+                            end: 252
                       span:
-                        start: 226
-                        end: 242
+                        start: 236
+                        end: 252
                     args:
                       - kind:
                           Literal:
                             kind: String
                             value: "\" gold at your disposal.\""
                         span:
-                          start: 243
-                          end: 268
+                          start: 253
+                          end: 278
                 span:
-                  start: 226
-                  end: 242
+                  start: 236
+                  end: 252
             span:
-              start: 226
-              end: 242
+              start: 236
+              end: 252
     name:
       name: main
       span:

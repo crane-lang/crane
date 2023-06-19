@@ -1,42 +1,43 @@
 ---
 source: crates/crane/src/typer.rs
-expression: typer.type_check_module(module)
+expression: typer.type_check_package(package)
 input_file: crates/crane/src/snapshot_inputs/struct_decls.crane
 ---
 Ok:
-  items:
-    - kind:
-        Struct:
-          Struct:
-            - name:
-                name: x
-                span:
-                  start: 19
-                  end: 20
-              ty:
-                name: Uint64
-                span:
-                  start: 22
-                  end: 28
-              span:
-                start: 19
-                end: 20
-            - name:
-                name: y
-                span:
-                  start: 34
-                  end: 35
-              ty:
-                name: Uint64
-                span:
-                  start: 37
-                  end: 43
-              span:
-                start: 34
-                end: 35
-      name:
-        name: Point
-        span:
-          start: 7
-          end: 12
+  modules:
+    - items:
+        - kind:
+            Struct:
+              Struct:
+                - name:
+                    name: x
+                    span:
+                      start: 19
+                      end: 20
+                  ty:
+                    name: Uint64
+                    span:
+                      start: 22
+                      end: 28
+                  span:
+                    start: 19
+                    end: 20
+                - name:
+                    name: y
+                    span:
+                      start: 34
+                      end: 35
+                  ty:
+                    name: Uint64
+                    span:
+                      start: 37
+                      end: 43
+                  span:
+                    start: 34
+                    end: 35
+          name:
+            name: Point
+            span:
+              start: 7
+              end: 12
 

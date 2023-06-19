@@ -1,204 +1,275 @@
 ---
 source: crates/crane/src/typer.rs
-expression: typer.type_check_module(module)
+expression: typer.type_check_package(package)
 input_file: crates/crane/src/snapshot_inputs/function_return_types.crane
 ---
 Ok:
-  items:
-    - kind:
-        Fn:
-          params: []
-          return_ty:
-            UserDefined:
-              module: "std::prelude"
-              name: ()
-          body:
-            - kind:
-                Expr:
-                  kind:
-                    Call:
-                      fun:
-                        kind:
-                          Variable:
-                            name:
-                              name: println
-                              span:
-                                start: 16
-                                end: 23
-                        span:
-                          start: 16
-                          end: 23
-                        ty:
-                          UserDefined:
-                            module: "?"
-                            name: "?"
-                      args:
-                        - kind:
-                            Call:
-                              fun:
-                                kind:
-                                  Variable:
-                                    name:
-                                      name: int_to_string
-                                      span:
-                                        start: 24
-                                        end: 37
-                                span:
-                                  start: 24
-                                  end: 37
-                                ty:
-                                  UserDefined:
-                                    module: "?"
-                                    name: "?"
-                              args:
-                                - kind:
-                                    Call:
-                                      fun:
-                                        kind:
-                                          Variable:
-                                            name:
-                                              name: add_10
-                                              span:
-                                                start: 38
-                                                end: 44
-                                        span:
-                                          start: 38
-                                          end: 44
-                                        ty:
-                                          UserDefined:
-                                            module: "?"
-                                            name: "?"
-                                      args:
-                                        - kind:
-                                            Literal:
-                                              kind:
-                                                Integer:
-                                                  Unsigned:
-                                                    - 5
-                                                    - Uint64
-                                              span:
-                                                start: 45
-                                                end: 46
-                                          span:
-                                            start: 45
-                                            end: 46
-                                          ty:
-                                            UserDefined:
-                                              module: "std::prelude"
-                                              name: Uint64
-                                  span:
-                                    start: 38
-                                    end: 44
-                                  ty:
-                                    UserDefined:
-                                      module: "std::prelude"
-                                      name: Uint64
-                          span:
-                            start: 24
-                            end: 37
-                          ty:
-                            UserDefined:
-                              module: "std::prelude"
-                              name: String
-                  span:
-                    start: 16
-                    end: 23
-                  ty:
-                    UserDefined:
-                      module: "std::prelude"
-                      name: ()
-              span:
-                start: 16
-                end: 23
-      name:
-        name: main
-        span:
-          start: 3
-          end: 7
-    - kind:
-        Fn:
-          params:
-            - name:
-                name: n
-                span:
-                  start: 63
-                  end: 64
-              ty:
+  modules:
+    - items:
+        - kind:
+            Fn:
+              params: []
+              return_ty:
                 UserDefined:
                   module: "std::prelude"
-                  name: Uint64
-              span:
-                start: 63
-                end: 64
-          return_ty:
-            UserDefined:
-              module: "std::prelude"
-              name: Uint64
-          body:
-            - kind:
-                Expr:
-                  kind:
-                    Call:
-                      fun:
-                        kind:
-                          Variable:
-                            name:
-                              name: int_add
-                              span:
-                                start: 90
-                                end: 97
-                        span:
-                          start: 90
-                          end: 97
-                        ty:
-                          UserDefined:
-                            module: "?"
-                            name: "?"
-                      args:
-                        - kind:
-                            Variable:
-                              name:
-                                name: n
+                  name: ()
+              body:
+                - kind:
+                    Expr:
+                      kind:
+                        Call:
+                          fun:
+                            kind:
+                              Variable:
+                                segments:
+                                  - ident:
+                                      name: std
+                                      span:
+                                        start: 16
+                                        end: 19
+                                  - ident:
+                                      name: io
+                                      span:
+                                        start: 21
+                                        end: 23
+                                  - ident:
+                                      name: println
+                                      span:
+                                        start: 25
+                                        end: 32
                                 span:
-                                  start: 98
-                                  end: 99
-                          span:
-                            start: 98
-                            end: 99
-                          ty:
-                            UserDefined:
-                              module: "std::prelude"
-                              name: Uint64
-                        - kind:
-                            Literal:
-                              kind:
-                                Integer:
-                                  Unsigned:
-                                    - 10
-                                    - Uint64
+                                  start: 16
+                                  end: 32
+                            span:
+                              start: 16
+                              end: 32
+                            ty:
+                              UserDefined:
+                                module: "?"
+                                name: "?"
+                          args:
+                            - kind:
+                                Call:
+                                  fun:
+                                    kind:
+                                      Variable:
+                                        segments:
+                                          - ident:
+                                              name: std
+                                              span:
+                                                start: 33
+                                                end: 36
+                                          - ident:
+                                              name: int
+                                              span:
+                                                start: 38
+                                                end: 41
+                                          - ident:
+                                              name: int_to_string
+                                              span:
+                                                start: 43
+                                                end: 56
+                                        span:
+                                          start: 33
+                                          end: 56
+                                    span:
+                                      start: 33
+                                      end: 56
+                                    ty:
+                                      UserDefined:
+                                        module: "?"
+                                        name: "?"
+                                  args:
+                                    - kind:
+                                        Call:
+                                          fun:
+                                            kind:
+                                              Variable:
+                                                segments:
+                                                  - ident:
+                                                      name: add_10
+                                                      span:
+                                                        start: 57
+                                                        end: 63
+                                                span:
+                                                  start: 57
+                                                  end: 63
+                                            span:
+                                              start: 57
+                                              end: 63
+                                            ty:
+                                              UserDefined:
+                                                module: "?"
+                                                name: "?"
+                                          args:
+                                            - kind:
+                                                Literal:
+                                                  kind:
+                                                    Integer:
+                                                      Unsigned:
+                                                        - 5
+                                                        - Uint64
+                                                  span:
+                                                    start: 64
+                                                    end: 65
+                                              span:
+                                                start: 64
+                                                end: 65
+                                              ty:
+                                                UserDefined:
+                                                  module: "std::prelude"
+                                                  name: Uint64
+                                      span:
+                                        start: 57
+                                        end: 63
+                                      ty:
+                                        UserDefined:
+                                          module: "std::prelude"
+                                          name: Uint64
                               span:
-                                start: 101
-                                end: 103
-                          span:
-                            start: 101
-                            end: 103
-                          ty:
-                            UserDefined:
-                              module: "std::prelude"
-                              name: Uint64
+                                start: 33
+                                end: 56
+                              ty:
+                                UserDefined:
+                                  module: "std::prelude"
+                                  name: String
+                      span:
+                        start: 16
+                        end: 32
+                      ty:
+                        UserDefined:
+                          module: "std::prelude"
+                          name: ()
                   span:
-                    start: 90
-                    end: 97
+                    start: 16
+                    end: 32
+              path:
+                segments:
+                  - ident:
+                      name: main
+                      span:
+                        start: 3
+                        end: 7
+                span:
+                  start: 3
+                  end: 7
+          name:
+            name: main
+            span:
+              start: 3
+              end: 7
+        - kind:
+            Fn:
+              params:
+                - name:
+                    name: n
+                    span:
+                      start: 82
+                      end: 83
                   ty:
                     UserDefined:
                       module: "std::prelude"
                       name: Uint64
-              span:
-                start: 90
-                end: 97
-      name:
-        name: add_10
-        span:
-          start: 56
-          end: 62
+                  span:
+                    start: 82
+                    end: 83
+              return_ty:
+                UserDefined:
+                  module: "std::prelude"
+                  name: Uint64
+              body:
+                - kind:
+                    Expr:
+                      kind:
+                        Call:
+                          fun:
+                            kind:
+                              Variable:
+                                segments:
+                                  - ident:
+                                      name: std
+                                      span:
+                                        start: 109
+                                        end: 112
+                                  - ident:
+                                      name: int
+                                      span:
+                                        start: 114
+                                        end: 117
+                                  - ident:
+                                      name: int_add
+                                      span:
+                                        start: 119
+                                        end: 126
+                                span:
+                                  start: 109
+                                  end: 126
+                            span:
+                              start: 109
+                              end: 126
+                            ty:
+                              UserDefined:
+                                module: "?"
+                                name: "?"
+                          args:
+                            - kind:
+                                Variable:
+                                  segments:
+                                    - ident:
+                                        name: n
+                                        span:
+                                          start: 127
+                                          end: 128
+                                  span:
+                                    start: 127
+                                    end: 128
+                              span:
+                                start: 127
+                                end: 128
+                              ty:
+                                UserDefined:
+                                  module: "std::prelude"
+                                  name: Uint64
+                            - kind:
+                                Literal:
+                                  kind:
+                                    Integer:
+                                      Unsigned:
+                                        - 10
+                                        - Uint64
+                                  span:
+                                    start: 130
+                                    end: 132
+                              span:
+                                start: 130
+                                end: 132
+                              ty:
+                                UserDefined:
+                                  module: "std::prelude"
+                                  name: Uint64
+                      span:
+                        start: 109
+                        end: 126
+                      ty:
+                        UserDefined:
+                          module: "std::prelude"
+                          name: Uint64
+                  span:
+                    start: 109
+                    end: 126
+              path:
+                segments:
+                  - ident:
+                      name: add_10
+                      span:
+                        start: 75
+                        end: 81
+                span:
+                  start: 75
+                  end: 81
+          name:
+            name: add_10
+            span:
+              start: 75
+              end: 81
 

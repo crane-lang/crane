@@ -317,86 +317,110 @@ input_file: crates/crane/src/snapshot_inputs/let_bindings.crane
       end: 201
 - Ok:
     kind: Ident
-    lexeme: int_to_string
+    lexeme: std
     span:
       start: 201
-      end: 214
+      end: 204
+- Ok:
+    kind: ColonColon
+    lexeme: "::"
+    span:
+      start: 204
+      end: 206
+- Ok:
+    kind: Ident
+    lexeme: int
+    span:
+      start: 206
+      end: 209
+- Ok:
+    kind: ColonColon
+    lexeme: "::"
+    span:
+      start: 209
+      end: 211
+- Ok:
+    kind: Ident
+    lexeme: int_to_string
+    span:
+      start: 211
+      end: 224
 - Ok:
     kind: OpenParen
     lexeme: (
     span:
-      start: 214
-      end: 215
+      start: 224
+      end: 225
 - Ok:
     kind: Ident
     lexeme: gold
     span:
-      start: 215
-      end: 219
+      start: 225
+      end: 229
 - Ok:
     kind: CloseParen
     lexeme: )
     span:
-      start: 219
-      end: 220
+      start: 229
+      end: 230
 - Ok:
     kind: CloseParen
     lexeme: )
     span:
-      start: 220
-      end: 221
+      start: 230
+      end: 231
 - Ok:
     kind: Ident
     lexeme: std
     span:
-      start: 226
-      end: 229
+      start: 236
+      end: 239
 - Ok:
     kind: ColonColon
     lexeme: "::"
     span:
-      start: 229
-      end: 231
+      start: 239
+      end: 241
 - Ok:
     kind: Ident
     lexeme: io
     span:
-      start: 231
-      end: 233
+      start: 241
+      end: 243
 - Ok:
     kind: ColonColon
     lexeme: "::"
     span:
-      start: 233
-      end: 235
+      start: 243
+      end: 245
 - Ok:
     kind: Ident
     lexeme: println
     span:
-      start: 235
-      end: 242
+      start: 245
+      end: 252
 - Ok:
     kind: OpenParen
     lexeme: (
     span:
-      start: 242
-      end: 243
+      start: 252
+      end: 253
 - Ok:
     kind: String
     lexeme: "\" gold at your disposal.\""
     span:
-      start: 243
-      end: 268
+      start: 253
+      end: 278
 - Ok:
     kind: CloseParen
     lexeme: )
     span:
-      start: 268
-      end: 269
+      start: 278
+      end: 279
 - Ok:
     kind: CloseBrace
     lexeme: "}"
     span:
-      start: 270
-      end: 271
+      start: 280
+      end: 281
 

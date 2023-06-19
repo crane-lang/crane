@@ -7,6 +7,6 @@ pub fn main() {
     std::io::println(".")
 
     std::io::print("You currently have ")
-    std::io::print(int_to_string(gold))
+    std::io::print(std::int::int_to_string(gold))
     std::io::println(" gold at your disposal.")
 }

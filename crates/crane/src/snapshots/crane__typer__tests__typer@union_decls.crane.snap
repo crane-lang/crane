@@ -1,34 +1,35 @@
 ---
 source: crates/crane/src/typer.rs
-expression: typer.type_check_module(module)
+expression: typer.type_check_package(package)
 input_file: crates/crane/src/snapshot_inputs/union_decls.crane
 ---
 Ok:
-  items:
-    - kind:
-        Union:
-          variants:
-            - name:
-                name: "True"
-                span:
-                  start: 17
-                  end: 21
-              data: Unit
-              span:
-                start: 17
-                end: 21
-            - name:
-                name: "False"
-                span:
-                  start: 27
-                  end: 32
-              data: Unit
-              span:
-                start: 27
-                end: 32
-      name:
-        name: Bool
-        span:
-          start: 6
-          end: 10
+  modules:
+    - items:
+        - kind:
+            Union:
+              variants:
+                - name:
+                    name: "True"
+                    span:
+                      start: 17
+                      end: 21
+                  data: Unit
+                  span:
+                    start: 17
+                    end: 21
+                - name:
+                    name: "False"
+                    span:
+                      start: 27
+                      end: 32
+                  data: Unit
+                  span:
+                    start: 27
+                    end: 32
+          name:
+            name: Bool
+            span:
+              start: 6
+              end: 10
 
