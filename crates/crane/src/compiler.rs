@@ -1,3 +1,4 @@
+use std::io::Write;
 use std::path::PathBuf;
 
 use ariadne::{Color, Label, Report, ReportKind, Source};
@@ -37,7 +38,11 @@ impl Compiler {
         Self {}
     }
 
-    pub fn compile(&mut self, params: CompileParams) -> Result<(), ()> {
+    pub fn compile<'io>(
+        &mut self,
+        stderr: &'io mut impl Write,
+        params: CompileParams,
+    ) -> Result<(), ()> {
         let (filepath, source) = match params.input {
             Input::File(path) => (
                 path.display().to_string(),
@@ -171,7 +176,7 @@ impl Compiler {
                         };
 
                         error_report
-                            .eprint((filepath.into(), Source::from(source)))
+                            .write((filepath.into(), Source::from(source)), stderr)
                             .unwrap();
 
                         Err(())
@@ -205,11 +210,43 @@ impl Compiler {
                 };
 
                 error_report
-                    .eprint((filepath.into(), Source::from(source)))
+                    .write((filepath.into(), Source::from(source)), stderr)
                     .unwrap();
 
                 Err(())
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    pub fn test_camel_case_function_name() {
+        let mut compiler = Compiler::new();
+
+        let params = CompileParams {
+            input: Input::String {
+                filename: "camel_case.crane".into(),
+                input: r#"
+fn main() {}
+
+fn inCamelCase() {}
+                "#
+                .trim()
+                .to_string(),
+            },
+        };
+
+        let mut stderr = Vec::new();
+
+        let _ = compiler.compile(&mut stderr, params);
+
+        let stderr: Vec<u8> = strip_ansi_escapes::strip(stderr).unwrap();
+        let stderr = std::str::from_utf8(&stderr).unwrap();
+
+        insta::assert_snapshot!(&stderr);
     }
 }
