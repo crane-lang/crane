@@ -1,5 +1,6 @@
 mod ast;
 mod backend;
+mod compiler;
 mod lexer;
 mod parser;
 mod typer;
@@ -7,20 +8,11 @@ mod typer;
 use std::io::Write;
 use std::path::PathBuf;
 
-use ariadne::{Color, Label, Report, ReportKind, Source};
-use ast::SourceSpan;
 use clap::{Parser, Subcommand};
-use itertools::Itertools;
-use lexer::Lexer;
-use thin_vec::thin_vec;
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
-use typer::TypeErrorKind;
 
-use crate::ast::{Module, Package};
-use crate::backend::native::NativeBackend;
-use crate::parser::ParseErrorKind;
-use crate::typer::Typer;
+use crate::compiler::{CompileParams, Compiler, Input};
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -107,174 +99,13 @@ fn compile(example: Option<String>) -> Result<(), ()> {
     let mut example_file = examples_path;
     example_file.push(format!("{example}.crane"));
 
-    let source = std::fs::read_to_string(&example_file).unwrap();
+    let mut compiler = Compiler::new();
 
-    let lexer = Lexer::new(&source);
+    let params = CompileParams {
+        input: Input::File(example_file),
+    };
 
-    let parser = crate::parser::Parser::new(lexer);
-
-    match parser.parse() {
-        Ok(items) => {
-            let mut typer = Typer::new();
-
-            let module = Module { items };
-
-            let package = Package {
-                modules: thin_vec![module],
-            };
-
-            match typer.type_check_package(package) {
-                Ok(typed_package) => {
-                    std::fs::create_dir_all("build").unwrap();
-
-                    let backend = NativeBackend::new();
-
-                    backend.compile(typed_package);
-
-                    println!("Compiled!");
-
-                    Ok(())
-                }
-                Err(type_error) => {
-                    let span = type_error.span;
-
-                    let example_file = example_file.display().to_string();
-
-                    let error_report = match type_error.kind {
-                        TypeErrorKind::InvalidFunctionName { reason, suggestion } => {
-                            Report::build(ReportKind::Error, &example_file, 1)
-                                .with_message("A type error occurred.")
-                                .with_label(
-                                    Label::new(SourceSpan::from((&example_file, span)))
-                                        .with_message(reason)
-                                        .with_color(Color::Red),
-                                )
-                                .with_label(
-                                    Label::new(SourceSpan::from((&example_file, span)))
-                                        .with_message(format!(
-                                            "Try writing it as `{suggestion}` instead."
-                                        ))
-                                        .with_color(Color::Cyan),
-                                )
-                                .finish()
-                        }
-                        TypeErrorKind::UnknownModule { path, options } => {
-                            let report = Report::build(ReportKind::Error, &example_file, 1)
-                                .with_message("A type error occurred.")
-                                .with_label(
-                                    Label::new(SourceSpan::from((&example_file, span)))
-                                        .with_message(format!("Module `{path}` does not exist.",))
-                                        .with_color(Color::Red),
-                                );
-
-                            let suggestion = options
-                                .iter()
-                                .sorted_by_key(|option| option.to_string())
-                                .min_by_key(|option| {
-                                    strsim::levenshtein(&option.to_string(), &path.to_string())
-                                });
-
-                            let report = if let Some(suggestion) = suggestion {
-                                report.with_label(
-                                    Label::new(SourceSpan::from((&example_file, suggestion.span)))
-                                        .with_message(format!(
-                                            "There is a module with a similar name: `{}`.",
-                                            suggestion.clone()
-                                        ))
-                                        .with_color(Color::Cyan),
-                                )
-                            } else {
-                                report
-                            };
-
-                            report.finish()
-                        }
-                        TypeErrorKind::UnknownFunction { path, options } => {
-                            let report = Report::build(ReportKind::Error, &example_file, 1)
-                                .with_message("A type error occurred.")
-                                .with_label(
-                                    Label::new(SourceSpan::from((&example_file, span)))
-                                        .with_message(format!("Function `{path}` does not exist.",))
-                                        .with_color(Color::Red),
-                                );
-
-                            let suggestion = options
-                                .iter()
-                                .sorted_by_key(|option| option.to_string())
-                                .min_by_key(|option| {
-                                    strsim::levenshtein(&option.to_string(), &path.to_string())
-                                });
-
-                            let report = if let Some(suggestion) = suggestion {
-                                report.with_label(
-                                    Label::new(SourceSpan::from((&example_file, suggestion.span)))
-                                        .with_message(format!(
-                                            "There is a function with a similar name: `{}`.",
-                                            suggestion.clone()
-                                        ))
-                                        .with_color(Color::Cyan),
-                                )
-                            } else {
-                                report
-                            };
-
-                            report.finish()
-                        }
-                        TypeErrorKind::Error(message) => {
-                            Report::build(ReportKind::Error, &example_file, 1)
-                                .with_message("A type error occurred.")
-                                .with_label(
-                                    Label::new(SourceSpan::from((&example_file, span)))
-                                        .with_message(message)
-                                        .with_color(Color::Red),
-                                )
-                                .finish()
-                        }
-                    };
-
-                    error_report
-                        .eprint((example_file.into(), Source::from(source)))
-                        .unwrap();
-
-                    Err(())
-                }
-            }
-        }
-        Err(err) => {
-            let span = err.span;
-
-            let example_file = example_file.display().to_string();
-
-            let error_report = match err.kind {
-                ParseErrorKind::LexError(lex_error) => {
-                    Report::build(ReportKind::Error, &example_file, 1)
-                        .with_message("An error occurred during lexing.")
-                        .with_label(
-                            Label::new(SourceSpan::from((&example_file, span)))
-                                .with_message(lex_error)
-                                .with_color(Color::Red),
-                        )
-                        .finish()
-                }
-                ParseErrorKind::Error(message) => {
-                    Report::build(ReportKind::Error, &example_file, 1)
-                        .with_message("An error occurred during parsing.")
-                        .with_label(
-                            Label::new(SourceSpan::from((&example_file, span)))
-                                .with_message(message)
-                                .with_color(Color::Red),
-                        )
-                        .finish()
-                }
-            };
-
-            error_report
-                .eprint((example_file.into(), Source::from(source)))
-                .unwrap();
-
-            Err(())
-        }
-    }
+    compiler.compile(params)
 }
 
 fn run() {
