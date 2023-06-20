@@ -47,7 +47,6 @@ impl Compiler {
         };
 
         let lexer = Lexer::new(&source);
-
         let parser = Parser::new(lexer);
 
         match parser.parse() {
