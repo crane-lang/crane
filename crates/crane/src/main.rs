@@ -141,6 +141,23 @@ fn compile(example: Option<String>) -> Result<(), ()> {
                     let example_file = example_file.display().to_string();
 
                     let error_report = match type_error.kind {
+                        TypeErrorKind::InvalidFunctionName { reason, suggestion } => {
+                            Report::build(ReportKind::Error, &example_file, 1)
+                                .with_message("A type error occurred.")
+                                .with_label(
+                                    Label::new(SourceSpan::from((&example_file, span)))
+                                        .with_message(reason)
+                                        .with_color(Color::Red),
+                                )
+                                .with_label(
+                                    Label::new(SourceSpan::from((&example_file, span)))
+                                        .with_message(format!(
+                                            "Try writing it as `{suggestion}` instead."
+                                        ))
+                                        .with_color(Color::Cyan),
+                                )
+                                .finish()
+                        }
                         TypeErrorKind::UnknownModule { path, options } => {
                             let report = Report::build(ReportKind::Error, &example_file, 1)
                                 .with_message("A type error occurred.")

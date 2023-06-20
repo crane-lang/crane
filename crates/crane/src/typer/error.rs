@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use smol_str::SmolStr;
 use thin_vec::ThinVec;
 
 use crate::ast::{Span, TyPath};
@@ -11,6 +12,10 @@ pub struct TypeError {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum TypeErrorKind {
+    InvalidFunctionName {
+        reason: String,
+        suggestion: SmolStr,
+    },
     UnknownModule {
         path: TyPath,
         options: ThinVec<TyPath>,

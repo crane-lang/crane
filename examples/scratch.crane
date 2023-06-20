@@ -18,6 +18,8 @@ pub fn main() {
 
     println("Hey")
 
+    lolCamelCase()
+
     foo::do_foo()
     foo::bar::do_bar()
 
@@ -55,6 +57,10 @@ pub fn main() {
     add_and_print(3, 3)
     print("7 + 5 = ")
     println(int_to_string(add_5(7)))
+}
+
+fn lolCamelCase() {
+    println("This shouldn't be allowed")
 }
 
 fn always_3() -> Uint64 {
