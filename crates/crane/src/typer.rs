@@ -8,6 +8,7 @@ pub use r#type::*;
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use heck::ToSnakeCase;
 use smol_str::SmolStr;
 use thin_vec::{thin_vec, ThinVec};
 
@@ -80,7 +81,7 @@ impl Typer {
 
     pub fn type_check_package(&mut self, package: Package) -> TypeCheckResult<TyPackage> {
         // HACK: Register the functions from `std`.
-        self.register_std();
+        self.register_std()?;
 
         self.perform_function_registration_pass(&package)?;
 
@@ -101,9 +102,21 @@ impl Typer {
         name: Ident,
         params: ThinVec<TyFnParam>,
         return_ty: Arc<Type>,
-    ) {
+    ) -> TypeCheckResult<()> {
+        if name.name != name.name.to_snake_case() {
+            return Err(TypeError {
+                kind: TypeErrorKind::InvalidFunctionName {
+                    reason: "Function names must be written in snake_case.".to_string(),
+                    suggestion: name.name.to_snake_case().into(),
+                },
+                span: name.span,
+            })?;
+        }
+
         let module = self.modules.entry(module_path).or_default();
         module.insert(name, (params, return_ty));
+
+        Ok(())
     }
 
     fn ensure_function_exists(
@@ -147,7 +160,7 @@ impl Typer {
         })
     }
 
-    fn register_std(&mut self) {
+    fn register_std(&mut self) -> TypeCheckResult<()> {
         let std_io_path = TyPath {
             segments: thin_vec![
                 TyPathSegment {
@@ -199,7 +212,7 @@ impl Typer {
                 span: DUMMY_SPAN
             }],
             self.unit_ty.clone(),
-        );
+        )?;
         self.register_function(
             std_io_path,
             Ident {
@@ -215,7 +228,7 @@ impl Typer {
                 span: DUMMY_SPAN
             }],
             self.unit_ty.clone(),
-        );
+        )?;
         self.register_function(
             std_int_path.clone(),
             Ident {
@@ -241,7 +254,7 @@ impl Typer {
                 }
             ],
             self.uint64_ty.clone(),
-        );
+        )?;
         self.register_function(
             std_int_path,
             Ident {
@@ -257,7 +270,9 @@ impl Typer {
                 span: DUMMY_SPAN
             }],
             self.string_ty.clone(),
-        );
+        )?;
+
+        Ok(())
     }
 
     fn perform_function_registration_pass(&mut self, package: &Package) -> TypeCheckResult<()> {
@@ -297,7 +312,12 @@ impl Typer {
                         span: DUMMY_SPAN,
                     };
 
-                    self.register_function(module_path, item.name.clone(), typed_params, return_ty)
+                    self.register_function(
+                        module_path,
+                        item.name.clone(),
+                        typed_params,
+                        return_ty,
+                    )?;
                 }
                 ItemKind::Struct(_) => {}
                 ItemKind::Union(_) => {}
