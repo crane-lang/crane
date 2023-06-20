@@ -3,12 +3,12 @@ mod error;
 mod r#type;
 
 pub use error::*;
-use heck::ToSnakeCase;
 pub use r#type::*;
 
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use heck::ToSnakeCase;
 use smol_str::SmolStr;
 use thin_vec::{thin_vec, ThinVec};
 
@@ -312,7 +312,12 @@ impl Typer {
                         span: DUMMY_SPAN,
                     };
 
-                    self.register_function(module_path, item.name.clone(), typed_params, return_ty)?;
+                    self.register_function(
+                        module_path,
+                        item.name.clone(),
+                        typed_params,
+                        return_ty,
+                    )?;
                 }
                 ItemKind::Struct(_) => {}
                 ItemKind::Union(_) => {}
