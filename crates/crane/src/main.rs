@@ -105,7 +105,7 @@ fn compile(example: Option<String>) -> Result<(), ()> {
         input: Input::File(example_file),
     };
 
-    compiler.compile(params)
+    compiler.compile(&mut std::io::stderr(), params)
 }
 
 fn run() {
