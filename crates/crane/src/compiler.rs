@@ -244,7 +244,7 @@ fn inCamelCase() {}
 
         let _ = compiler.compile(&mut stderr, params);
 
-        let stderr: Vec<u8> = strip_ansi_escapes::strip(stderr).unwrap();
+        let stderr = strip_ansi_escapes::strip(stderr).unwrap();
         let stderr = std::str::from_utf8(&stderr).unwrap();
 
         insta::assert_snapshot!(&stderr);
