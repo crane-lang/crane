@@ -249,4 +249,31 @@ fn inCamelCase() {}
 
         insta::assert_snapshot!(&stderr);
     }
+
+    #[test]
+    pub fn test_mixed_case_function_name() {
+        let mut compiler = Compiler::new();
+
+        let params = CompileParams {
+            input: Input::String {
+                filename: "mixed_case.crane".into(),
+                input: r#"
+fn main() {}
+
+fn XMLHttpRequest() {}
+                "#
+                .trim()
+                .to_string(),
+            },
+        };
+
+        let mut stderr = Vec::new();
+
+        let _ = compiler.compile(&mut stderr, params);
+
+        let stderr = strip_ansi_escapes::strip(stderr).unwrap();
+        let stderr = std::str::from_utf8(&stderr).unwrap();
+
+        insta::assert_snapshot!(&stderr);
+    }
 }
