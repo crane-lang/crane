@@ -713,10 +713,29 @@ impl Typer {
                     span: path.span,
                 };
 
+                // Check the variable's path against the items brought into scope by `use`.
+                // If we find an item that's been brought into scope we can use that as the alias.
+                let path = if let Some(use_path) = self.use_map.get(&path) {
+                    use_path.clone()
+                } else {
+                    path
+                };
+
                 let ty = self
                     .scopes
                     .last()
                     .and_then(|scope| scope.get(&path).cloned());
+
+                let ty = ty.or_else(|| {
+                    let function = self.ensure_function_exists(&path).ok();
+
+                    function.map(|(params, return_ty)| {
+                        Arc::new(Type::Fn {
+                            args: params.iter().map(|param| param.ty.clone()).collect(),
+                            return_ty,
+                        })
+                    })
+                });
 
                 Ok(TyExpr {
                     kind: TyExprKind::Variable(path),
@@ -748,7 +767,33 @@ impl Typer {
                     callee_path
                 };
 
-                let (callee_params, callee_return_ty) = self.ensure_function_exists(callee_path)?;
+                let callee_from_params = self
+                    .scopes
+                    .last()
+                    .and_then(|scope| scope.get(&callee_path))
+                    .and_then(|ty| match &*ty.clone() {
+                        Type::Fn { args, return_ty } => Some((
+                            args.iter()
+                                .map(|ty| TyFnParam {
+                                    name: Ident {
+                                        name: "".into(),
+                                        span: DUMMY_SPAN,
+                                    },
+                                    ty: ty.clone(),
+                                    span: DUMMY_SPAN,
+                                })
+                                .collect::<ThinVec<_>>(),
+                            return_ty.clone(),
+                        )),
+                        _ => None,
+                    });
+
+                let (callee_params, callee_return_ty) = if let Some(callee) = callee_from_params {
+                    callee
+                } else {
+                    self.ensure_function_exists(callee_path)
+                        .map(|(params, return_ty)| (params.clone(), return_ty))?
+                };
 
                 let caller_args = args
                     .into_iter()

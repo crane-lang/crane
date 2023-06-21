@@ -25,6 +25,11 @@ pub fn main() {
     println(int_to_string(twenty_three))
     println(" ")
 
+    let sum = do_add(int_add, twenty_three, 1)
+    print("twenty_three + 1 = ")
+    println(int_to_string(sum))
+    println(" ")
+
     let greeting = "Hey"
 
     print("greeting = ")
@@ -63,6 +68,10 @@ fn always_3() -> Uint64 {
 
 fn add_5(value: Uint64) -> Uint64 {
     int_add(value, 5)
+}
+
+fn do_add(add: Fn(Uint64, Uint64) -> Uint64, x: Uint64, y: Uint64) -> Uint64 {
+    add(x, y)
 }
 
 fn greet(name: String) {

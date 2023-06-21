@@ -50,9 +50,15 @@ Ok:
                               start: 42
                               end: 49
                             ty:
-                              UserDefined:
-                                module: "?"
-                                name: "?"
+                              Fn:
+                                args:
+                                  - UserDefined:
+                                      module: "std::prelude"
+                                      name: String
+                                return_ty:
+                                  UserDefined:
+                                    module: "std::prelude"
+                                    name: ()
                           args:
                             - kind:
                                 Literal:

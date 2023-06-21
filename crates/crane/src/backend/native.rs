@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::process::Command;
+use std::sync::Arc;
 
 use inkwell::builder::Builder;
 use inkwell::context::Context;
@@ -8,10 +9,9 @@ use inkwell::passes::PassManager;
 use inkwell::targets::{
     CodeModel, FileType, InitializationConfig, RelocMode, Target, TargetTriple,
 };
-use inkwell::types::BasicType;
+use inkwell::types::{AnyType, AnyTypeEnum, BasicMetadataTypeEnum, BasicType};
 use inkwell::values::{
-    BasicMetadataValueEnum, BasicValue, BasicValueEnum, CallSiteValue, FunctionValue, GlobalValue,
-    IntValue, PointerValue,
+    BasicValue, BasicValueEnum, CallSiteValue, FunctionValue, GlobalValue, IntValue, PointerValue,
 };
 use inkwell::{AddressSpace, OptimizationLevel};
 use smol_str::SmolStr;
@@ -362,6 +362,55 @@ impl NativeBackend {
         }
     }
 
+    fn to_llvm_type<'ctx>(context: &'ctx Context, ty: Arc<Type>) -> AnyTypeEnum<'ctx> {
+        match &*ty {
+            Type::Fn {
+                args: params,
+                return_ty,
+            } => {
+                let params = params
+                    .iter()
+                    .map(|param| Self::to_llvm_type(context, param.clone()))
+                    .map(Self::any_type_to_basic_metadata_type)
+                    .collect::<Vec<_>>();
+
+                let return_ty = Self::to_llvm_type(context, return_ty.clone());
+
+                AnyTypeEnum::FunctionType(match return_ty {
+                    AnyTypeEnum::IntType(int_type) => int_type.fn_type(&params, false),
+                    _ => panic!(""),
+                })
+            }
+            Type::UserDefined { module, name } => match (module.as_ref(), name.as_ref()) {
+                ("std::prelude", "String") => context
+                    .i8_type()
+                    .ptr_type(AddressSpace::default())
+                    .as_any_type_enum(),
+                ("std::prelude", "Uint64") => context.i64_type().as_any_type_enum(),
+                (module, name) => {
+                    panic!("Unknown function parameter type: {}::{}", module, name)
+                }
+            },
+        }
+    }
+
+    fn any_type_to_basic_metadata_type<'ctx>(
+        any_type: AnyTypeEnum<'ctx>,
+    ) -> BasicMetadataTypeEnum<'ctx> {
+        match any_type {
+            AnyTypeEnum::ArrayType(array_type) => BasicMetadataTypeEnum::ArrayType(array_type),
+            AnyTypeEnum::FloatType(float_type) => BasicMetadataTypeEnum::FloatType(float_type),
+            AnyTypeEnum::IntType(int_type) => BasicMetadataTypeEnum::IntType(int_type),
+            AnyTypeEnum::PointerType(ptr_type) => BasicMetadataTypeEnum::PointerType(ptr_type),
+            AnyTypeEnum::StructType(struct_type) => BasicMetadataTypeEnum::StructType(struct_type),
+            AnyTypeEnum::VectorType(vector_type) => BasicMetadataTypeEnum::VectorType(vector_type),
+            AnyTypeEnum::VoidType(_) => todo!(),
+            AnyTypeEnum::FunctionType(function_type) => {
+                BasicMetadataTypeEnum::PointerType(function_type.ptr_type(AddressSpace::default()))
+            }
+        }
+    }
+
     fn compile_item<'ctx>(
         context: &'ctx Context,
         builder: &Builder<'ctx>,
@@ -376,29 +425,9 @@ impl NativeBackend {
                     .params
                     .iter()
                     .map(|param| {
-                        let param_type = match &*param.ty {
-                            Type::Fn {
-                                args: _,
-                                return_ty: _,
-                            } => todo!(),
-                            Type::UserDefined { module, name } => {
-                                match (module.as_ref(), name.as_ref()) {
-                                    ("std::prelude", "String") => context
-                                        .i8_type()
-                                        .ptr_type(AddressSpace::default())
-                                        .as_basic_type_enum(),
-                                    ("std::prelude", "Uint64") => {
-                                        context.i64_type().as_basic_type_enum()
-                                    }
-                                    (module, name) => panic!(
-                                        "Unknown function parameter type: {}::{}",
-                                        module, name
-                                    ),
-                                }
-                            }
-                        };
+                        let param_type = Self::to_llvm_type(context, param.ty.clone());
 
-                        param_type.into()
+                        Self::any_type_to_basic_metadata_type(param_type)
                     })
                     .collect::<Vec<_>>();
 
@@ -630,8 +659,72 @@ impl NativeBackend {
             _ => todo!(),
         };
 
+        if let Some((param_index, callee)) = caller_params
+            .iter()
+            .enumerate()
+            .find(|(_, param)| param.name.name == callee_name.to_string())
+        {
+            let function_type = Self::to_llvm_type(context, callee.ty.clone()).into_function_type();
+
+            let function_ptr = caller
+                .get_nth_param(param_index as u32)
+                .unwrap()
+                .into_pointer_value();
+
+            let args = args
+                .into_iter()
+                .map(|arg| match arg.kind {
+                    TyExprKind::Literal(literal) => match literal.kind {
+                        TyLiteralKind::String(literal) => {
+                            Self::compile_string_literal(context, builder, module, literal)
+                                .as_basic_value_enum()
+                                .into()
+                        }
+                        TyLiteralKind::Integer(literal) => {
+                            Self::compile_integer_literal(context, builder, module, literal)
+                                .as_basic_value_enum()
+                                .into()
+                        }
+                    },
+                    TyExprKind::Variable(path) => {
+                        let param = caller_params
+                            .into_iter()
+                            .enumerate()
+                            .find(|(_, param)| {
+                                Some(param.name.clone())
+                                    == path.segments.last().map(|segment| segment.ident.clone())
+                            })
+                            .and_then(|(param_index, _)| caller.get_nth_param(param_index as u32));
+
+                        param.unwrap().into()
+                    }
+                    TyExprKind::Call { fun, args } => Self::compile_fn_call(
+                        context,
+                        builder,
+                        module,
+                        caller,
+                        caller_params,
+                        fun,
+                        args,
+                        locals,
+                    )
+                    .unwrap()
+                    .try_as_basic_value()
+                    .unwrap_left()
+                    .into(),
+                })
+                .collect::<Vec<_>>();
+
+            return Ok(builder.build_indirect_call(
+                function_type,
+                function_ptr,
+                &args,
+                &callee.name.name,
+            ));
+        }
+
         if let Some(callee) = module.get_function(&callee_name.to_string()) {
-            let args: Vec<BasicMetadataValueEnum> = args
+            let args = args
                 .into_iter()
                 .enumerate()
                 .map(|(arg_index, arg)| match arg.kind {
@@ -666,6 +759,14 @@ impl NativeBackend {
                             .or_else(|| {
                                 locals.get(&path).map(|local| {
                                     builder.build_load(callee_param.get_type(), *local, "load")
+                                })
+                            })
+                            .or_else(|| {
+                                module.get_function(&path.to_string()).map(|function| {
+                                    function
+                                        .as_global_value()
+                                        .as_pointer_value()
+                                        .as_basic_value_enum()
                                 })
                             })
                             .unwrap_or_else(|| panic!("Variable `{}` not found.", path));
