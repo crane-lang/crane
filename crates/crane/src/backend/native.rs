@@ -662,37 +662,66 @@ impl NativeBackend {
             _ => todo!(),
         };
 
-        println!(
-            "Compiling call to {} from {}",
-            callee_name.to_string(),
-            caller.get_name().to_str().unwrap()
-        );
-
         if let Some((param_index, callee)) = caller_params
             .iter()
             .enumerate()
             .find(|(_, param)| param.name.name == callee_name.to_string())
         {
-            println!("Found callee as param: {:?}", callee);
-
             let function_type = Self::to_llvm_type(context, callee.ty.clone()).into_function_type();
-
-            dbg!(caller.get_nth_param(param_index as u32));
 
             let function_ptr = caller
                 .get_nth_param(param_index as u32)
                 .unwrap()
                 .into_pointer_value();
 
-            let i64_type = context.i64_type();
+            let args = args
+                .into_iter()
+                .map(|arg| match arg.kind {
+                    TyExprKind::Literal(literal) => match literal.kind {
+                        TyLiteralKind::String(literal) => {
+                            Self::compile_string_literal(context, builder, module, literal)
+                                .as_basic_value_enum()
+                                .into()
+                        }
+                        TyLiteralKind::Integer(literal) => {
+                            Self::compile_integer_literal(context, builder, module, literal)
+                                .as_basic_value_enum()
+                                .into()
+                        }
+                    },
+                    TyExprKind::Variable(path) => {
+                        let param = caller_params
+                            .into_iter()
+                            .enumerate()
+                            .find(|(_, param)| {
+                                Some(param.name.clone())
+                                    == path.segments.last().map(|segment| segment.ident.clone())
+                            })
+                            .and_then(|(param_index, _)| caller.get_nth_param(param_index as u32));
+
+                        param.unwrap().into()
+                    }
+                    TyExprKind::Call { fun, args } => Self::compile_fn_call(
+                        context,
+                        builder,
+                        module,
+                        caller,
+                        caller_params,
+                        fun,
+                        args,
+                        locals,
+                    )
+                    .unwrap()
+                    .try_as_basic_value()
+                    .unwrap_left()
+                    .into(),
+                })
+                .collect::<Vec<_>>();
 
             return Ok(builder.build_indirect_call(
                 function_type,
                 function_ptr,
-                &[
-                    i64_type.const_int(5, false).as_basic_value_enum().into(),
-                    i64_type.const_int(7, false).as_basic_value_enum().into(),
-                ],
+                &args,
                 &callee.name.name,
             ));
         }
@@ -749,7 +778,7 @@ impl NativeBackend {
                     }
                     TyExprKind::Call {
                         fun,
-                        args: callee_args,
+                        args,
                     } => Self::compile_fn_call(
                         context,
                         builder,
@@ -757,7 +786,7 @@ impl NativeBackend {
                         caller,
                         caller_params,
                         fun,
-                        callee_args,
+                        args,
                         locals,
                     )
                     .unwrap()
