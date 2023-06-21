@@ -767,7 +767,33 @@ impl Typer {
                     callee_path
                 };
 
-                let (callee_params, callee_return_ty) = self.ensure_function_exists(callee_path)?;
+                let callee_from_params = self
+                    .scopes
+                    .last()
+                    .and_then(|scope| scope.get(&callee_path))
+                    .and_then(|ty| match &*ty.clone() {
+                        Type::Fn { args, return_ty } => Some((
+                            args.iter()
+                                .map(|ty| TyFnParam {
+                                    name: Ident {
+                                        name: "".into(),
+                                        span: DUMMY_SPAN,
+                                    },
+                                    ty: ty.clone(),
+                                    span: DUMMY_SPAN,
+                                })
+                                .collect::<ThinVec<_>>(),
+                            return_ty.clone(),
+                        )),
+                        _ => None,
+                    });
+
+                let (callee_params, callee_return_ty) = if let Some(callee) = callee_from_params {
+                    callee
+                } else {
+                    self.ensure_function_exists(callee_path)
+                        .map(|(params, return_ty)| (params.clone(), return_ty))?
+                };
 
                 let caller_args = args
                     .into_iter()
