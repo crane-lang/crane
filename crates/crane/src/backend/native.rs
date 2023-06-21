@@ -513,6 +513,7 @@ impl NativeBackend {
                                     &module,
                                     &fun.params,
                                     &fn_value,
+                                    &thin_vec![],
                                     &locals,
                                     *init.clone(),
                                 ),
@@ -542,6 +543,7 @@ impl NativeBackend {
                                 &module,
                                 &fun.params,
                                 &fn_value,
+                                &thin_vec![],
                                 &locals,
                                 *expr.clone(),
                             );
@@ -574,6 +576,7 @@ impl NativeBackend {
         module: &Module<'ctx>,
         fn_params: &ThinVec<TyFnParam>,
         fn_value: &FunctionValue<'ctx>,
+        fn_args: &ThinVec<Box<TyExpr>>,
         locals: &HashMap<TyPath, PointerValue<'ctx>>,
         expr: TyExpr,
     ) -> Option<BasicValueEnum<'ctx>> {
@@ -595,6 +598,7 @@ impl NativeBackend {
                 module,
                 fn_value,
                 fn_params,
+                fn_args,
                 fun.clone(),
                 args,
                 locals,
@@ -653,6 +657,7 @@ impl NativeBackend {
         module: &Module<'ctx>,
         caller: &FunctionValue<'ctx>,
         caller_params: &ThinVec<TyFnParam>,
+        caller_args: &ThinVec<Box<TyExpr>>,
         fun: Box<TyExpr>,
         args: ThinVec<Box<TyExpr>>,
         locals: &HashMap<TyPath, PointerValue<'ctx>>,
@@ -662,16 +667,29 @@ impl NativeBackend {
             _ => todo!(),
         };
 
-        if let Some(callee) = caller_params
+        println!(
+            "Compiling call to {} from {}",
+            callee_name.to_string(),
+            caller.get_name().to_str().unwrap()
+        );
+
+        if let Some((param_index, callee)) = caller_params
             .iter()
-            .find(|param| param.name.name == callee_name.to_string())
+            .enumerate()
+            .find(|(_, param)| param.name.name == callee_name.to_string())
         {
             println!("Found callee as param: {:?}", callee);
 
+            dbg!(caller_params, caller_args);
+
             let function_type = Self::to_llvm_type(context, callee.ty.clone()).into_function_type();
 
-            let function_ptr =
-                builder.build_alloca(function_type.ptr_type(AddressSpace::default()), "blah");
+            dbg!(caller.get_nth_param(param_index as u32));
+
+            let function_ptr = caller
+                .get_nth_param(param_index as u32)
+                .unwrap()
+                .into_pointer_value();
 
             let i64_type = context.i64_type();
 
@@ -685,6 +703,8 @@ impl NativeBackend {
                 &callee.name.name,
             ));
         }
+
+        let caller_args = args.clone();
 
         if let Some(callee) = module.get_function(&callee_name.to_string()) {
             let args = args
@@ -740,14 +760,18 @@ impl NativeBackend {
 
                         variable.into()
                     }
-                    TyExprKind::Call { fun, args } => Self::compile_fn_call(
+                    TyExprKind::Call {
+                        fun,
+                        args: callee_args,
+                    } => Self::compile_fn_call(
                         context,
                         builder,
                         module,
                         caller,
                         caller_params,
+                        &caller_args,
                         fun,
-                        args,
+                        callee_args,
                         locals,
                     )
                     .unwrap()
