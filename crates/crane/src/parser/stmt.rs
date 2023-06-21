@@ -7,6 +7,7 @@ impl<TokenStream> Parser<TokenStream>
 where
     TokenStream: Iterator<Item = Result<Token, LexError>>,
 {
+    /// Parses a [`Stmt`].
     #[tracing::instrument(skip(self))]
     pub fn parse_stmt(&mut self) -> ParseResult<Option<Stmt>> {
         if self.consume_keyword(keywords::LET) {
