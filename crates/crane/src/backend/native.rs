@@ -776,10 +776,7 @@ impl NativeBackend {
 
                         variable.into()
                     }
-                    TyExprKind::Call {
-                        fun,
-                        args,
-                    } => Self::compile_fn_call(
+                    TyExprKind::Call { fun, args } => Self::compile_fn_call(
                         context,
                         builder,
                         module,
