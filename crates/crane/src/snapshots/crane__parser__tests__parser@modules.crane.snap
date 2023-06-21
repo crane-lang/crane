@@ -91,7 +91,7 @@ Ok:
   - kind:
       Fn:
         params: []
-        return_ty: ~
+        return_ty: Unit
         body:
           - kind:
               Expr:
@@ -221,10 +221,21 @@ Ok:
                               Fn:
                                 params: []
                                 return_ty:
-                                  name: Uint64
-                                  span:
-                                    start: 224
-                                    end: 230
+                                  Ty:
+                                    kind:
+                                      Path:
+                                        segments:
+                                          - ident:
+                                              name: Uint64
+                                              span:
+                                                start: 224
+                                                end: 230
+                                        span:
+                                          start: 224
+                                          end: 230
+                                    span:
+                                      start: 224
+                                      end: 230
                                 body:
                                   - kind:
                                       Expr:

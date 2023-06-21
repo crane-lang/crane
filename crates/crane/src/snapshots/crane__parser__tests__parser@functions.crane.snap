@@ -35,7 +35,7 @@ Ok:
   - kind:
       Fn:
         params: []
-        return_ty: ~
+        return_ty: Unit
         body:
           - kind:
               Expr:
@@ -97,7 +97,7 @@ Ok:
   - kind:
       Fn:
         params: []
-        return_ty: ~
+        return_ty: Unit
         body:
           - kind:
               Expr:
@@ -140,7 +140,7 @@ Ok:
   - kind:
       Fn:
         params: []
-        return_ty: ~
+        return_ty: Unit
         body:
           - kind:
               Expr:

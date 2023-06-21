@@ -91,7 +91,7 @@ Ok:
   - kind:
       Fn:
         params: []
-        return_ty: ~
+        return_ty: Unit
         body:
           - kind:
               Local:
