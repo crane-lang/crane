@@ -57,10 +57,6 @@ pub fn main() {
     println(int_to_string(add_5(7)))
 }
 
-fn do(callback: Fn(Uint64, Uint64) -> Uint64) {
-    callback(1, 2)
-}
-
 fn always_3() -> Uint64 {
     3
 }
