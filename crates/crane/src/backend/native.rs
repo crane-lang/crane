@@ -513,7 +513,6 @@ impl NativeBackend {
                                     &module,
                                     &fun.params,
                                     &fn_value,
-                                    &thin_vec![],
                                     &locals,
                                     *init.clone(),
                                 ),
@@ -543,7 +542,6 @@ impl NativeBackend {
                                 &module,
                                 &fun.params,
                                 &fn_value,
-                                &thin_vec![],
                                 &locals,
                                 *expr.clone(),
                             );
@@ -576,7 +574,6 @@ impl NativeBackend {
         module: &Module<'ctx>,
         fn_params: &ThinVec<TyFnParam>,
         fn_value: &FunctionValue<'ctx>,
-        fn_args: &ThinVec<Box<TyExpr>>,
         locals: &HashMap<TyPath, PointerValue<'ctx>>,
         expr: TyExpr,
     ) -> Option<BasicValueEnum<'ctx>> {
@@ -598,7 +595,6 @@ impl NativeBackend {
                 module,
                 fn_value,
                 fn_params,
-                fn_args,
                 fun.clone(),
                 args,
                 locals,
@@ -657,7 +653,6 @@ impl NativeBackend {
         module: &Module<'ctx>,
         caller: &FunctionValue<'ctx>,
         caller_params: &ThinVec<TyFnParam>,
-        caller_args: &ThinVec<Box<TyExpr>>,
         fun: Box<TyExpr>,
         args: ThinVec<Box<TyExpr>>,
         locals: &HashMap<TyPath, PointerValue<'ctx>>,
@@ -680,8 +675,6 @@ impl NativeBackend {
         {
             println!("Found callee as param: {:?}", callee);
 
-            dbg!(caller_params, caller_args);
-
             let function_type = Self::to_llvm_type(context, callee.ty.clone()).into_function_type();
 
             dbg!(caller.get_nth_param(param_index as u32));
@@ -703,8 +696,6 @@ impl NativeBackend {
                 &callee.name.name,
             ));
         }
-
-        let caller_args = args.clone();
 
         if let Some(callee) = module.get_function(&callee_name.to_string()) {
             let args = args
@@ -769,7 +760,6 @@ impl NativeBackend {
                         module,
                         caller,
                         caller_params,
-                        &caller_args,
                         fun,
                         callee_args,
                         locals,
