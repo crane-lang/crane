@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::process::Command;
+use std::sync::Arc;
 
 use inkwell::builder::Builder;
 use inkwell::context::Context;
@@ -8,7 +9,9 @@ use inkwell::passes::PassManager;
 use inkwell::targets::{
     CodeModel, FileType, InitializationConfig, RelocMode, Target, TargetTriple,
 };
-use inkwell::types::BasicType;
+use inkwell::types::{
+    AnyType, AnyTypeEnum, BasicMetadataTypeEnum, BasicType, BasicTypeEnum, FunctionType,
+};
 use inkwell::values::{
     BasicMetadataValueEnum, BasicValue, BasicValueEnum, CallSiteValue, FunctionValue, GlobalValue,
     IntValue, PointerValue,
@@ -362,6 +365,55 @@ impl NativeBackend {
         }
     }
 
+    fn to_llvm_type<'ctx>(context: &'ctx Context, ty: Arc<Type>) -> AnyTypeEnum<'ctx> {
+        match &*ty {
+            Type::Fn {
+                args: params,
+                return_ty,
+            } => {
+                let params = params
+                    .iter()
+                    .map(|param| Self::to_llvm_type(context, param.clone()))
+                    .map(Self::any_type_to_basic_metadata_type)
+                    .collect::<Vec<_>>();
+
+                let return_ty = Self::to_llvm_type(context, return_ty.clone());
+
+                AnyTypeEnum::FunctionType(match return_ty {
+                    AnyTypeEnum::IntType(int_type) => int_type.fn_type(&params, false),
+                    _ => panic!(""),
+                })
+            }
+            Type::UserDefined { module, name } => match (module.as_ref(), name.as_ref()) {
+                ("std::prelude", "String") => context
+                    .i8_type()
+                    .ptr_type(AddressSpace::default())
+                    .as_any_type_enum(),
+                ("std::prelude", "Uint64") => context.i64_type().as_any_type_enum(),
+                (module, name) => {
+                    panic!("Unknown function parameter type: {}::{}", module, name)
+                }
+            },
+        }
+    }
+
+    fn any_type_to_basic_metadata_type<'ctx>(
+        any_type: AnyTypeEnum<'ctx>,
+    ) -> BasicMetadataTypeEnum<'ctx> {
+        match any_type {
+            AnyTypeEnum::ArrayType(array_type) => BasicMetadataTypeEnum::ArrayType(array_type),
+            AnyTypeEnum::FloatType(float_type) => BasicMetadataTypeEnum::FloatType(float_type),
+            AnyTypeEnum::IntType(int_type) => BasicMetadataTypeEnum::IntType(int_type),
+            AnyTypeEnum::PointerType(_) => todo!(),
+            AnyTypeEnum::StructType(_) => todo!(),
+            AnyTypeEnum::VectorType(_) => todo!(),
+            AnyTypeEnum::VoidType(_) => todo!(),
+            AnyTypeEnum::FunctionType(function_type) => {
+                BasicMetadataTypeEnum::PointerType(function_type.ptr_type(AddressSpace::default()))
+            }
+        }
+    }
+
     fn compile_item<'ctx>(
         context: &'ctx Context,
         builder: &Builder<'ctx>,
@@ -376,29 +428,9 @@ impl NativeBackend {
                     .params
                     .iter()
                     .map(|param| {
-                        let param_type = match &*param.ty {
-                            Type::Fn {
-                                args: _,
-                                return_ty: _,
-                            } => todo!(),
-                            Type::UserDefined { module, name } => {
-                                match (module.as_ref(), name.as_ref()) {
-                                    ("std::prelude", "String") => context
-                                        .i8_type()
-                                        .ptr_type(AddressSpace::default())
-                                        .as_basic_type_enum(),
-                                    ("std::prelude", "Uint64") => {
-                                        context.i64_type().as_basic_type_enum()
-                                    }
-                                    (module, name) => panic!(
-                                        "Unknown function parameter type: {}::{}",
-                                        module, name
-                                    ),
-                                }
-                            }
-                        };
+                        let param_type = Self::to_llvm_type(context, param.ty.clone());
 
-                        param_type.into()
+                        Self::any_type_to_basic_metadata_type(param_type)
                     })
                     .collect::<Vec<_>>();
 
@@ -629,6 +661,11 @@ impl NativeBackend {
             TyExprKind::Variable(path) => path,
             _ => todo!(),
         };
+
+        if let Some(callee) = caller_params.iter().find(|param| param.name.name == callee_name.to_string()) {
+            println!("Found callee as param: {:?}", callee);
+            dbg!(&locals);
+        }
 
         if let Some(callee) = module.get_function(&callee_name.to_string()) {
             let args: Vec<BasicMetadataValueEnum> = args
