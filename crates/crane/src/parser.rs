@@ -21,6 +21,7 @@ enum ExpectedToken {
     Token(TokenKind),
     Keyword(Ident),
     Ident,
+    Path,
 }
 
 impl std::fmt::Display for ExpectedToken {
@@ -32,6 +33,7 @@ impl std::fmt::Display for ExpectedToken {
                 Self::Token(kind) => format!("`{kind:?}`"),
                 Self::Keyword(keyword) => format!("`{keyword}`"),
                 Self::Ident => "an identifier".to_string(),
+                Self::Path => "a path".to_string(),
             }
         )
     }
@@ -194,6 +196,14 @@ where
         self.token.is_keyword(keyword)
     }
 
+    fn check_or_expected(&mut self, is_ok: bool, expected: ExpectedToken) -> bool {
+        if !is_ok {
+            self.expected_tokens.push(expected);
+        }
+
+        is_ok
+    }
+
     /// Consumes the next token if it is of the given [`TokenKind`].
     ///
     /// Returns whether the token was present.
@@ -231,6 +241,14 @@ where
         self.advance();
 
         Ok(ident)
+    }
+
+    /// Returns whether the next token is a [`Path`].
+    ///
+    /// If the next token is not a [`Path`] this method will add the token to the list
+    /// of expected tokens.
+    fn check_path(&mut self) -> bool {
+        self.check_or_expected(self.token.is_path_start(), ExpectedToken::Path)
     }
 
     /// Parses a [`Path`].

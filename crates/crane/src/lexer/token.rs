@@ -95,6 +95,7 @@ impl Token {
         self.kind == TokenKind::Ident && self.lexeme == keyword.name
     }
 
+    /// Returns the [`Ident`] for this token, if it is one.
     pub fn ident(&self) -> Option<Ident> {
         match self.kind {
             TokenKind::Ident => Some(Ident {
@@ -103,5 +104,17 @@ impl Token {
             }),
             _ => None,
         }
+    }
+
+    /// Returns whether this token is an [`Ident`].
+    pub fn is_ident(&self) -> bool {
+        self.ident().is_some()
+    }
+
+    /// Returns whether this token is the start of a [`Path`].
+    ///
+    /// [`Path`]: crate::ast::Path
+    pub fn is_path_start(&self) -> bool {
+        self.kind == TokenKind::ColonColon || self.is_ident()
     }
 }
