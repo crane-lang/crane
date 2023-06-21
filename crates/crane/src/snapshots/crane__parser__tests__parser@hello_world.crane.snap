@@ -34,8 +34,9 @@ Ok:
         end: 0
   - kind:
       Fn:
-        params: []
-        return_ty: Unit
+        decl:
+          params: []
+          return_ty: Unit
         body:
           - kind:
               Expr:

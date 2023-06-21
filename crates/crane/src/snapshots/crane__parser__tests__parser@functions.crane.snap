@@ -34,8 +34,9 @@ Ok:
         end: 0
   - kind:
       Fn:
-        params: []
-        return_ty: Unit
+        decl:
+          params: []
+          return_ty: Unit
         body:
           - kind:
               Expr:
@@ -96,8 +97,9 @@ Ok:
         end: 33
   - kind:
       Fn:
-        params: []
-        return_ty: Unit
+        decl:
+          params: []
+          return_ty: Unit
         body:
           - kind:
               Expr:
@@ -139,8 +141,9 @@ Ok:
         end: 87
   - kind:
       Fn:
-        params: []
-        return_ty: Unit
+        decl:
+          params: []
+          return_ty: Unit
         body:
           - kind:
               Expr:

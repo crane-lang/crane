@@ -90,8 +90,9 @@ Ok:
         end: 0
   - kind:
       Fn:
-        params: []
-        return_ty: Unit
+        decl:
+          params: []
+          return_ty: Unit
         body:
           - kind:
               Expr:
@@ -175,46 +176,47 @@ Ok:
         end: 79
   - kind:
       Fn:
-        params:
-          - name:
-              name: n
+        decl:
+          params:
+            - name:
+                name: n
+                span:
+                  start: 135
+                  end: 136
+              ty:
+                kind:
+                  Path:
+                    segments:
+                      - ident:
+                          name: Uint64
+                          span:
+                            start: 138
+                            end: 144
+                    span:
+                      start: 138
+                      end: 144
+                span:
+                  start: 138
+                  end: 144
               span:
                 start: 135
                 end: 136
-            ty:
+          return_ty:
+            Ty:
               kind:
                 Path:
                   segments:
                     - ident:
                         name: Uint64
                         span:
-                          start: 138
-                          end: 144
+                          start: 149
+                          end: 155
                   span:
-                    start: 138
-                    end: 144
+                    start: 149
+                    end: 155
               span:
-                start: 138
-                end: 144
-            span:
-              start: 135
-              end: 136
-        return_ty:
-          Ty:
-            kind:
-              Path:
-                segments:
-                  - ident:
-                      name: Uint64
-                      span:
-                        start: 149
-                        end: 155
-                span:
-                  start: 149
-                  end: 155
-            span:
-              start: 149
-              end: 155
+                start: 149
+                end: 155
         body:
           - kind:
               Expr:
