@@ -13,12 +13,12 @@ use smol_str::SmolStr;
 use thin_vec::{thin_vec, ThinVec};
 
 use crate::ast::{
-    Expr, ExprKind, Fn, FnParam, FnReturnTy, Ident, InlineModuleDecl, Item, ItemKind, Literal,
-    LiteralKind, Local, LocalKind, Module, ModuleDecl, Package, PathSegment, Span, Stmt, StmtKind,
-    StructDecl, TyExpr, TyExprKind, TyFieldDecl, TyFn, TyFnParam, TyIntegerLiteral, TyItem,
-    TyItemKind, TyKind, TyLiteral, TyLiteralKind, TyLocal, TyLocalKind, TyModule, TyPackage,
-    TyPath, TyPathSegment, TyStmt, TyStmtKind, TyStructDecl, TyUint, TyUnionDecl, TyVariant,
-    TyVariantData, UnionDecl, UseTree, UseTreeKind, VariantData, DUMMY_SPAN,
+    Expr, ExprKind, Fn, FnDecl, FnParam, FnReturnTy, Ident, InlineModuleDecl, Item, ItemKind,
+    Literal, LiteralKind, Local, LocalKind, Module, ModuleDecl, Package, PathSegment, Span, Stmt,
+    StmtKind, StructDecl, Ty, TyExpr, TyExprKind, TyFieldDecl, TyFn, TyFnParam, TyIntegerLiteral,
+    TyItem, TyItemKind, TyKind, TyLiteral, TyLiteralKind, TyLocal, TyLocalKind, TyModule,
+    TyPackage, TyPath, TyPathSegment, TyStmt, TyStmtKind, TyStructDecl, TyUint, TyUnionDecl,
+    TyVariant, TyVariantData, UnionDecl, UseTree, UseTreeKind, VariantData, DUMMY_SPAN,
 };
 
 fn ty_to_string(ty: &Type) -> String {
@@ -292,26 +292,7 @@ impl Typer {
             match item.kind {
                 ItemKind::Use(_) => {}
                 ItemKind::Fn(ref fun) => {
-                    let typed_params = self.infer_function_params(&fun.decl.params)?;
-
-                    let return_ty = match &fun.decl.return_ty {
-                        FnReturnTy::Ty(ty) => match &ty.kind {
-                            TyKind::Path(path) => {
-                                let (PathSegment { ident }, _) =
-                                    path.segments.split_last().unwrap();
-
-                                Arc::new(Type::UserDefined {
-                                    // HACK: We need to resolve the type based on its path.
-                                    module: "std::prelude".into(),
-                                    name: ident.to_string().into(),
-                                })
-                            }
-                            TyKind::Fn(fn_ty) => {
-                                todo!()
-                            }
-                        },
-                        FnReturnTy::Unit => self.unit_ty.clone(),
-                    };
+                    let (typed_params, return_ty) = self.infer_function_decl(&fun.decl)?;
 
                     let path_segments = prefix.cloned().unwrap_or(ThinVec::new());
 
@@ -394,6 +375,27 @@ impl Typer {
         }
 
         Ok(TyModule { items: typed_items })
+    }
+
+    fn infer_ty(&mut self, ty: Ty) -> TypeCheckResult<Arc<Type>> {
+        Ok(match ty.kind {
+            TyKind::Path(path) => {
+                let (PathSegment { ident }, _) = path.segments.split_last().unwrap();
+
+                Arc::new(Type::UserDefined {
+                    module: "std::prelude".into(),
+                    name: ident.to_string().into(),
+                })
+            }
+            TyKind::Fn(fn_ty) => {
+                let (params, return_ty) = self.infer_function_decl(&fn_ty.decl)?;
+
+                Arc::new(Type::Fn {
+                    args: params.iter().map(|param| param.ty.clone()).collect(),
+                    return_ty,
+                })
+            }
+        })
     }
 
     fn infer_item(
@@ -547,30 +549,34 @@ impl Typer {
         Ok(ty_fn)
     }
 
+    fn infer_function_decl(
+        &mut self,
+        function_decl: &FnDecl,
+    ) -> TypeCheckResult<(ThinVec<TyFnParam>, Arc<Type>)> {
+        let params = self.infer_function_params(&function_decl.params)?;
+
+        let return_ty = match function_decl.return_ty {
+            FnReturnTy::Unit => self.unit_ty.clone(),
+            FnReturnTy::Ty(ref ty) => self.infer_ty(*ty.clone())?,
+        };
+
+        Ok((params, return_ty))
+    }
+
     fn infer_function_params(
-        &self,
+        &mut self,
         params: &ThinVec<FnParam>,
     ) -> TypeCheckResult<ThinVec<TyFnParam>> {
-        Ok(params
+        params
             .iter()
-            .map(|param| TyFnParam {
-                name: param.name.clone(),
-                ty: Arc::new(Type::UserDefined {
-                    module: "std::prelude".into(),
-                    name: match &param.ty.kind {
-                        TyKind::Path(path) => {
-                            let (PathSegment { ident }, _) = path.segments.split_last().unwrap();
-
-                            ident.to_string().into()
-                        }
-                        TyKind::Fn(fn_ty) => {
-                            todo!()
-                        }
-                    },
-                }),
-                span: param.span,
+            .map(|param| {
+                Ok(TyFnParam {
+                    name: param.name.clone(),
+                    ty: self.infer_ty(*param.ty.clone())?,
+                    span: param.span,
+                })
             })
-            .collect::<ThinVec<_>>())
+            .collect::<Result<ThinVec<_>, _>>()
     }
 
     fn infer_struct_decl(&self, struct_decl: &StructDecl) -> TypeCheckResult<TyStructDecl> {
