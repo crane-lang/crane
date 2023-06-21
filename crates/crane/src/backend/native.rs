@@ -662,13 +662,32 @@ impl NativeBackend {
             _ => todo!(),
         };
 
-        if let Some(callee) = caller_params.iter().find(|param| param.name.name == callee_name.to_string()) {
+        if let Some(callee) = caller_params
+            .iter()
+            .find(|param| param.name.name == callee_name.to_string())
+        {
             println!("Found callee as param: {:?}", callee);
-            dbg!(&locals);
+
+            let function_type = Self::to_llvm_type(context, callee.ty.clone()).into_function_type();
+
+            let function_ptr =
+                builder.build_alloca(function_type.ptr_type(AddressSpace::default()), "blah");
+
+            let i64_type = context.i64_type();
+
+            return Ok(builder.build_indirect_call(
+                function_type,
+                function_ptr,
+                &[
+                    i64_type.const_int(5, false).as_basic_value_enum().into(),
+                    i64_type.const_int(7, false).as_basic_value_enum().into(),
+                ],
+                &callee.name.name,
+            ));
         }
 
         if let Some(callee) = module.get_function(&callee_name.to_string()) {
-            let args: Vec<BasicMetadataValueEnum> = args
+            let args = args
                 .into_iter()
                 .enumerate()
                 .map(|(arg_index, arg)| match arg.kind {
@@ -703,6 +722,18 @@ impl NativeBackend {
                             .or_else(|| {
                                 locals.get(&path).map(|local| {
                                     builder.build_load(callee_param.get_type(), *local, "load")
+                                })
+                            })
+                            .or_else(|| {
+                                module.get_function(&path.to_string()).map(|function| {
+                                    builder.build_load(
+                                        function.get_type().ptr_type(AddressSpace::default()),
+                                        builder.build_alloca(
+                                            function.get_type().ptr_type(AddressSpace::default()),
+                                            "blah",
+                                        ),
+                                        "load",
+                                    )
                                 })
                             })
                             .unwrap_or_else(|| panic!("Variable `{}` not found.", path));
