@@ -16,11 +16,93 @@ union Bool {
 pub fn main() {
     let twenty_three = 23
 
-    let sum = do_add(int_add, twenty_three, 1)
+    println("Hey")
 
+    foo::do_foo()
+    foo::bar::do_bar()
+
+    print("twenty_three = ")
+    println(int_to_string(twenty_three))
+    println(" ")
+
+    let sum = do_add(int_add, twenty_three, 1)
+    print("twenty_three + 1 = ")
     println(int_to_string(sum))
+    println(" ")
+
+    let greeting = "Hey"
+
+    print("greeting = ")
+    println(greeting)
+    println(" ")
+
+    greet("world")
+    greet("trees")
+    greet("everyone")
+    println("")
+
+    print("This value is always ")
+    println(int_to_string(always_3()))
+    println("")
+
+    let also_always_3 = always_3()
+    print("This value is also always ")
+    println(int_to_string(also_always_3))
+    println("")
+
+    let ten = int_add(also_always_3, 7)
+    print("This value should be 10: ")
+    println(int_to_string(ten))
+    println("")
+
+    add_and_print(1, 1)
+    add_and_print(2, 2)
+    add_and_print(3, 3)
+    print("7 + 5 = ")
+    println(int_to_string(add_5(7)))
+}
+
+fn always_3() -> Uint64 {
+    3
+}
+
+fn add_5(value: Uint64) -> Uint64 {
+    int_add(value, 5)
 }
 
 fn do_add(add: Fn(Uint64, Uint64) -> Uint64, x: Uint64, y: Uint64) -> Uint64 {
     add(x, y)
+}
+
+fn greet(name: String) {
+    join("Hello", name)
+    print("!")
+    println("")
+}
+
+fn join(a: String, b: String) {
+    print(a)
+    print(", ")
+    print(b)
+}
+
+fn add_and_print(a: Uint64, b: Uint64) {
+    print(int_to_string(a))
+    print(" + ")
+    print(int_to_string(b))
+    print(" = ")
+    print(int_to_string(int_add(a, b)))
+    println("")
+}
+
+mod foo {
+    fn do_foo() {
+        println("Hello from `foo`")
+    }
+
+    mod bar {
+        fn do_bar() {
+            println("Hello from `bar`")
+        }
+    }
 }

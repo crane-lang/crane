@@ -9,12 +9,9 @@ use inkwell::passes::PassManager;
 use inkwell::targets::{
     CodeModel, FileType, InitializationConfig, RelocMode, Target, TargetTriple,
 };
-use inkwell::types::{
-    AnyType, AnyTypeEnum, BasicMetadataTypeEnum, BasicType, BasicTypeEnum, FunctionType,
-};
+use inkwell::types::{AnyType, AnyTypeEnum, BasicMetadataTypeEnum, BasicType};
 use inkwell::values::{
-    BasicMetadataValueEnum, BasicValue, BasicValueEnum, CallSiteValue, FunctionValue, GlobalValue,
-    IntValue, PointerValue,
+    BasicValue, BasicValueEnum, CallSiteValue, FunctionValue, GlobalValue, IntValue, PointerValue,
 };
 use inkwell::{AddressSpace, OptimizationLevel};
 use smol_str::SmolStr;
@@ -404,9 +401,9 @@ impl NativeBackend {
             AnyTypeEnum::ArrayType(array_type) => BasicMetadataTypeEnum::ArrayType(array_type),
             AnyTypeEnum::FloatType(float_type) => BasicMetadataTypeEnum::FloatType(float_type),
             AnyTypeEnum::IntType(int_type) => BasicMetadataTypeEnum::IntType(int_type),
-            AnyTypeEnum::PointerType(_) => todo!(),
-            AnyTypeEnum::StructType(_) => todo!(),
-            AnyTypeEnum::VectorType(_) => todo!(),
+            AnyTypeEnum::PointerType(ptr_type) => BasicMetadataTypeEnum::PointerType(ptr_type),
+            AnyTypeEnum::StructType(struct_type) => BasicMetadataTypeEnum::StructType(struct_type),
+            AnyTypeEnum::VectorType(vector_type) => BasicMetadataTypeEnum::VectorType(vector_type),
             AnyTypeEnum::VoidType(_) => todo!(),
             AnyTypeEnum::FunctionType(function_type) => {
                 BasicMetadataTypeEnum::PointerType(function_type.ptr_type(AddressSpace::default()))
