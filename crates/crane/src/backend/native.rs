@@ -737,14 +737,10 @@ impl NativeBackend {
                             })
                             .or_else(|| {
                                 module.get_function(&path.to_string()).map(|function| {
-                                    builder.build_load(
-                                        function.get_type().ptr_type(AddressSpace::default()),
-                                        builder.build_alloca(
-                                            function.get_type().ptr_type(AddressSpace::default()),
-                                            "blah",
-                                        ),
-                                        "load",
-                                    )
+                                    function
+                                        .as_global_value()
+                                        .as_pointer_value()
+                                        .as_basic_value_enum()
                                 })
                             })
                             .unwrap_or_else(|| panic!("Variable `{}` not found.", path));
