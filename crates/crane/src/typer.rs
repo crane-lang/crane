@@ -292,9 +292,9 @@ impl Typer {
             match item.kind {
                 ItemKind::Use(_) => {}
                 ItemKind::Fn(ref fun) => {
-                    let typed_params = self.infer_function_params(&fun.params)?;
+                    let typed_params = self.infer_function_params(&fun.decl.params)?;
 
-                    let return_ty = match &fun.return_ty {
+                    let return_ty = match &fun.decl.return_ty {
                         FnReturnTy::Ty(ty) => match &ty.kind {
                             TyKind::Path(path) => {
                                 let (PathSegment { ident }, _) =
@@ -305,6 +305,9 @@ impl Typer {
                                     module: "std::prelude".into(),
                                     name: ident.to_string().into(),
                                 })
+                            }
+                            TyKind::Fn(fn_ty) => {
+                                todo!()
                             }
                         },
                         FnReturnTy::Unit => self.unit_ty.clone(),
@@ -492,7 +495,7 @@ impl Typer {
     fn infer_function(&mut self, path: &TyPath, fun: Fn) -> TypeCheckResult<TyFn> {
         let (_, return_ty) = self.ensure_function_exists(&path)?;
 
-        let params = self.infer_function_params(&fun.params)?;
+        let params = self.infer_function_params(&fun.decl.params)?;
 
         self.scopes
             .push(HashMap::from_iter(params.clone().into_iter().map(
@@ -560,6 +563,9 @@ impl Typer {
 
                             ident.to_string().into()
                         }
+                        TyKind::Fn(fn_ty) => {
+                            todo!()
+                        }
                     },
                 }),
                 span: param.span,
@@ -626,6 +632,9 @@ impl Typer {
                                     path.segments.split_last().unwrap();
 
                                 ident.clone()
+                            }
+                            TyKind::Fn(fn_ty) => {
+                                todo!()
                             }
                         },
                         span: field.span,

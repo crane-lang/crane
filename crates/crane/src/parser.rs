@@ -243,6 +243,14 @@ where
         Ok(ident)
     }
 
+    /// Returns whether the next token is an [`Ident`].
+    ///
+    /// If the next token is not an [`Ident`] this method will add the token to the list
+    /// of expected tokens.
+    fn check_ident(&mut self) -> bool {
+        self.check_or_expected(self.token.is_ident(), ExpectedToken::Ident)
+    }
+
     /// Returns whether the next token is a [`Path`].
     ///
     /// If the next token is not a [`Path`] this method will add the token to the list
