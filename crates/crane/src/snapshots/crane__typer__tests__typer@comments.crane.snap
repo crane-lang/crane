@@ -50,9 +50,15 @@ Ok:
                               start: 38
                               end: 45
                             ty:
-                              UserDefined:
-                                module: "?"
-                                name: "?"
+                              Fn:
+                                args:
+                                  - UserDefined:
+                                      module: "std::prelude"
+                                      name: String
+                                return_ty:
+                                  UserDefined:
+                                    module: "std::prelude"
+                                    name: ()
                           args:
                             - kind:
                                 Call:
@@ -72,9 +78,12 @@ Ok:
                                       start: 46
                                       end: 57
                                     ty:
-                                      UserDefined:
-                                        module: "?"
-                                        name: "?"
+                                      Fn:
+                                        args: []
+                                        return_ty:
+                                          UserDefined:
+                                            module: "std::prelude"
+                                            name: String
                                   args: []
                               span:
                                 start: 46

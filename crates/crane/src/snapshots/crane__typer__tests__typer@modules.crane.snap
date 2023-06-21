@@ -62,9 +62,15 @@ Ok:
                               start: 85
                               end: 90
                             ty:
-                              UserDefined:
-                                module: "?"
-                                name: "?"
+                              Fn:
+                                args:
+                                  - UserDefined:
+                                      module: "std::prelude"
+                                      name: String
+                                return_ty:
+                                  UserDefined:
+                                    module: "std::prelude"
+                                    name: ()
                           args:
                             - kind:
                                 Literal:
@@ -120,9 +126,15 @@ Ok:
                               start: 111
                               end: 118
                             ty:
-                              UserDefined:
-                                module: "?"
-                                name: "?"
+                              Fn:
+                                args:
+                                  - UserDefined:
+                                      module: "std::prelude"
+                                      name: String
+                                return_ty:
+                                  UserDefined:
+                                    module: "std::prelude"
+                                    name: ()
                           args:
                             - kind:
                                 Call:
@@ -152,9 +164,15 @@ Ok:
                                       start: 119
                                       end: 132
                                     ty:
-                                      UserDefined:
-                                        module: "?"
-                                        name: "?"
+                                      Fn:
+                                        args:
+                                          - UserDefined:
+                                              module: "std::prelude"
+                                              name: Uint64
+                                        return_ty:
+                                          UserDefined:
+                                            module: "std::prelude"
+                                            name: String
                                   args:
                                     - kind:
                                         Call:
@@ -184,9 +202,12 @@ Ok:
                                               start: 133
                                               end: 159
                                             ty:
-                                              UserDefined:
-                                                module: "?"
-                                                name: "?"
+                                              Fn:
+                                                args: []
+                                                return_ty:
+                                                  UserDefined:
+                                                    module: "std::prelude"
+                                                    name: Uint64
                                           args: []
                                       span:
                                         start: 133
