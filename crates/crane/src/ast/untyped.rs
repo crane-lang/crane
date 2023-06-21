@@ -283,5 +283,7 @@ mod tests {
         insta::assert_snapshot!(size_of::<ItemKind>().to_string(), @"32");
         insta::assert_snapshot!(size_of::<Stmt>().to_string(), @"32");
         insta::assert_snapshot!(size_of::<StmtKind>().to_string(), @"16");
+        insta::assert_snapshot!(size_of::<Ty>().to_string(), @"40");
+        insta::assert_snapshot!(size_of::<TyKind>().to_string(), @"24");
     }
 }
