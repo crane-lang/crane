@@ -713,10 +713,29 @@ impl Typer {
                     span: path.span,
                 };
 
+                // Check the variable's path against the items brought into scope by `use`.
+                // If we find an item that's been brought into scope we can use that as the alias.
+                let path = if let Some(use_path) = self.use_map.get(&path) {
+                    use_path.clone()
+                } else {
+                    path
+                };
+
                 let ty = self
                     .scopes
                     .last()
                     .and_then(|scope| scope.get(&path).cloned());
+
+                let ty = ty.or_else(|| {
+                    let function = self.ensure_function_exists(&path).ok();
+
+                    function.map(|(params, return_ty)| {
+                        Arc::new(Type::Fn {
+                            args: params.iter().map(|param| param.ty.clone()).collect(),
+                            return_ty,
+                        })
+                    })
+                });
 
                 Ok(TyExpr {
                     kind: TyExprKind::Variable(path),
