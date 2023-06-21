@@ -90,8 +90,9 @@ Ok:
         end: 0
   - kind:
       Fn:
-        params: []
-        return_ty: Unit
+        decl:
+          params: []
+          return_ty: Unit
         body:
           - kind:
               Expr:
@@ -219,23 +220,24 @@ Ok:
                       - items:
                           - kind:
                               Fn:
-                                params: []
-                                return_ty:
-                                  Ty:
-                                    kind:
-                                      Path:
-                                        segments:
-                                          - ident:
-                                              name: Uint64
-                                              span:
-                                                start: 224
-                                                end: 230
-                                        span:
-                                          start: 224
-                                          end: 230
-                                    span:
-                                      start: 224
-                                      end: 230
+                                decl:
+                                  params: []
+                                  return_ty:
+                                    Ty:
+                                      kind:
+                                        Path:
+                                          segments:
+                                            - ident:
+                                                name: Uint64
+                                                span:
+                                                  start: 224
+                                                  end: 230
+                                          span:
+                                            start: 224
+                                            end: 230
+                                      span:
+                                        start: 224
+                                        end: 230
                                 body:
                                   - kind:
                                       Expr:

@@ -34,8 +34,9 @@ Ok:
         end: 0
   - kind:
       Fn:
-        params: []
-        return_ty: Unit
+        decl:
+          params: []
+          return_ty: Unit
         body:
           - kind:
               Expr:
@@ -91,23 +92,24 @@ Ok:
         end: 29
   - kind:
       Fn:
-        params: []
-        return_ty:
-          Ty:
-            kind:
-              Path:
-                segments:
-                  - ident:
-                      name: String
-                      span:
-                        start: 122
-                        end: 128
-                span:
-                  start: 122
-                  end: 128
-            span:
-              start: 122
-              end: 128
+        decl:
+          params: []
+          return_ty:
+            Ty:
+              kind:
+                Path:
+                  segments:
+                    - ident:
+                        name: String
+                        span:
+                          start: 122
+                          end: 128
+                  span:
+                    start: 122
+                    end: 128
+              span:
+                start: 122
+                end: 128
         body:
           - kind:
               Expr:

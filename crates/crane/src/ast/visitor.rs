@@ -1,7 +1,7 @@
 use crate::ast::{
-    Expr, ExprKind, FieldDecl, Fn, FnParam, FnReturnTy, Ident, Item, ItemKind, Local, ModuleDecl,
-    Path, PathSegment, Stmt, StmtKind, StructDecl, Ty, UnionDecl, UseTree, UseTreeKind, Variant,
-    VariantData,
+    Expr, ExprKind, FieldDecl, Fn, FnDecl, FnParam, FnReturnTy, Ident, Item, ItemKind, Local,
+    ModuleDecl, Path, PathSegment, Stmt, StmtKind, StructDecl, Ty, UnionDecl, UseTree, UseTreeKind,
+    Variant, VariantData,
 };
 
 pub trait Visitor: Sized {
@@ -27,6 +27,10 @@ pub trait Visitor: Sized {
 
     fn visit_fn(&mut self, fun: &Fn) {
         walk_fn(self, fun);
+    }
+
+    fn visit_fn_decl(&mut self, fun_decl: &FnDecl) {
+        walk_fn_decl(self, fun_decl);
     }
 
     fn visit_fn_param(&mut self, param: &FnParam) {
@@ -115,15 +119,19 @@ pub fn walk_path_segment<V: Visitor>(visitor: &mut V, path_segment: &PathSegment
 }
 
 pub fn walk_fn<V: Visitor>(visitor: &mut V, fun: &Fn) {
-    for param in &fun.params {
-        visitor.visit_fn_param(param);
-    }
-
-    visitor.visit_fn_return_ty(&fun.return_ty);
+    visitor.visit_fn_decl(&fun.decl);
 
     for stmt in &fun.body {
         visitor.visit_stmt(stmt);
     }
+}
+
+pub fn walk_fn_decl<V: Visitor>(visitor: &mut V, fun_decl: &FnDecl) {
+    for param in &fun_decl.params {
+        visitor.visit_fn_param(param);
+    }
+
+    visitor.visit_fn_return_ty(&fun_decl.return_ty);
 }
 
 pub fn walk_fn_param<V: Visitor>(visitor: &mut V, param: &FnParam) {

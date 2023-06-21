@@ -1,8 +1,8 @@
 use thin_vec::ThinVec;
 
 use crate::ast::{
-    keywords, FieldDecl, Fn, FnParam, FnReturnTy, Ident, InlineModuleDecl, Item, ItemKind, Module,
-    ModuleDecl, Path, PathSegment, StructDecl, UnionDecl, UseTree, UseTreeKind, Variant,
+    keywords, FieldDecl, Fn, FnDecl, FnParam, FnReturnTy, Ident, InlineModuleDecl, Item, ItemKind,
+    Module, ModuleDecl, Path, PathSegment, StructDecl, UnionDecl, UseTree, UseTreeKind, Variant,
     VariantData, DUMMY_SPAN,
 };
 use crate::lexer::token::{Token, TokenKind};
@@ -139,12 +139,16 @@ where
         Ok((
             ident,
             Fn {
-                params,
-                return_ty,
+                decl: Box::new(FnDecl { params, return_ty }),
                 body,
             },
         ))
     }
+
+    // #[tracing::instrument(skip(self))]
+    // fn parse_fn_decl(&mut self) -> ParseResult<(Ident, Fn)> {
+
+    // }
 
     #[tracing::instrument(skip(self))]
     fn parse_struct_decl(&mut self) -> ParseResult<(Ident, StructDecl)> {

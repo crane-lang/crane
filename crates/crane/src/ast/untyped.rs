@@ -19,11 +19,20 @@ pub struct PathSegment {
     pub ident: Ident,
 }
 
+/// A function type.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FnTy {
+    pub decl: Box<FnDecl>,
+}
+
 /// The kind of a [`Ty`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TyKind {
     /// A type referenced by its path.
     Path(Path),
+
+    /// A function type.
+    Fn(Box<FnTy>),
 }
 
 /// A type.
@@ -128,9 +137,14 @@ pub struct UseTree {
 /// A function definition.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Fn {
+    pub decl: Box<FnDecl>,
+    pub body: ThinVec<Stmt>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FnDecl {
     pub params: ThinVec<FnParam>,
     pub return_ty: FnReturnTy,
-    pub body: ThinVec<Stmt>,
 }
 
 /// A parameter to a [`Fn`].
@@ -278,7 +292,7 @@ mod tests {
 
         insta::assert_snapshot!(size_of::<Expr>().to_string(), @"48");
         insta::assert_snapshot!(size_of::<ExprKind>().to_string(), @"32");
-        insta::assert_snapshot!(size_of::<Fn>().to_string(), @"24");
+        insta::assert_snapshot!(size_of::<Fn>().to_string(), @"16");
         insta::assert_snapshot!(size_of::<Item>().to_string(), @"72");
         insta::assert_snapshot!(size_of::<ItemKind>().to_string(), @"32");
         insta::assert_snapshot!(size_of::<Stmt>().to_string(), @"32");
