@@ -2,6 +2,7 @@ mod error;
 mod expr;
 mod item;
 mod stmt;
+mod ty;
 
 pub use error::*;
 

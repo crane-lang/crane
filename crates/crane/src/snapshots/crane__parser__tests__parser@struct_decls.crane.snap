@@ -13,7 +13,17 @@ Ok:
                 start: 19
                 end: 20
             ty:
-              name: Uint64
+              kind:
+                Path:
+                  segments:
+                    - ident:
+                        name: Uint64
+                        span:
+                          start: 22
+                          end: 28
+                  span:
+                    start: 22
+                    end: 28
               span:
                 start: 22
                 end: 28
@@ -26,7 +36,17 @@ Ok:
                 start: 34
                 end: 35
             ty:
-              name: Uint64
+              kind:
+                Path:
+                  segments:
+                    - ident:
+                        name: Uint64
+                        span:
+                          start: 37
+                          end: 43
+                  span:
+                    start: 37
+                    end: 43
               span:
                 start: 37
                 end: 43

@@ -1,9 +1,9 @@
 use thin_vec::ThinVec;
 
 use crate::ast::{
-    keywords, FieldDecl, Fn, FnParam, Ident, InlineModuleDecl, Item, ItemKind, Module, ModuleDecl,
-    Path, PathSegment, StructDecl, UnionDecl, UseTree, UseTreeKind, Variant, VariantData,
-    DUMMY_SPAN,
+    keywords, FieldDecl, Fn, FnParam, FnReturnTy, Ident, InlineModuleDecl, Item, ItemKind, Module,
+    ModuleDecl, Path, PathSegment, StructDecl, UnionDecl, UseTree, UseTreeKind, Variant,
+    VariantData, DUMMY_SPAN,
 };
 use crate::lexer::token::{Token, TokenKind};
 use crate::lexer::LexError;
@@ -100,13 +100,13 @@ where
 
                 self.consume(TokenKind::Colon);
 
-                let ty_annotation = self.parse_ident()?;
+                let ty = self.parse_ty()?;
 
                 let span = param_name.span;
 
                 params.push(FnParam {
                     name: param_name,
-                    ty: ty_annotation,
+                    ty: Box::new(ty),
                     span,
                 });
 
@@ -119,9 +119,11 @@ where
         self.consume(TokenKind::CloseParen);
 
         let return_ty = if self.consume(TokenKind::RightArrow) {
-            Some(self.parse_ident()?)
+            let ty = self.parse_ty()?;
+
+            FnReturnTy::Ty(Box::new(ty))
         } else {
-            None
+            FnReturnTy::Unit
         };
 
         self.consume(TokenKind::OpenBrace);
@@ -158,13 +160,13 @@ where
 
                 self.consume(TokenKind::Colon);
 
-                let ty_annotation = self.parse_ident()?;
+                let ty = self.parse_ty()?;
 
                 let span = field_name.span;
 
                 fields.push(FieldDecl {
                     name: Some(field_name),
-                    ty: ty_annotation,
+                    ty: Box::new(ty),
                     span,
                 });
 

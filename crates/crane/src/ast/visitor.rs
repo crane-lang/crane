@@ -1,12 +1,13 @@
 use crate::ast::{
-    Expr, ExprKind, FieldDecl, Fn, FnParam, Ident, Item, ItemKind, Local, ModuleDecl, Path,
-    PathSegment, Stmt, StmtKind, StructDecl, UnionDecl, UseTree, UseTreeKind, Variant, VariantData,
+    Expr, ExprKind, FieldDecl, Fn, FnParam, FnReturnTy, Ident, Item, ItemKind, Local, ModuleDecl,
+    Path, PathSegment, Stmt, StmtKind, StructDecl, Ty, UnionDecl, UseTree, UseTreeKind, Variant,
+    VariantData,
 };
 
 pub trait Visitor: Sized {
     fn visit_ident(&mut self, _ident: &Ident) {}
 
-    fn visit_ty(&mut self, _ty: &Ident) {}
+    fn visit_ty(&mut self, _ty: &Ty) {}
 
     fn visit_item(&mut self, item: &Item) {
         walk_item(self, item);
@@ -30,6 +31,10 @@ pub trait Visitor: Sized {
 
     fn visit_fn_param(&mut self, param: &FnParam) {
         walk_fn_param(self, param);
+    }
+
+    fn visit_fn_return_ty(&mut self, return_ty: &FnReturnTy) {
+        walk_fn_return_ty(self, return_ty);
     }
 
     fn visit_struct_decl(&mut self, struct_decl: &StructDecl) {
@@ -114,6 +119,8 @@ pub fn walk_fn<V: Visitor>(visitor: &mut V, fun: &Fn) {
         visitor.visit_fn_param(param);
     }
 
+    visitor.visit_fn_return_ty(&fun.return_ty);
+
     for stmt in &fun.body {
         visitor.visit_stmt(stmt);
     }
@@ -122,6 +129,15 @@ pub fn walk_fn<V: Visitor>(visitor: &mut V, fun: &Fn) {
 pub fn walk_fn_param<V: Visitor>(visitor: &mut V, param: &FnParam) {
     visitor.visit_ident(&param.name);
     visitor.visit_ty(&param.ty);
+}
+
+pub fn walk_fn_return_ty<V: Visitor>(visitor: &mut V, return_ty: &FnReturnTy) {
+    match &return_ty {
+        FnReturnTy::Ty(ty) => {
+            visitor.visit_ty(ty);
+        }
+        FnReturnTy::Unit => {}
+    }
 }
 
 pub fn walk_struct_decl<V: Visitor>(visitor: &mut V, struct_decl: &StructDecl) {

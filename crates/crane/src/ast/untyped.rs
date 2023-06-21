@@ -19,6 +19,20 @@ pub struct PathSegment {
     pub ident: Ident,
 }
 
+/// The kind of a [`Ty`].
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum TyKind {
+    /// A type referenced by its path.
+    Path(Path),
+}
+
+/// A type.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Ty {
+    pub kind: TyKind,
+    pub span: Span,
+}
+
 /// The kind of an [`Expr`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ExprKind {
@@ -94,7 +108,7 @@ impl LocalKind {
 pub struct Local {
     pub kind: LocalKind,
     pub name: Ident,
-    pub ty: Option<Box<Ident>>,
+    pub ty: Option<Box<Ty>>,
     pub span: Span,
 }
 
@@ -115,7 +129,7 @@ pub struct UseTree {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Fn {
     pub params: ThinVec<FnParam>,
-    pub return_ty: Option<Ident>,
+    pub return_ty: FnReturnTy,
     pub body: ThinVec<Stmt>,
 }
 
@@ -123,8 +137,20 @@ pub struct Fn {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FnParam {
     pub name: Ident,
-    pub ty: Ident,
+    pub ty: Box<Ty>,
     pub span: Span,
+}
+
+/// The return type of a [`Fn`].
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum FnReturnTy {
+    /// The unit type `()`.
+    ///
+    /// This is the default return type if one is not specified.
+    Unit,
+
+    /// Any other type.
+    Ty(Box<Ty>),
 }
 
 /// A statement.
@@ -138,7 +164,7 @@ pub struct Stmt {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FieldDecl {
     pub name: Option<Ident>,
-    pub ty: Ident,
+    pub ty: Box<Ty>,
     pub span: Span,
 }
 
@@ -252,10 +278,12 @@ mod tests {
 
         insta::assert_snapshot!(size_of::<Expr>().to_string(), @"48");
         insta::assert_snapshot!(size_of::<ExprKind>().to_string(), @"32");
-        insta::assert_snapshot!(size_of::<Fn>().to_string(), @"56");
+        insta::assert_snapshot!(size_of::<Fn>().to_string(), @"24");
         insta::assert_snapshot!(size_of::<Item>().to_string(), @"72");
         insta::assert_snapshot!(size_of::<ItemKind>().to_string(), @"32");
         insta::assert_snapshot!(size_of::<Stmt>().to_string(), @"32");
         insta::assert_snapshot!(size_of::<StmtKind>().to_string(), @"16");
+        insta::assert_snapshot!(size_of::<Ty>().to_string(), @"40");
+        insta::assert_snapshot!(size_of::<TyKind>().to_string(), @"24");
     }
 }
