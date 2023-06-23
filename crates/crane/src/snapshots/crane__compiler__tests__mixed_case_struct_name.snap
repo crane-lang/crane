@@ -1,0 +1,14 @@
+---
+source: crates/crane/src/compiler.rs
+expression: "&stderr"
+---
+Error: A type error occurred.
+   ╭─[mixed_case.crane:1:2]
+   │
+ 1 │ struct XMLHttpRequest {
+   │        ───────┬──────  
+   │               ╰──────── Struct names must be written in PascalCase.
+   │               │        
+   │               ╰──────── Try writing it as `XmlHttpRequest` instead.
+───╯
+
