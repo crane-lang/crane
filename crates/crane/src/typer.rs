@@ -42,6 +42,7 @@ pub type TypeCheckResult<T> = Result<T, TypeError>;
 #[derive(Default)]
 struct ModuleItems {
     pub functions: HashMap<Ident, (ThinVec<TyFnParam>, Arc<Type>)>,
+    pub structs: HashMap<Ident, TyStructDecl>,
     pub unions: HashMap<Ident, TyUnionDecl>,
 }
 
@@ -163,6 +164,28 @@ impl Typer {
             },
             span: path.span,
         })
+    }
+
+    fn register_struct(
+        &mut self,
+        module_path: TyPath,
+        name: Ident,
+        struct_decl: TyStructDecl,
+    ) -> TypeCheckResult<()> {
+        if name.name != name.name.to_pascal_case() {
+            return Err(TypeError {
+                kind: TypeErrorKind::InvalidTypeName {
+                    reason: "Struct names must be written in PascalCase.".to_string(),
+                    suggestion: name.name.to_pascal_case().into(),
+                },
+                span: name.span,
+            })?;
+        }
+
+        let module = self.modules.entry(module_path).or_default();
+        module.structs.insert(name, struct_decl);
+
+        Ok(())
     }
 
     fn register_union(
@@ -335,7 +358,18 @@ impl Typer {
                         return_ty,
                     )?;
                 }
-                ItemKind::Struct(_) => {}
+                ItemKind::Struct(ref struct_decl) => {
+                    let typed_struct_decl = self.infer_struct_decl(&struct_decl)?;
+
+                    let path_segments = prefix.cloned().unwrap_or(ThinVec::new());
+
+                    let module_path = TyPath {
+                        segments: path_segments,
+                        span: DUMMY_SPAN,
+                    };
+
+                    self.register_struct(module_path, item.name.clone(), typed_struct_decl)?;
+                }
                 ItemKind::Union(ref union_decl) => {
                     let typed_union_decl = self.infer_union_decl(&union_decl)?;
 

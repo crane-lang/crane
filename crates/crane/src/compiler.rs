@@ -295,6 +295,62 @@ fn XMLHttpRequest() {}
     }
 
     #[test]
+    pub fn test_snake_case_struct_name() {
+        let mut compiler = Compiler::new();
+
+        let params = CompileParams {
+            input: Input::String {
+                filename: "snake_case.crane".into(),
+                input: r#"
+struct snake_cased_struct {
+    foo: Uint64,
+    bar: Uint64,
+}
+                "#
+                .trim()
+                .to_string(),
+            },
+        };
+
+        let mut stderr = Vec::new();
+
+        let _ = compiler.compile(&mut stderr, params);
+
+        let stderr = strip_ansi_escapes::strip(stderr).unwrap();
+        let stderr = std::str::from_utf8(&stderr).unwrap();
+
+        insta::assert_snapshot!(&stderr);
+    }
+
+    #[test]
+    pub fn test_mixed_case_struct_name() {
+        let mut compiler = Compiler::new();
+
+        let params = CompileParams {
+            input: Input::String {
+                filename: "mixed_case.crane".into(),
+                input: r#"
+struct XMLHttpRequest {
+    foo: Uint64,
+    bar: Uint64,
+}
+                "#
+                .trim()
+                .to_string(),
+            },
+        };
+
+        let mut stderr = Vec::new();
+
+        let _ = compiler.compile(&mut stderr, params);
+
+        let stderr = strip_ansi_escapes::strip(stderr).unwrap();
+        let stderr = std::str::from_utf8(&stderr).unwrap();
+
+        insta::assert_snapshot!(&stderr);
+    }
+
+    #[test]
     pub fn test_snake_case_union_name() {
         let mut compiler = Compiler::new();
 
