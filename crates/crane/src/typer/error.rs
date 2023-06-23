@@ -16,6 +16,10 @@ pub enum TypeErrorKind {
         reason: String,
         suggestion: SmolStr,
     },
+    InvalidTypeName {
+        reason: String,
+        suggestion: SmolStr,
+    },
     UnknownModule {
         path: TyPath,
         options: ThinVec<TyPath>,
