@@ -97,6 +97,23 @@ impl Compiler {
                                     )
                                     .finish()
                             }
+                            TypeErrorKind::InvalidTypeName { reason, suggestion } => {
+                                Report::build(ReportKind::Error, &filepath, 1)
+                                    .with_message("A type error occurred.")
+                                    .with_label(
+                                        Label::new(SourceSpan::from((&filepath, span)))
+                                            .with_message(reason)
+                                            .with_color(Color::Red),
+                                    )
+                                    .with_label(
+                                        Label::new(SourceSpan::from((&filepath, span)))
+                                            .with_message(format!(
+                                                "Try writing it as `{suggestion}` instead."
+                                            ))
+                                            .with_color(Color::Cyan),
+                                    )
+                                    .finish()
+                            }
                             TypeErrorKind::UnknownModule { path, options } => {
                                 let report = Report::build(ReportKind::Error, &filepath, 1)
                                     .with_message("A type error occurred.")
@@ -261,6 +278,62 @@ fn inCamelCase() {}
 fn main() {}
 
 fn XMLHttpRequest() {}
+                "#
+                .trim()
+                .to_string(),
+            },
+        };
+
+        let mut stderr = Vec::new();
+
+        let _ = compiler.compile(&mut stderr, params);
+
+        let stderr = strip_ansi_escapes::strip(stderr).unwrap();
+        let stderr = std::str::from_utf8(&stderr).unwrap();
+
+        insta::assert_snapshot!(&stderr);
+    }
+
+    #[test]
+    pub fn test_snake_case_union_name() {
+        let mut compiler = Compiler::new();
+
+        let params = CompileParams {
+            input: Input::String {
+                filename: "snake_case.crane".into(),
+                input: r#"
+union snake_cased_union {
+    Foo,
+    Bar,
+}
+                "#
+                .trim()
+                .to_string(),
+            },
+        };
+
+        let mut stderr = Vec::new();
+
+        let _ = compiler.compile(&mut stderr, params);
+
+        let stderr = strip_ansi_escapes::strip(stderr).unwrap();
+        let stderr = std::str::from_utf8(&stderr).unwrap();
+
+        insta::assert_snapshot!(&stderr);
+    }
+
+    #[test]
+    pub fn test_mixed_case_union_name() {
+        let mut compiler = Compiler::new();
+
+        let params = CompileParams {
+            input: Input::String {
+                filename: "mixed_case.crane".into(),
+                input: r#"
+union XMLHttpRequest {
+    Foo,
+    Bar,
+}
                 "#
                 .trim()
                 .to_string(),

@@ -8,7 +8,7 @@ pub use r#type::*;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use heck::ToSnakeCase;
+use heck::{ToPascalCase, ToSnakeCase};
 use smol_str::SmolStr;
 use thin_vec::{thin_vec, ThinVec};
 
@@ -39,10 +39,14 @@ fn ty_to_string(ty: &Type) -> String {
 
 pub type TypeCheckResult<T> = Result<T, TypeError>;
 
-type ModuleFunctions = HashMap<Ident, (ThinVec<TyFnParam>, Arc<Type>)>;
+#[derive(Default)]
+struct ModuleItems {
+    pub functions: HashMap<Ident, (ThinVec<TyFnParam>, Arc<Type>)>,
+    pub unions: HashMap<Ident, TyUnionDecl>,
+}
 
 pub struct Typer {
-    modules: HashMap<TyPath, ModuleFunctions>,
+    modules: HashMap<TyPath, ModuleItems>,
     use_map: HashMap<TyPath, TyPath>,
     scopes: Vec<HashMap<TyPath, Arc<Type>>>,
 
@@ -83,7 +87,7 @@ impl Typer {
         // HACK: Register the functions from `std`.
         self.register_std()?;
 
-        self.perform_function_registration_pass(&package)?;
+        self.perform_item_registration_pass(&package)?;
 
         let mut typed_modules = ThinVec::new();
 
@@ -114,7 +118,7 @@ impl Typer {
         }
 
         let module = self.modules.entry(module_path).or_default();
-        module.insert(name, (params, return_ty));
+        module.functions.insert(name, (params, return_ty));
 
         Ok(())
     }
@@ -139,7 +143,7 @@ impl Typer {
             span: path.span,
         })?;
 
-        if let Some((params, return_ty)) = module.get(name) {
+        if let Some((params, return_ty)) = module.functions.get(name) {
             return Ok((params, return_ty.clone()));
         }
 
@@ -147,6 +151,7 @@ impl Typer {
             kind: TypeErrorKind::UnknownFunction {
                 path: path.clone(),
                 options: module
+                    .functions
                     .keys()
                     .map(|name| TyPath {
                         segments: thin_vec![TyPathSegment {
@@ -158,6 +163,28 @@ impl Typer {
             },
             span: path.span,
         })
+    }
+
+    fn register_union(
+        &mut self,
+        module_path: TyPath,
+        name: Ident,
+        union_decl: TyUnionDecl,
+    ) -> TypeCheckResult<()> {
+        if name.name != name.name.to_pascal_case() {
+            return Err(TypeError {
+                kind: TypeErrorKind::InvalidTypeName {
+                    reason: "Union names must be written in PascalCase.".to_string(),
+                    suggestion: name.name.to_pascal_case().into(),
+                },
+                span: name.span,
+            })?;
+        }
+
+        let module = self.modules.entry(module_path).or_default();
+        module.unions.insert(name, union_decl);
+
+        Ok(())
     }
 
     fn register_std(&mut self) -> TypeCheckResult<()> {
@@ -275,15 +302,15 @@ impl Typer {
         Ok(())
     }
 
-    fn perform_function_registration_pass(&mut self, package: &Package) -> TypeCheckResult<()> {
+    fn perform_item_registration_pass(&mut self, package: &Package) -> TypeCheckResult<()> {
         for module in &package.modules {
-            self.register_functions_in_module(None, module)?;
+            self.register_items_in_module(None, module)?;
         }
 
         Ok(())
     }
 
-    fn register_functions_in_module(
+    fn register_items_in_module(
         &mut self,
         prefix: Option<&ThinVec<TyPathSegment>>,
         module: &Module,
@@ -309,7 +336,18 @@ impl Typer {
                     )?;
                 }
                 ItemKind::Struct(_) => {}
-                ItemKind::Union(_) => {}
+                ItemKind::Union(ref union_decl) => {
+                    let typed_union_decl = self.infer_union_decl(&union_decl)?;
+
+                    let path_segments = prefix.cloned().unwrap_or(ThinVec::new());
+
+                    let module_path = TyPath {
+                        segments: path_segments,
+                        span: DUMMY_SPAN,
+                    };
+
+                    self.register_union(module_path, item.name.clone(), typed_union_decl)?;
+                }
                 ItemKind::Module(ref module_decl) => match *module_decl.clone() {
                     ModuleDecl::Loaded(module, InlineModuleDecl::Yes) => {
                         let mut path_segments = prefix.cloned().unwrap_or(ThinVec::new());
@@ -317,7 +355,7 @@ impl Typer {
                             ident: item.name.clone(),
                         });
 
-                        self.register_functions_in_module(Some(&path_segments), &module)?;
+                        self.register_items_in_module(Some(&path_segments), &module)?;
                     }
                     ModuleDecl::Loaded(_, InlineModuleDecl::No) => {}
                     ModuleDecl::Unloaded => {}
