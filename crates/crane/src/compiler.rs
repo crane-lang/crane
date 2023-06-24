@@ -180,6 +180,37 @@ impl Compiler {
 
                                 report.finish()
                             }
+                            TypeErrorKind::UnknownType { path, options } => {
+                                let report = Report::build(ReportKind::Error, &filepath, 1)
+                                    .with_message("A type error occurred.")
+                                    .with_label(
+                                        Label::new(SourceSpan::from((&filepath, span)))
+                                            .with_message(format!("Type `{path}` does not exist.",))
+                                            .with_color(Color::Red),
+                                    );
+
+                                let suggestion = options
+                                    .iter()
+                                    .sorted_by_key(|option| option.to_string())
+                                    .min_by_key(|option| {
+                                        strsim::levenshtein(&option.to_string(), &path.to_string())
+                                    });
+
+                                let report = if let Some(suggestion) = suggestion {
+                                    report.with_label(
+                                        Label::new(SourceSpan::from((&filepath, suggestion.span)))
+                                            .with_message(format!(
+                                                "There is a type with a similar name: `{}`.",
+                                                suggestion.clone()
+                                            ))
+                                            .with_color(Color::Cyan),
+                                    )
+                                } else {
+                                    report
+                                };
+
+                                report.finish()
+                            }
                             TypeErrorKind::Error(message) => {
                                 Report::build(ReportKind::Error, &filepath, 1)
                                     .with_message("A type error occurred.")

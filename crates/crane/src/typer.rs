@@ -188,6 +188,45 @@ impl Typer {
         Ok(())
     }
 
+    fn ensure_struct_exists(&self, path: &TyPath) -> TypeCheckResult<TyStructDecl> {
+        let (TyPathSegment { ident: name }, module_path_segments) =
+            path.segments.split_last().unwrap();
+
+        let module_path = TyPath {
+            segments: module_path_segments.into(),
+            span: path.span,
+        };
+
+        let module = self.modules.get(&module_path).ok_or_else(|| TypeError {
+            kind: TypeErrorKind::UnknownModule {
+                path: module_path,
+                options: self.modules.keys().cloned().collect::<ThinVec<_>>(),
+            },
+            span: path.span,
+        })?;
+
+        if let Some(struct_decl) = module.structs.get(name) {
+            return Ok(struct_decl.clone());
+        }
+
+        Err(TypeError {
+            kind: TypeErrorKind::UnknownType {
+                path: path.clone(),
+                options: module
+                    .structs
+                    .keys()
+                    .map(|name| TyPath {
+                        segments: thin_vec![TyPathSegment {
+                            ident: name.clone()
+                        }],
+                        span: name.span,
+                    })
+                    .collect::<ThinVec<_>>(),
+            },
+            span: path.span,
+        })
+    }
+
     fn register_union(
         &mut self,
         module_path: TyPath,
@@ -909,7 +948,23 @@ impl Typer {
                     span: expr.span,
                 })
             }
-            ExprKind::Struct(struct_expr) => todo!(),
+            ExprKind::Struct(struct_expr) => {
+                let path = TyPath {
+                    segments: struct_expr
+                        .path
+                        .segments
+                        .into_iter()
+                        .map(|segment| TyPathSegment {
+                            ident: segment.ident,
+                        })
+                        .collect::<ThinVec<_>>(),
+                    span: struct_expr.path.span,
+                };
+
+                let _struct_decl = self.ensure_struct_exists(&path)?;
+
+                todo!()
+            }
         }
     }
 
