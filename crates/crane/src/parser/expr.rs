@@ -95,6 +95,7 @@ where
                     args.push(param);
                 }
 
+                // TODO: Should this be a `CloseParen`?
                 if self.check_without_expect(TokenKind::CloseBrace) {
                     break;
                 }
@@ -133,6 +134,10 @@ where
                 });
 
                 if !self.consume(TokenKind::Comma) {
+                    break;
+                }
+
+                if self.check_without_expect(TokenKind::CloseBrace) {
                     break;
                 }
             }

@@ -1,0 +1,175 @@
+---
+source: crates/crane/src/parser.rs
+expression: parser.parse()
+input_file: crates/crane/src/snapshot_inputs/struct_expressions.crane
+---
+Ok:
+  - kind:
+      Struct:
+        Struct:
+          - name:
+              name: first_name
+              span:
+                start: 18
+                end: 28
+            ty:
+              kind:
+                Path:
+                  segments:
+                    - ident:
+                        name: String
+                        span:
+                          start: 30
+                          end: 36
+                  span:
+                    start: 30
+                    end: 36
+              span:
+                start: 30
+                end: 36
+            span:
+              start: 18
+              end: 28
+          - name:
+              name: last_name
+              span:
+                start: 42
+                end: 51
+            ty:
+              kind:
+                Path:
+                  segments:
+                    - ident:
+                        name: String
+                        span:
+                          start: 53
+                          end: 59
+                  span:
+                    start: 53
+                    end: 59
+              span:
+                start: 53
+                end: 59
+            span:
+              start: 42
+              end: 51
+          - name:
+              name: age
+              span:
+                start: 65
+                end: 68
+            ty:
+              kind:
+                Path:
+                  segments:
+                    - ident:
+                        name: Uint64
+                        span:
+                          start: 70
+                          end: 76
+                  span:
+                    start: 70
+                    end: 76
+              span:
+                start: 70
+                end: 76
+            span:
+              start: 65
+              end: 68
+    name:
+      name: User
+      span:
+        start: 7
+        end: 11
+  - kind:
+      Fn:
+        decl:
+          params: []
+          return_ty: Unit
+        body:
+          - kind:
+              Local:
+                kind:
+                  Init:
+                    kind:
+                      Struct:
+                        path:
+                          segments:
+                            - ident:
+                                name: User
+                                span:
+                                  start: 108
+                                  end: 112
+                          span:
+                            start: 108
+                            end: 112
+                        fields:
+                          - name:
+                              name: first_name
+                              span:
+                                start: 123
+                                end: 133
+                            expr:
+                              kind:
+                                Literal:
+                                  kind: String
+                                  value: "\"Elaine\""
+                              span:
+                                start: 135
+                                end: 143
+                            span:
+                              start: 123
+                              end: 143
+                          - name:
+                              name: last_name
+                              span:
+                                start: 153
+                                end: 162
+                            expr:
+                              kind:
+                                Literal:
+                                  kind: String
+                                  value: "\"Benes\""
+                              span:
+                                start: 164
+                                end: 171
+                            span:
+                              start: 153
+                              end: 171
+                          - name:
+                              name: age
+                              span:
+                                start: 181
+                                end: 184
+                            expr:
+                              kind:
+                                Literal:
+                                  kind: Integer
+                                  value: "27"
+                              span:
+                                start: 186
+                                end: 188
+                            span:
+                              start: 181
+                              end: 188
+                    span:
+                      start: 108
+                      end: 195
+                name:
+                  name: user
+                  span:
+                    start: 101
+                    end: 105
+                ty: ~
+                span:
+                  start: 101
+                  end: 105
+            span:
+              start: 101
+              end: 105
+    name:
+      name: main
+      span:
+        start: 84
+        end: 88
+

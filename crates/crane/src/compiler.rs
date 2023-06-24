@@ -436,4 +436,41 @@ union XMLHttpRequest {
 
         insta::assert_snapshot!(&stderr);
     }
+
+    #[test]
+    pub fn test_struct_expression() {
+        let mut compiler = Compiler::new();
+
+        let params = CompileParams {
+            input: Input::String {
+                filename: "mixed_case.crane".into(),
+                input: r#"
+struct User {
+    first_name: String,
+    last_name: String,
+    age: Uint64,
+}
+
+fn main() {
+    let user = User {
+        first_name: "Elaine",
+        last_name: "Benes",
+        age: 27,
+    }
+}
+                "#
+                .trim()
+                .to_string(),
+            },
+        };
+
+        let mut stderr = Vec::new();
+
+        let _ = compiler.compile(&mut stderr, params);
+
+        let stderr = strip_ansi_escapes::strip(stderr).unwrap();
+        let stderr = std::str::from_utf8(&stderr).unwrap();
+
+        insta::assert_snapshot!(&stderr);
+    }
 }

@@ -1,0 +1,246 @@
+---
+source: crates/crane/src/lexer.rs
+expression: "lexer.into_iter().collect::<Vec<_>>()"
+input_file: crates/crane/src/snapshot_inputs/struct_expressions.crane
+---
+- Ok:
+    kind: Ident
+    lexeme: struct
+    span:
+      start: 0
+      end: 6
+- Ok:
+    kind: Ident
+    lexeme: User
+    span:
+      start: 7
+      end: 11
+- Ok:
+    kind: OpenBrace
+    lexeme: "{"
+    span:
+      start: 12
+      end: 13
+- Ok:
+    kind: Ident
+    lexeme: first_name
+    span:
+      start: 18
+      end: 28
+- Ok:
+    kind: Colon
+    lexeme: ":"
+    span:
+      start: 28
+      end: 29
+- Ok:
+    kind: Ident
+    lexeme: String
+    span:
+      start: 30
+      end: 36
+- Ok:
+    kind: Comma
+    lexeme: ","
+    span:
+      start: 36
+      end: 37
+- Ok:
+    kind: Ident
+    lexeme: last_name
+    span:
+      start: 42
+      end: 51
+- Ok:
+    kind: Colon
+    lexeme: ":"
+    span:
+      start: 51
+      end: 52
+- Ok:
+    kind: Ident
+    lexeme: String
+    span:
+      start: 53
+      end: 59
+- Ok:
+    kind: Comma
+    lexeme: ","
+    span:
+      start: 59
+      end: 60
+- Ok:
+    kind: Ident
+    lexeme: age
+    span:
+      start: 65
+      end: 68
+- Ok:
+    kind: Colon
+    lexeme: ":"
+    span:
+      start: 68
+      end: 69
+- Ok:
+    kind: Ident
+    lexeme: Uint64
+    span:
+      start: 70
+      end: 76
+- Ok:
+    kind: Comma
+    lexeme: ","
+    span:
+      start: 76
+      end: 77
+- Ok:
+    kind: CloseBrace
+    lexeme: "}"
+    span:
+      start: 78
+      end: 79
+- Ok:
+    kind: Ident
+    lexeme: fn
+    span:
+      start: 81
+      end: 83
+- Ok:
+    kind: Ident
+    lexeme: main
+    span:
+      start: 84
+      end: 88
+- Ok:
+    kind: OpenParen
+    lexeme: (
+    span:
+      start: 88
+      end: 89
+- Ok:
+    kind: CloseParen
+    lexeme: )
+    span:
+      start: 89
+      end: 90
+- Ok:
+    kind: OpenBrace
+    lexeme: "{"
+    span:
+      start: 91
+      end: 92
+- Ok:
+    kind: Ident
+    lexeme: let
+    span:
+      start: 97
+      end: 100
+- Ok:
+    kind: Ident
+    lexeme: user
+    span:
+      start: 101
+      end: 105
+- Ok:
+    kind: Equal
+    lexeme: "="
+    span:
+      start: 106
+      end: 107
+- Ok:
+    kind: Ident
+    lexeme: User
+    span:
+      start: 108
+      end: 112
+- Ok:
+    kind: OpenBrace
+    lexeme: "{"
+    span:
+      start: 113
+      end: 114
+- Ok:
+    kind: Ident
+    lexeme: first_name
+    span:
+      start: 123
+      end: 133
+- Ok:
+    kind: Colon
+    lexeme: ":"
+    span:
+      start: 133
+      end: 134
+- Ok:
+    kind: String
+    lexeme: "\"Elaine\""
+    span:
+      start: 135
+      end: 143
+- Ok:
+    kind: Comma
+    lexeme: ","
+    span:
+      start: 143
+      end: 144
+- Ok:
+    kind: Ident
+    lexeme: last_name
+    span:
+      start: 153
+      end: 162
+- Ok:
+    kind: Colon
+    lexeme: ":"
+    span:
+      start: 162
+      end: 163
+- Ok:
+    kind: String
+    lexeme: "\"Benes\""
+    span:
+      start: 164
+      end: 171
+- Ok:
+    kind: Comma
+    lexeme: ","
+    span:
+      start: 171
+      end: 172
+- Ok:
+    kind: Ident
+    lexeme: age
+    span:
+      start: 181
+      end: 184
+- Ok:
+    kind: Colon
+    lexeme: ":"
+    span:
+      start: 184
+      end: 185
+- Ok:
+    kind: Integer
+    lexeme: "27"
+    span:
+      start: 186
+      end: 188
+- Ok:
+    kind: Comma
+    lexeme: ","
+    span:
+      start: 188
+      end: 189
+- Ok:
+    kind: CloseBrace
+    lexeme: "}"
+    span:
+      start: 194
+      end: 195
+- Ok:
+    kind: CloseBrace
+    lexeme: "}"
+    span:
+      start: 196
+      end: 197
+
