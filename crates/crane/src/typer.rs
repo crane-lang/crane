@@ -909,6 +909,7 @@ impl Typer {
                     span: expr.span,
                 })
             }
+            ExprKind::Struct(struct_expr) => todo!(),
         }
     }
 
