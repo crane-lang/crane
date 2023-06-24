@@ -28,5 +28,9 @@ pub enum TypeErrorKind {
         path: TyPath,
         options: ThinVec<TyPath>,
     },
+    UnknownType {
+        path: TyPath,
+        options: ThinVec<TyPath>,
+    },
     Error(String),
 }

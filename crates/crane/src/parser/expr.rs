@@ -1,6 +1,6 @@
 use thin_vec::ThinVec;
 
-use crate::ast::{Expr, ExprKind, Literal, LiteralKind};
+use crate::ast::{Expr, ExprKind, Literal, LiteralKind, Path, StructExpr, StructExprField};
 use crate::lexer::token::{Token, TokenKind};
 use crate::lexer::LexError;
 use crate::parser::{ParseResult, Parser};
@@ -59,14 +59,25 @@ where
                     },
                     span,
                 }));
-            } else {
-                let span = path.span;
+            }
+
+            if self.check_without_expect(TokenKind::OpenBrace) {
+                let struct_expr = self.parse_struct_expr(&path)?;
+
+                let span = path.span.to(self.prev_token.span);
 
                 return Ok(Some(Expr {
-                    kind: ExprKind::Variable(path),
+                    kind: ExprKind::Struct(Box::new(struct_expr)),
                     span,
                 }));
             }
+
+            let span = path.span;
+
+            return Ok(Some(Expr {
+                kind: ExprKind::Variable(path),
+                span,
+            }));
         }
 
         Ok(None)
@@ -84,6 +95,7 @@ where
                     args.push(param);
                 }
 
+                // TODO: Should this be a `CloseParen`?
                 if self.check_without_expect(TokenKind::CloseBrace) {
                     break;
                 }
@@ -97,5 +109,45 @@ where
         self.consume(TokenKind::CloseParen);
 
         Ok(args)
+    }
+
+    #[tracing::instrument(skip(self))]
+    fn parse_struct_expr(&mut self, path: &Path) -> ParseResult<StructExpr> {
+        self.consume(TokenKind::OpenBrace);
+
+        let mut fields = ThinVec::new();
+
+        if !self.check(TokenKind::CloseBrace) {
+            loop {
+                let field_name = self.parse_ident()?;
+
+                self.consume(TokenKind::Colon);
+
+                let expr = self.parse_expr()?.unwrap();
+
+                let span = field_name.span.to(expr.span);
+
+                fields.push(StructExprField {
+                    name: field_name,
+                    expr: Box::new(expr),
+                    span,
+                });
+
+                if !self.consume(TokenKind::Comma) {
+                    break;
+                }
+
+                if self.check_without_expect(TokenKind::CloseBrace) {
+                    break;
+                }
+            }
+        }
+
+        self.consume(TokenKind::CloseBrace);
+
+        Ok(StructExpr {
+            path: path.clone(),
+            fields,
+        })
     }
 }

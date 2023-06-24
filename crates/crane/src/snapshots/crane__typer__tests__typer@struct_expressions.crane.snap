@@ -1,0 +1,12 @@
+---
+source: crates/crane/src/typer.rs
+expression: typer.type_check_package(package)
+input_file: crates/crane/src/snapshot_inputs/struct_expressions.crane
+---
+Err:
+  kind:
+    Error: Struct expressions are not yet supported.
+  span:
+    start: 108
+    end: 195
+

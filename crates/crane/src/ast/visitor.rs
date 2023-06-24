@@ -1,7 +1,7 @@
 use crate::ast::{
     Expr, ExprKind, FieldDecl, Fn, FnDecl, FnParam, FnReturnTy, Ident, Item, ItemKind, Local,
-    ModuleDecl, Path, PathSegment, Stmt, StmtKind, StructDecl, Ty, UnionDecl, UseTree, UseTreeKind,
-    Variant, VariantData,
+    ModuleDecl, Path, PathSegment, Stmt, StmtKind, StructDecl, StructExprField, Ty, UnionDecl,
+    UseTree, UseTreeKind, Variant, VariantData,
 };
 
 pub trait Visitor: Sized {
@@ -75,6 +75,10 @@ pub trait Visitor: Sized {
 
     fn visit_expr(&mut self, expr: &Expr) {
         walk_expr(self, expr);
+    }
+
+    fn visit_struct_expr_field(&mut self, field: &StructExprField) {
+        walk_struct_expr_field(self, field);
     }
 }
 
@@ -215,5 +219,17 @@ pub fn walk_expr<V: Visitor>(visitor: &mut V, expr: &Expr) {
                 visitor.visit_expr(arg);
             }
         }
+        ExprKind::Struct(struct_expr) => {
+            visitor.visit_path(&struct_expr.path);
+
+            for field in &struct_expr.fields {
+                visitor.visit_struct_expr_field(&field);
+            }
+        }
     }
+}
+
+pub fn walk_struct_expr_field<V: Visitor>(visitor: &mut V, field: &StructExprField) {
+    visitor.visit_expr(&field.expr);
+    visitor.visit_ident(&field.name);
 }

@@ -180,6 +180,37 @@ impl Compiler {
 
                                 report.finish()
                             }
+                            TypeErrorKind::UnknownType { path, options } => {
+                                let report = Report::build(ReportKind::Error, &filepath, 1)
+                                    .with_message("A type error occurred.")
+                                    .with_label(
+                                        Label::new(SourceSpan::from((&filepath, span)))
+                                            .with_message(format!("Type `{path}` does not exist.",))
+                                            .with_color(Color::Red),
+                                    );
+
+                                let suggestion = options
+                                    .iter()
+                                    .sorted_by_key(|option| option.to_string())
+                                    .min_by_key(|option| {
+                                        strsim::levenshtein(&option.to_string(), &path.to_string())
+                                    });
+
+                                let report = if let Some(suggestion) = suggestion {
+                                    report.with_label(
+                                        Label::new(SourceSpan::from((&filepath, suggestion.span)))
+                                            .with_message(format!(
+                                                "There is a type with a similar name: `{}`.",
+                                                suggestion.clone()
+                                            ))
+                                            .with_color(Color::Cyan),
+                                    )
+                                } else {
+                                    report
+                                };
+
+                                report.finish()
+                            }
                             TypeErrorKind::Error(message) => {
                                 Report::build(ReportKind::Error, &filepath, 1)
                                     .with_message("A type error occurred.")
@@ -389,6 +420,43 @@ union snake_cased_union {
 union XMLHttpRequest {
     Foo,
     Bar,
+}
+                "#
+                .trim()
+                .to_string(),
+            },
+        };
+
+        let mut stderr = Vec::new();
+
+        let _ = compiler.compile(&mut stderr, params);
+
+        let stderr = strip_ansi_escapes::strip(stderr).unwrap();
+        let stderr = std::str::from_utf8(&stderr).unwrap();
+
+        insta::assert_snapshot!(&stderr);
+    }
+
+    #[test]
+    pub fn test_struct_expression() {
+        let mut compiler = Compiler::new();
+
+        let params = CompileParams {
+            input: Input::String {
+                filename: "mixed_case.crane".into(),
+                input: r#"
+struct User {
+    first_name: String,
+    last_name: String,
+    age: Uint64,
+}
+
+fn main() {
+    let user = User {
+        first_name: "Elaine",
+        last_name: "Benes",
+        age: 27,
+    }
 }
                 "#
                 .trim()

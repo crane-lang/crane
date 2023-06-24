@@ -56,6 +56,9 @@ pub enum ExprKind {
         fun: Box<Expr>,
         args: ThinVec<Box<Expr>>,
     },
+
+    /// A struct literal.
+    Struct(Box<StructExpr>),
 }
 
 /// The kind of a [`Literal`].
@@ -70,6 +73,21 @@ pub enum LiteralKind {
 pub struct Literal {
     pub kind: LiteralKind,
     pub value: SmolStr,
+}
+
+/// A struct literal expression.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StructExpr {
+    pub path: Path,
+    pub fields: ThinVec<StructExprField>,
+}
+
+/// A field in a [`StructExpr`].
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StructExprField {
+    pub name: Ident,
+    pub expr: Box<Expr>,
+    pub span: Span,
 }
 
 /// An expression.

@@ -1,0 +1,14 @@
+---
+source: crates/crane/src/compiler.rs
+expression: "&stderr"
+---
+Error: A type error occurred.
+    ╭─[mixed_case.crane:1:2]
+    │
+  8 │ ╭─▶     let user = User {
+    ┆ ┆   
+ 12 │ ├─▶     }
+    │ │           
+    │ ╰─────────── Struct expressions are not yet supported.
+────╯
+
