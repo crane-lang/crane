@@ -963,7 +963,12 @@ impl Typer {
 
                 let _struct_decl = self.ensure_struct_exists(&path)?;
 
-                todo!()
+                Err(TypeError {
+                    kind: TypeErrorKind::Error(
+                        "Struct expressions are not yet supported.".to_string(),
+                    ),
+                    span: expr.span,
+                })
             }
         }
     }

@@ -62,9 +62,9 @@ where
             }
 
             if self.check_without_expect(TokenKind::OpenBrace) {
-                let span = path.span;
-
                 let struct_expr = self.parse_struct_expr(&path)?;
+
+                let span = path.span.to(self.prev_token.span);
 
                 return Ok(Some(Expr {
                     kind: ExprKind::Struct(Box::new(struct_expr)),
