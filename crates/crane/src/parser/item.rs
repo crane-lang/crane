@@ -145,11 +145,6 @@ where
         ))
     }
 
-    // #[tracing::instrument(skip(self))]
-    // fn parse_fn_decl(&mut self) -> ParseResult<(Ident, Fn)> {
-
-    // }
-
     #[tracing::instrument(skip(self))]
     fn parse_struct_decl(&mut self) -> ParseResult<(Ident, StructDecl)> {
         let ident = self.parse_ident()?;
