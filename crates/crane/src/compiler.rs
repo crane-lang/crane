@@ -68,7 +68,9 @@ impl Compiler {
                     Ok(typed_package) => {
                         std::fs::create_dir_all("build").unwrap();
 
-                        let backend = NativeBackend::new();
+                        let context = inkwell::context::Context::create();
+
+                        let backend = NativeBackend::new(&context);
 
                         backend.compile(typed_package);
 

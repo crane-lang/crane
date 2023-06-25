@@ -23,14 +23,25 @@ use crate::ast::{
 };
 use crate::typer::Type;
 
-pub struct NativeBackend {
-    context: Context,
+pub struct NativeBackend<'ctx> {
+    context: &'ctx Context,
+    builder: Builder<'ctx>,
+    module: Module<'ctx>,
+    fpm: PassManager<FunctionValue<'ctx>>,
 }
 
-impl NativeBackend {
-    pub fn new() -> Self {
+impl<'ctx> NativeBackend<'ctx> {
+    pub fn new(context: &'ctx Context) -> Self {
+        let module = context.create_module("main");
+        let builder = context.create_builder();
+
+        let fpm = PassManager::create(&module);
+
         Self {
-            context: Context::create(),
+            context,
+            module,
+            builder,
+            fpm,
         }
     }
 
@@ -350,11 +361,11 @@ impl NativeBackend {
         }
     }
 
-    fn compile_module<'ctx>(
-        context: &'ctx Context,
-        builder: &Builder<'ctx>,
-        module: &Module<'ctx>,
-        fpm: &PassManager<FunctionValue<'ctx>>,
+    fn compile_module<'ctx2>(
+        context: &'ctx2 Context,
+        builder: &Builder<'ctx2>,
+        module: &Module<'ctx2>,
+        fpm: &PassManager<FunctionValue<'ctx2>>,
         ty_module: &TyModule,
     ) {
         for item in &ty_module.items {
@@ -362,7 +373,7 @@ impl NativeBackend {
         }
     }
 
-    fn to_llvm_type<'ctx>(context: &'ctx Context, ty: Arc<Type>) -> AnyTypeEnum<'ctx> {
+    fn to_llvm_type<'ctx2>(context: &'ctx2 Context, ty: Arc<Type>) -> AnyTypeEnum<'ctx2> {
         match &*ty {
             Type::Fn {
                 args: params,
@@ -394,9 +405,9 @@ impl NativeBackend {
         }
     }
 
-    fn any_type_to_basic_metadata_type<'ctx>(
-        any_type: AnyTypeEnum<'ctx>,
-    ) -> BasicMetadataTypeEnum<'ctx> {
+    fn any_type_to_basic_metadata_type<'ctx2>(
+        any_type: AnyTypeEnum<'ctx2>,
+    ) -> BasicMetadataTypeEnum<'ctx2> {
         match any_type {
             AnyTypeEnum::ArrayType(array_type) => BasicMetadataTypeEnum::ArrayType(array_type),
             AnyTypeEnum::FloatType(float_type) => BasicMetadataTypeEnum::FloatType(float_type),
@@ -411,11 +422,11 @@ impl NativeBackend {
         }
     }
 
-    fn compile_item<'ctx>(
-        context: &'ctx Context,
-        builder: &Builder<'ctx>,
-        module: &Module<'ctx>,
-        fpm: &PassManager<FunctionValue<'ctx>>,
+    fn compile_item<'ctx2>(
+        context: &'ctx2 Context,
+        builder: &Builder<'ctx2>,
+        module: &Module<'ctx2>,
+        fpm: &PassManager<FunctionValue<'ctx2>>,
         item: &TyItem,
     ) {
         match &item.kind {
@@ -565,15 +576,15 @@ impl NativeBackend {
         }
     }
 
-    fn compile_expr<'ctx>(
-        context: &'ctx Context,
-        builder: &Builder<'ctx>,
-        module: &Module<'ctx>,
+    fn compile_expr<'ctx2>(
+        context: &'ctx2 Context,
+        builder: &Builder<'ctx2>,
+        module: &Module<'ctx2>,
         fn_params: &ThinVec<TyFnParam>,
-        fn_value: &FunctionValue<'ctx>,
-        locals: &HashMap<TyPath, PointerValue<'ctx>>,
+        fn_value: &FunctionValue<'ctx2>,
+        locals: &HashMap<TyPath, PointerValue<'ctx2>>,
         expr: TyExpr,
-    ) -> Option<BasicValueEnum<'ctx>> {
+    ) -> Option<BasicValueEnum<'ctx2>> {
         match expr.kind {
             TyExprKind::Literal(literal) => match literal.kind {
                 TyLiteralKind::String(literal) => Some(
@@ -602,12 +613,12 @@ impl NativeBackend {
         }
     }
 
-    fn compile_string_literal<'ctx>(
-        context: &'ctx Context,
-        _builder: &Builder<'ctx>,
-        module: &Module<'ctx>,
+    fn compile_string_literal<'ctx2>(
+        context: &'ctx2 Context,
+        _builder: &Builder<'ctx2>,
+        module: &Module<'ctx2>,
         literal: SmolStr,
-    ) -> GlobalValue<'ctx> {
+    ) -> GlobalValue<'ctx2> {
         // Unquote the string literal.
         let value = {
             let mut chars = literal.chars();
@@ -631,12 +642,12 @@ impl NativeBackend {
         global
     }
 
-    fn compile_integer_literal<'ctx>(
-        context: &'ctx Context,
-        _builder: &Builder<'ctx>,
-        _module: &Module<'ctx>,
+    fn compile_integer_literal<'ctx2>(
+        context: &'ctx2 Context,
+        _builder: &Builder<'ctx2>,
+        _module: &Module<'ctx2>,
         literal: TyIntegerLiteral,
-    ) -> IntValue<'ctx> {
+    ) -> IntValue<'ctx2> {
         let (int_value, int_type) = match literal {
             TyIntegerLiteral::Unsigned(value, TyUint::Uint64) => (value as u64, context.i64_type()),
         };
@@ -644,16 +655,16 @@ impl NativeBackend {
         int_type.const_int(int_value, false)
     }
 
-    fn compile_fn_call<'ctx>(
-        context: &'ctx Context,
-        builder: &Builder<'ctx>,
-        module: &Module<'ctx>,
-        caller: &FunctionValue<'ctx>,
+    fn compile_fn_call<'ctx2>(
+        context: &'ctx2 Context,
+        builder: &Builder<'ctx2>,
+        module: &Module<'ctx2>,
+        caller: &FunctionValue<'ctx2>,
         caller_params: &ThinVec<TyFnParam>,
         fun: Box<TyExpr>,
         args: ThinVec<Box<TyExpr>>,
-        locals: &HashMap<TyPath, PointerValue<'ctx>>,
-    ) -> Result<CallSiteValue<'ctx>, String> {
+        locals: &HashMap<TyPath, PointerValue<'ctx2>>,
+    ) -> Result<CallSiteValue<'ctx2>, String> {
         let callee_name = match fun.kind {
             TyExprKind::Variable(path) => path,
             _ => todo!(),

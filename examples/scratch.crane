@@ -16,7 +16,7 @@ union Bool {
 pub fn main() {
     let twenty_three = 23
 
-    let user = User { name: "Jane", age: 27 }
+    // let user = User { name: "Jane", age: 27 }
 
     println("Hey")
 
