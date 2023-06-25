@@ -23,14 +23,25 @@ use crate::ast::{
 };
 use crate::typer::Type;
 
-pub struct NativeBackend {
-    context: Context,
+pub struct NativeBackend<'ctx> {
+    context: &'ctx Context,
+    builder: Builder<'ctx>,
+    module: Module<'ctx>,
+    fpm: PassManager<FunctionValue<'ctx>>,
 }
 
-impl NativeBackend {
-    pub fn new() -> Self {
+impl<'ctx> NativeBackend<'ctx> {
+    pub fn new(context: &'ctx Context) -> Self {
+        let module = context.create_module("main");
+        let builder = context.create_builder();
+
+        let fpm = PassManager::create(&module);
+
         Self {
-            context: Context::create(),
+            context,
+            module,
+            builder,
+            fpm,
         }
     }
 
@@ -54,14 +65,9 @@ impl NativeBackend {
             )
             .unwrap();
 
-        let module = self.context.create_module("main");
-        let builder = self.context.create_builder();
+        self.fpm.add_instruction_combining_pass();
 
-        let fpm = PassManager::create(&module);
-
-        fpm.add_instruction_combining_pass();
-
-        fpm.initialize();
+        self.fpm.initialize();
 
         // Define `puts`.
         let puts = {
@@ -77,9 +83,11 @@ impl NativeBackend {
                 false,
             );
 
-            let puts = module.add_function(fn_name, fn_type, Some(Linkage::External));
+            let puts = self
+                .module
+                .add_function(fn_name, fn_type, Some(Linkage::External));
 
-            Self::verify_fn(&fpm, fn_name, &puts).unwrap();
+            self.verify_fn(fn_name, &puts).unwrap();
 
             fn_name
         };
@@ -105,9 +113,11 @@ impl NativeBackend {
                 true,
             );
 
-            let sprintf = module.add_function(fn_name, fn_type, Some(Linkage::External));
+            let sprintf = self
+                .module
+                .add_function(fn_name, fn_type, Some(Linkage::External));
 
-            Self::verify_fn(&fpm, fn_name, &sprintf).unwrap();
+            self.verify_fn(fn_name, &sprintf).unwrap();
 
             fn_name
         };
@@ -127,9 +137,11 @@ impl NativeBackend {
                 true,
             );
 
-            let printf = module.add_function(fn_name, fn_type, Some(Linkage::External));
+            let printf = self
+                .module
+                .add_function(fn_name, fn_type, Some(Linkage::External));
 
-            Self::verify_fn(&fpm, fn_name, &printf).unwrap();
+            self.verify_fn(fn_name, &printf).unwrap();
 
             fn_name
         };
@@ -148,13 +160,13 @@ impl NativeBackend {
                 false,
             );
 
-            let fn_value = module.add_function(fn_name, fn_type, None);
+            let fn_value = self.module.add_function(fn_name, fn_type, None);
 
             let value_param = fn_value.get_first_param().unwrap();
 
             let entry = self.context.append_basic_block(fn_value, "entry");
 
-            builder.position_at_end(entry);
+            self.builder.position_at_end(entry);
 
             let template = b"%1$s";
 
@@ -163,13 +175,15 @@ impl NativeBackend {
 
             let template = self.context.const_string(template, true);
 
-            let global = module.add_global(i8_array_type, None, "print_template");
+            let global = self
+                .module
+                .add_global(i8_array_type, None, "print_template");
             global.set_linkage(Linkage::Internal);
             global.set_constant(true);
             global.set_initializer(&template);
 
-            if let Some(callee) = module.get_function(printf) {
-                builder.build_call(
+            if let Some(callee) = self.module.get_function(printf) {
+                self.builder.build_call(
                     callee,
                     &[global.as_basic_value_enum().into(), value_param.into()],
                     "tmp",
@@ -178,9 +192,9 @@ impl NativeBackend {
                 eprintln!("Function '{}' not found.", printf);
             }
 
-            builder.build_return(None);
+            self.builder.build_return(None);
 
-            Self::verify_fn(&fpm, fn_name, &fn_value).unwrap();
+            self.verify_fn(fn_name, &fn_value).unwrap();
         }
 
         // Define `std::io::println`.
@@ -197,23 +211,24 @@ impl NativeBackend {
                 false,
             );
 
-            let fn_value = module.add_function(fn_name, fn_type, None);
+            let fn_value = self.module.add_function(fn_name, fn_type, None);
 
             let value_param = fn_value.get_first_param().unwrap();
 
             let entry = self.context.append_basic_block(fn_value, "entry");
 
-            builder.position_at_end(entry);
+            self.builder.position_at_end(entry);
 
-            if let Some(callee) = module.get_function(puts) {
-                builder.build_call(callee, &[value_param.into()], "tmp");
+            if let Some(callee) = self.module.get_function(puts) {
+                self.builder
+                    .build_call(callee, &[value_param.into()], "tmp");
             } else {
                 eprintln!("Function '{}' not found.", puts);
             }
 
-            builder.build_return(None);
+            self.builder.build_return(None);
 
-            Self::verify_fn(&fpm, fn_name, &fn_value).unwrap();
+            self.verify_fn(fn_name, &fn_value).unwrap();
         }
 
         // Define `std::int::int_add`.
@@ -230,20 +245,20 @@ impl NativeBackend {
                 false,
             );
 
-            let fn_value = module.add_function(fn_name, fn_type, None);
+            let fn_value = self.module.add_function(fn_name, fn_type, None);
 
             let lhs_param = fn_value.get_first_param().unwrap().into_int_value();
             let rhs_param = fn_value.get_nth_param(1).unwrap().into_int_value();
 
             let entry = self.context.append_basic_block(fn_value, "entry");
 
-            builder.position_at_end(entry);
+            self.builder.position_at_end(entry);
 
-            let sum = builder.build_int_add(lhs_param, rhs_param, "sum");
+            let sum = self.builder.build_int_add(lhs_param, rhs_param, "sum");
 
-            builder.build_return(Some(&sum));
+            self.builder.build_return(Some(&sum));
 
-            Self::verify_fn(&fpm, fn_name, &fn_value).unwrap();
+            self.verify_fn(fn_name, &fn_value).unwrap();
         }
 
         // Define `std::int::int_to_string`.
@@ -256,15 +271,16 @@ impl NativeBackend {
 
             let fn_type = i8_ptr_type.fn_type(&[i64_type.as_basic_type_enum().into()], false);
 
-            let fn_value = module.add_function(fn_name, fn_type, None);
+            let fn_value = self.module.add_function(fn_name, fn_type, None);
 
             let int_value = fn_value.get_first_param().unwrap().into_int_value();
 
             let entry = self.context.append_basic_block(fn_value, "entry");
 
-            builder.position_at_end(entry);
+            self.builder.position_at_end(entry);
 
-            let buffer = builder
+            let buffer = self
+                .builder
                 .build_malloc(i8_ptr_type, "buffer")
                 .expect("Failed to allocate `int_to_string` buffer.");
 
@@ -275,13 +291,15 @@ impl NativeBackend {
 
             let template = self.context.const_string(template, true);
 
-            let global = module.add_global(i8_array_type, None, "int_to_string_template");
+            let global = self
+                .module
+                .add_global(i8_array_type, None, "int_to_string_template");
             global.set_linkage(Linkage::Internal);
             global.set_constant(true);
             global.set_initializer(&template);
 
-            if let Some(callee) = module.get_function(sprintf) {
-                builder.build_call(
+            if let Some(callee) = self.module.get_function(sprintf) {
+                self.builder.build_call(
                     callee,
                     &[
                         buffer.into(),
@@ -294,9 +312,9 @@ impl NativeBackend {
                 panic!("Function '{}' not found.", sprintf);
             }
 
-            builder.build_return(Some(&buffer));
+            self.builder.build_return(Some(&buffer));
 
-            Self::verify_fn(&fpm, fn_name, &fn_value).unwrap();
+            self.verify_fn(fn_name, &fn_value).unwrap();
         }
 
         for item in package
@@ -307,15 +325,15 @@ impl NativeBackend {
             // This should be replaced with a call graph.
             .rev()
         {
-            Self::compile_item(&self.context, &builder, &module, &fpm, &item);
+            self.compile_item(&item);
         }
 
-        module
+        self.module
             .print_to_file("build/main.ll")
             .expect("Failed to emit main.ll");
 
         let buffer = target_machine
-            .write_to_memory_buffer(&module, FileType::Object)
+            .write_to_memory_buffer(&self.module, FileType::Object)
             .expect("Failed to write to buffer");
 
         use std::io::Write;
@@ -324,7 +342,7 @@ impl NativeBackend {
 
         outfile.write_all(buffer.as_slice()).unwrap();
 
-        let bitcode = module.write_bitcode_to_memory();
+        let bitcode = self.module.write_bitcode_to_memory();
 
         outfile.write_all(bitcode.as_slice()).unwrap();
 
@@ -336,13 +354,9 @@ impl NativeBackend {
         println!("clang exited with {}", exit_status);
     }
 
-    fn verify_fn(
-        fpm: &PassManager<FunctionValue>,
-        fn_name: &str,
-        fn_value: &FunctionValue,
-    ) -> Result<(), String> {
+    fn verify_fn(&self, fn_name: &str, fn_value: &FunctionValue) -> Result<(), String> {
         if fn_value.verify(true) {
-            fpm.run_on(fn_value);
+            self.fpm.run_on(fn_value);
 
             Ok(())
         } else {
@@ -350,19 +364,13 @@ impl NativeBackend {
         }
     }
 
-    fn compile_module<'ctx>(
-        context: &'ctx Context,
-        builder: &Builder<'ctx>,
-        module: &Module<'ctx>,
-        fpm: &PassManager<FunctionValue<'ctx>>,
-        ty_module: &TyModule,
-    ) {
+    fn compile_module(&self, ty_module: &TyModule) {
         for item in &ty_module.items {
-            Self::compile_item(context, builder, module, fpm, item);
+            self.compile_item(item);
         }
     }
 
-    fn to_llvm_type<'ctx>(context: &'ctx Context, ty: Arc<Type>) -> AnyTypeEnum<'ctx> {
+    fn to_llvm_type(&self, ty: Arc<Type>) -> AnyTypeEnum<'ctx> {
         match &*ty {
             Type::Fn {
                 args: params,
@@ -370,11 +378,11 @@ impl NativeBackend {
             } => {
                 let params = params
                     .iter()
-                    .map(|param| Self::to_llvm_type(context, param.clone()))
-                    .map(Self::any_type_to_basic_metadata_type)
+                    .map(|param| self.to_llvm_type(param.clone()))
+                    .map(any_type_to_basic_metadata_type)
                     .collect::<Vec<_>>();
 
-                let return_ty = Self::to_llvm_type(context, return_ty.clone());
+                let return_ty = self.to_llvm_type(return_ty.clone());
 
                 AnyTypeEnum::FunctionType(match return_ty {
                     AnyTypeEnum::IntType(int_type) => int_type.fn_type(&params, false),
@@ -382,11 +390,12 @@ impl NativeBackend {
                 })
             }
             Type::UserDefined { module, name } => match (module.as_ref(), name.as_ref()) {
-                ("std::prelude", "String") => context
+                ("std::prelude", "String") => self
+                    .context
                     .i8_type()
                     .ptr_type(AddressSpace::default())
                     .as_any_type_enum(),
-                ("std::prelude", "Uint64") => context.i64_type().as_any_type_enum(),
+                ("std::prelude", "Uint64") => self.context.i64_type().as_any_type_enum(),
                 (module, name) => {
                     panic!("Unknown function parameter type: {}::{}", module, name)
                 }
@@ -394,30 +403,7 @@ impl NativeBackend {
         }
     }
 
-    fn any_type_to_basic_metadata_type<'ctx>(
-        any_type: AnyTypeEnum<'ctx>,
-    ) -> BasicMetadataTypeEnum<'ctx> {
-        match any_type {
-            AnyTypeEnum::ArrayType(array_type) => BasicMetadataTypeEnum::ArrayType(array_type),
-            AnyTypeEnum::FloatType(float_type) => BasicMetadataTypeEnum::FloatType(float_type),
-            AnyTypeEnum::IntType(int_type) => BasicMetadataTypeEnum::IntType(int_type),
-            AnyTypeEnum::PointerType(ptr_type) => BasicMetadataTypeEnum::PointerType(ptr_type),
-            AnyTypeEnum::StructType(struct_type) => BasicMetadataTypeEnum::StructType(struct_type),
-            AnyTypeEnum::VectorType(vector_type) => BasicMetadataTypeEnum::VectorType(vector_type),
-            AnyTypeEnum::VoidType(_) => todo!(),
-            AnyTypeEnum::FunctionType(function_type) => {
-                BasicMetadataTypeEnum::PointerType(function_type.ptr_type(AddressSpace::default()))
-            }
-        }
-    }
-
-    fn compile_item<'ctx>(
-        context: &'ctx Context,
-        builder: &Builder<'ctx>,
-        module: &Module<'ctx>,
-        fpm: &PassManager<FunctionValue<'ctx>>,
-        item: &TyItem,
-    ) {
+    fn compile_item(&self, item: &TyItem) {
         match &item.kind {
             TyItemKind::Use => {}
             TyItemKind::Fn(fun) => {
@@ -425,17 +411,20 @@ impl NativeBackend {
                     .params
                     .iter()
                     .map(|param| {
-                        let param_type = Self::to_llvm_type(context, param.ty.clone());
+                        let param_type = self.to_llvm_type(param.ty.clone());
 
-                        Self::any_type_to_basic_metadata_type(param_type)
+                        any_type_to_basic_metadata_type(param_type)
                     })
                     .collect::<Vec<_>>();
 
                 let fn_type = match &*fun.return_ty {
                     Type::UserDefined { module, name } => match (module.as_str(), name.as_str()) {
-                        ("std::prelude", "()") => context.void_type().fn_type(&params, false),
-                        ("std::prelude", "Uint64") => context.i64_type().fn_type(&params, false),
-                        ("std::prelude", "String") => context
+                        ("std::prelude", "()") => self.context.void_type().fn_type(&params, false),
+                        ("std::prelude", "Uint64") => {
+                            self.context.i64_type().fn_type(&params, false)
+                        }
+                        ("std::prelude", "String") => self
+                            .context
                             .i8_type()
                             .ptr_type(AddressSpace::default())
                             .fn_type(&params, false),
@@ -450,12 +439,14 @@ impl NativeBackend {
                 let is_main_fn = item.name.name == "main";
 
                 let fn_type = if is_main_fn {
-                    context.i32_type().fn_type(&params, false)
+                    self.context.i32_type().fn_type(&params, false)
                 } else {
                     fn_type
                 };
 
-                let fn_value = module.add_function(&fun.path.to_string(), fn_type, None);
+                let fn_value = self
+                    .module
+                    .add_function(&fun.path.to_string(), fn_type, None);
 
                 for (index, param_value) in fn_value.get_param_iter().enumerate() {
                     if let Some(param) = fun.params.get(index) {
@@ -463,9 +454,9 @@ impl NativeBackend {
                     }
                 }
 
-                let entry = context.append_basic_block(fn_value, "entry");
+                let entry = self.context.append_basic_block(fn_value, "entry");
 
-                builder.position_at_end(entry);
+                self.builder.position_at_end(entry);
 
                 let mut locals = HashMap::new();
 
@@ -483,9 +474,10 @@ impl NativeBackend {
                                     match (module.as_str(), name.as_str()) {
                                         ("std::prelude", "()") => todo!(),
                                         ("std::prelude", "Uint64") => {
-                                            context.i64_type().as_basic_type_enum()
+                                            self.context.i64_type().as_basic_type_enum()
                                         }
-                                        ("std::prelude", "String") => context
+                                        ("std::prelude", "String") => self
+                                            .context
                                             .i8_type()
                                             .ptr_type(AddressSpace::default())
                                             .as_basic_type_enum(),
@@ -500,14 +492,11 @@ impl NativeBackend {
                                 } => todo!(),
                             };
 
-                            let local_ptr = builder.build_alloca(ty, &local.name.to_string());
+                            let local_ptr = self.builder.build_alloca(ty, &local.name.to_string());
 
                             let value = match &local.kind {
                                 TyLocalKind::Decl => None,
-                                TyLocalKind::Init(init) => Self::compile_expr(
-                                    &context,
-                                    &builder,
-                                    &module,
+                                TyLocalKind::Init(init) => self.compile_expr(
                                     &fun.params,
                                     &fn_value,
                                     &locals,
@@ -521,7 +510,7 @@ impl NativeBackend {
                                 )
                             });
 
-                            builder.build_store(local_ptr, value);
+                            self.builder.build_store(local_ptr, value);
 
                             let local_path = TyPath {
                                 segments: thin_vec![TyPathSegment {
@@ -533,42 +522,34 @@ impl NativeBackend {
                             locals.insert(local_path, local_ptr);
                         }
                         TyStmtKind::Expr(expr) => {
-                            last_stmt = Self::compile_expr(
-                                &context,
-                                &builder,
-                                &module,
-                                &fun.params,
-                                &fn_value,
-                                &locals,
-                                *expr.clone(),
-                            );
+                            last_stmt =
+                                self.compile_expr(&fun.params, &fn_value, &locals, *expr.clone());
                         }
                         TyStmtKind::Item(_item) => todo!(),
                     }
                 }
 
                 if is_main_fn {
-                    builder.build_return(Some(&context.i32_type().const_int(0, false)));
+                    self.builder
+                        .build_return(Some(&self.context.i32_type().const_int(0, false)));
                 } else if let Some(last_stmt) = last_stmt {
-                    builder.build_return(Some(&last_stmt));
+                    self.builder.build_return(Some(&last_stmt));
                 } else {
-                    builder.build_return(None);
+                    self.builder.build_return(None);
                 }
 
-                Self::verify_fn(&fpm, &item.name.to_string(), &fn_value).unwrap();
+                self.verify_fn(&item.name.to_string(), &fn_value).unwrap();
             }
             TyItemKind::Struct(_) => {}
             TyItemKind::Union(_) => {}
             TyItemKind::Module(ty_module) => {
-                Self::compile_module(context, builder, module, fpm, &ty_module);
+                self.compile_module(&ty_module);
             }
         }
     }
 
-    fn compile_expr<'ctx>(
-        context: &'ctx Context,
-        builder: &Builder<'ctx>,
-        module: &Module<'ctx>,
+    fn compile_expr(
+        &self,
         fn_params: &ThinVec<TyFnParam>,
         fn_value: &FunctionValue<'ctx>,
         locals: &HashMap<TyPath, PointerValue<'ctx>>,
@@ -576,38 +557,23 @@ impl NativeBackend {
     ) -> Option<BasicValueEnum<'ctx>> {
         match expr.kind {
             TyExprKind::Literal(literal) => match literal.kind {
-                TyLiteralKind::String(literal) => Some(
-                    Self::compile_string_literal(context, builder, module, literal)
-                        .as_basic_value_enum(),
-                ),
-                TyLiteralKind::Integer(literal) => Some(
-                    Self::compile_integer_literal(context, builder, module, literal)
-                        .as_basic_value_enum(),
-                ),
+                TyLiteralKind::String(literal) => {
+                    Some(self.compile_string_literal(literal).as_basic_value_enum())
+                }
+                TyLiteralKind::Integer(literal) => {
+                    Some(self.compile_integer_literal(literal).as_basic_value_enum())
+                }
             },
             TyExprKind::Variable(_) => todo!(),
-            TyExprKind::Call { fun, args } => Self::compile_fn_call(
-                context,
-                builder,
-                module,
-                fn_value,
-                fn_params,
-                fun.clone(),
-                args,
-                locals,
-            )
-            .unwrap_or_else(|_| panic!("Failed to compile function call: {:?}", fun))
-            .try_as_basic_value()
-            .either(Some, |_| None),
+            TyExprKind::Call { fun, args } => self
+                .compile_fn_call(fn_value, fn_params, fun.clone(), args, locals)
+                .unwrap_or_else(|_| panic!("Failed to compile function call: {:?}", fun))
+                .try_as_basic_value()
+                .either(Some, |_| None),
         }
     }
 
-    fn compile_string_literal<'ctx>(
-        context: &'ctx Context,
-        _builder: &Builder<'ctx>,
-        module: &Module<'ctx>,
-        literal: SmolStr,
-    ) -> GlobalValue<'ctx> {
+    fn compile_string_literal(&self, literal: SmolStr) -> GlobalValue<'ctx> {
         // Unquote the string literal.
         let value = {
             let mut chars = literal.chars();
@@ -618,12 +584,12 @@ impl NativeBackend {
 
         let value = value.as_bytes();
 
-        let i8_type = context.i8_type();
+        let i8_type = self.context.i8_type();
         let i8_array_type = i8_type.array_type(value.len() as u32 + 1);
 
-        let string = context.const_string(value, true);
+        let string = self.context.const_string(value, true);
 
-        let global = module.add_global(i8_array_type, None, "string_lit");
+        let global = self.module.add_global(i8_array_type, None, "string_lit");
         global.set_linkage(Linkage::Internal);
         global.set_constant(true);
         global.set_initializer(&string);
@@ -631,23 +597,18 @@ impl NativeBackend {
         global
     }
 
-    fn compile_integer_literal<'ctx>(
-        context: &'ctx Context,
-        _builder: &Builder<'ctx>,
-        _module: &Module<'ctx>,
-        literal: TyIntegerLiteral,
-    ) -> IntValue<'ctx> {
+    fn compile_integer_literal(&self, literal: TyIntegerLiteral) -> IntValue<'ctx> {
         let (int_value, int_type) = match literal {
-            TyIntegerLiteral::Unsigned(value, TyUint::Uint64) => (value as u64, context.i64_type()),
+            TyIntegerLiteral::Unsigned(value, TyUint::Uint64) => {
+                (value as u64, self.context.i64_type())
+            }
         };
 
         int_type.const_int(int_value, false)
     }
 
-    fn compile_fn_call<'ctx>(
-        context: &'ctx Context,
-        builder: &Builder<'ctx>,
-        module: &Module<'ctx>,
+    fn compile_fn_call(
+        &self,
         caller: &FunctionValue<'ctx>,
         caller_params: &ThinVec<TyFnParam>,
         fun: Box<TyExpr>,
@@ -664,7 +625,7 @@ impl NativeBackend {
             .enumerate()
             .find(|(_, param)| param.name.name == callee_name.to_string())
         {
-            let function_type = Self::to_llvm_type(context, callee.ty.clone()).into_function_type();
+            let function_type = self.to_llvm_type(callee.ty.clone()).into_function_type();
 
             let function_ptr = caller
                 .get_nth_param(param_index as u32)
@@ -675,16 +636,14 @@ impl NativeBackend {
                 .into_iter()
                 .map(|arg| match arg.kind {
                     TyExprKind::Literal(literal) => match literal.kind {
-                        TyLiteralKind::String(literal) => {
-                            Self::compile_string_literal(context, builder, module, literal)
-                                .as_basic_value_enum()
-                                .into()
-                        }
-                        TyLiteralKind::Integer(literal) => {
-                            Self::compile_integer_literal(context, builder, module, literal)
-                                .as_basic_value_enum()
-                                .into()
-                        }
+                        TyLiteralKind::String(literal) => self
+                            .compile_string_literal(literal)
+                            .as_basic_value_enum()
+                            .into(),
+                        TyLiteralKind::Integer(literal) => self
+                            .compile_integer_literal(literal)
+                            .as_basic_value_enum()
+                            .into(),
                     },
                     TyExprKind::Variable(path) => {
                         let param = caller_params
@@ -698,24 +657,16 @@ impl NativeBackend {
 
                         param.unwrap().into()
                     }
-                    TyExprKind::Call { fun, args } => Self::compile_fn_call(
-                        context,
-                        builder,
-                        module,
-                        caller,
-                        caller_params,
-                        fun,
-                        args,
-                        locals,
-                    )
-                    .unwrap()
-                    .try_as_basic_value()
-                    .unwrap_left()
-                    .into(),
+                    TyExprKind::Call { fun, args } => self
+                        .compile_fn_call(caller, caller_params, fun, args, locals)
+                        .unwrap()
+                        .try_as_basic_value()
+                        .unwrap_left()
+                        .into(),
                 })
                 .collect::<Vec<_>>();
 
-            return Ok(builder.build_indirect_call(
+            return Ok(self.builder.build_indirect_call(
                 function_type,
                 function_ptr,
                 &args,
@@ -723,22 +674,20 @@ impl NativeBackend {
             ));
         }
 
-        if let Some(callee) = module.get_function(&callee_name.to_string()) {
+        if let Some(callee) = self.module.get_function(&callee_name.to_string()) {
             let args = args
                 .into_iter()
                 .enumerate()
                 .map(|(arg_index, arg)| match arg.kind {
                     TyExprKind::Literal(literal) => match literal.kind {
-                        TyLiteralKind::String(literal) => {
-                            Self::compile_string_literal(context, builder, module, literal)
-                                .as_basic_value_enum()
-                                .into()
-                        }
-                        TyLiteralKind::Integer(literal) => {
-                            Self::compile_integer_literal(context, builder, module, literal)
-                                .as_basic_value_enum()
-                                .into()
-                        }
+                        TyLiteralKind::String(literal) => self
+                            .compile_string_literal(literal)
+                            .as_basic_value_enum()
+                            .into(),
+                        TyLiteralKind::Integer(literal) => self
+                            .compile_integer_literal(literal)
+                            .as_basic_value_enum()
+                            .into(),
                     },
                     TyExprKind::Variable(path) => {
                         let param = caller_params
@@ -758,11 +707,12 @@ impl NativeBackend {
                         let variable = param
                             .or_else(|| {
                                 locals.get(&path).map(|local| {
-                                    builder.build_load(callee_param.get_type(), *local, "load")
+                                    self.builder
+                                        .build_load(callee_param.get_type(), *local, "load")
                                 })
                             })
                             .or_else(|| {
-                                module.get_function(&path.to_string()).map(|function| {
+                                self.module.get_function(&path.to_string()).map(|function| {
                                     function
                                         .as_global_value()
                                         .as_pointer_value()
@@ -773,27 +723,36 @@ impl NativeBackend {
 
                         variable.into()
                     }
-                    TyExprKind::Call { fun, args } => Self::compile_fn_call(
-                        context,
-                        builder,
-                        module,
-                        caller,
-                        caller_params,
-                        fun,
-                        args,
-                        locals,
-                    )
-                    .unwrap()
-                    .try_as_basic_value()
-                    .unwrap_left()
-                    .into(),
+                    TyExprKind::Call { fun, args } => self
+                        .compile_fn_call(caller, caller_params, fun, args, locals)
+                        .unwrap()
+                        .try_as_basic_value()
+                        .unwrap_left()
+                        .into(),
                 })
                 .collect::<Vec<_>>();
 
-            Ok(builder.build_call(callee, args.as_slice(), "tmp"))
+            Ok(self.builder.build_call(callee, args.as_slice(), "tmp"))
         } else {
             eprintln!("Function '{}' not found.", callee_name);
             Err(format!("Function '{}' not found.", callee_name))
+        }
+    }
+}
+
+fn any_type_to_basic_metadata_type<'ctx>(
+    any_type: AnyTypeEnum<'ctx>,
+) -> BasicMetadataTypeEnum<'ctx> {
+    match any_type {
+        AnyTypeEnum::ArrayType(array_type) => BasicMetadataTypeEnum::ArrayType(array_type),
+        AnyTypeEnum::FloatType(float_type) => BasicMetadataTypeEnum::FloatType(float_type),
+        AnyTypeEnum::IntType(int_type) => BasicMetadataTypeEnum::IntType(int_type),
+        AnyTypeEnum::PointerType(ptr_type) => BasicMetadataTypeEnum::PointerType(ptr_type),
+        AnyTypeEnum::StructType(struct_type) => BasicMetadataTypeEnum::StructType(struct_type),
+        AnyTypeEnum::VectorType(vector_type) => BasicMetadataTypeEnum::VectorType(vector_type),
+        AnyTypeEnum::VoidType(_) => todo!(),
+        AnyTypeEnum::FunctionType(function_type) => {
+            BasicMetadataTypeEnum::PointerType(function_type.ptr_type(AddressSpace::default()))
         }
     }
 }
