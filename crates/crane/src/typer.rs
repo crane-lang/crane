@@ -51,20 +51,43 @@ struct ModuleItems {
 }
 
 pub struct Typer<'ctx> {
-    ctx: &'ctx TyContext,
+    ctx: &'ctx TyContext<'ctx>,
 
     modules: HashMap<TyPath, ModuleItems>,
     use_map: HashMap<TyPath, TyPath>,
     scopes: Vec<HashMap<TyPath, Arc<Type>>>,
+
+    // Types.
+    unit_ty: Arc<Type>,
+    string_ty: Arc<Type>,
+    uint64_ty: Arc<Type>,
 }
 
 impl<'ctx> Typer<'ctx> {
-    pub fn new(ctx: &'ctx TyContext) -> Self {
+    pub fn new(ctx: &'ctx TyContext<'ctx>) -> Self {
+        let unit_ty = Arc::new(Type::UserDefined {
+            module: SmolStr::new_inline("std::prelude"),
+            name: SmolStr::new_inline("()"),
+        });
+
+        let string_ty = Arc::new(Type::UserDefined {
+            module: SmolStr::new_inline("std::prelude"),
+            name: SmolStr::new_inline("String"),
+        });
+
+        let uint64_ty = Arc::new(Type::UserDefined {
+            module: SmolStr::new_inline("std::prelude"),
+            name: SmolStr::new_inline("Uint64"),
+        });
+
         Self {
             ctx,
             modules: HashMap::new(),
             use_map: HashMap::new(),
             scopes: Vec::new(),
+            unit_ty,
+            string_ty,
+            uint64_ty,
         }
     }
 
@@ -281,10 +304,10 @@ impl<'ctx> Typer<'ctx> {
                     name: "value".into(),
                     span: DUMMY_SPAN
                 },
-                ty: self.ctx.string.clone(),
+                ty: self.string_ty.clone(),
                 span: DUMMY_SPAN
             }],
-            self.ctx.unit.clone(),
+            self.unit_ty.clone(),
         )?;
         self.register_function(
             std_io_path,
@@ -297,10 +320,10 @@ impl<'ctx> Typer<'ctx> {
                     name: "value".into(),
                     span: DUMMY_SPAN
                 },
-                ty: self.ctx.string.clone(),
+                ty: self.string_ty.clone(),
                 span: DUMMY_SPAN
             }],
-            self.ctx.unit.clone(),
+            self.unit_ty.clone(),
         )?;
         self.register_function(
             std_int_path.clone(),
@@ -314,7 +337,7 @@ impl<'ctx> Typer<'ctx> {
                         name: "a".into(),
                         span: DUMMY_SPAN
                     },
-                    ty: self.ctx.uint64.clone(),
+                    ty: self.uint64_ty.clone(),
                     span: DUMMY_SPAN
                 },
                 TyFnParam {
@@ -322,11 +345,11 @@ impl<'ctx> Typer<'ctx> {
                         name: "b".into(),
                         span: DUMMY_SPAN
                     },
-                    ty: self.ctx.uint64.clone(),
+                    ty: self.uint64_ty.clone(),
                     span: DUMMY_SPAN
                 }
             ],
-            self.ctx.uint64.clone(),
+            self.uint64_ty.clone(),
         )?;
         self.register_function(
             std_int_path,
@@ -339,10 +362,10 @@ impl<'ctx> Typer<'ctx> {
                     name: "value".into(),
                     span: DUMMY_SPAN
                 },
-                ty: self.ctx.uint64.clone(),
+                ty: self.uint64_ty.clone(),
                 span: DUMMY_SPAN
             }],
-            self.ctx.string.clone(),
+            self.string_ty.clone(),
         )?;
 
         Ok(())
@@ -651,7 +674,7 @@ impl<'ctx> Typer<'ctx> {
         let params = self.infer_function_params(&function_decl.params)?;
 
         let return_ty = match function_decl.return_ty {
-            FnReturnTy::Unit => self.ctx.unit.clone(),
+            FnReturnTy::Unit => self.unit_ty.clone(),
             FnReturnTy::Ty(ref ty) => self.infer_ty(*ty.clone())?,
         };
 
@@ -964,7 +987,7 @@ impl<'ctx> Typer<'ctx> {
                 span,
             }),
             span,
-            ty: self.ctx.string.clone(),
+            ty: self.string_ty.clone(),
         })
     }
 
@@ -977,7 +1000,7 @@ impl<'ctx> Typer<'ctx> {
                 span,
             }),
             span,
-            ty: self.ctx.uint64.clone(),
+            ty: self.uint64_ty.clone(),
         })
     }
 }
@@ -1005,7 +1028,8 @@ mod tests {
                 modules: thin_vec![module],
             };
 
-            let ty_context = TyContext::new();
+            let arena = Arena::default();
+            let ty_context = TyContext::new(&arena);
 
             let mut typer = Typer::new(&ty_context);
 

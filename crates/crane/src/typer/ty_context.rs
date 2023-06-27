@@ -1,30 +1,38 @@
-use std::sync::Arc;
+use typed_arena::Arena as TypedArena;
 
-use smol_str::SmolStr;
+use crate::interned::Interned;
+use crate::typer::ty::{Ty, TyKind};
+use crate::typer::UintTy;
 
-use crate::typer::Type;
-
-pub struct TyContext {
-    pub unit: Arc<Type>,
-    pub uint64: Arc<Type>,
-    pub string: Arc<Type>,
+#[derive(Default)]
+pub struct Arena<'ctx> {
+    pub tys: TypedArena<TyKind<'ctx>>,
 }
 
-impl TyContext {
-    pub fn new() -> Self {
+impl<'ctx> Arena<'ctx> {
+    pub fn intern_ty(&self, kind: TyKind<'ctx>) -> Ty {
+        Ty(Interned::new_unchecked(self.tys.alloc(kind)))
+    }
+}
+
+pub struct CommonTypes<'ctx> {
+    pub unit: Ty<'ctx>,
+    pub uint64: Ty<'ctx>,
+}
+
+pub struct TyContext<'ctx> {
+    pub arena: &'ctx Arena<'ctx>,
+    pub types: CommonTypes<'ctx>,
+}
+
+impl<'ctx> TyContext<'ctx> {
+    pub fn new(arena: &'ctx Arena<'ctx>) -> Self {
         Self {
-            unit: Arc::new(Type::UserDefined {
-                module: SmolStr::new_inline("std::prelude"),
-                name: SmolStr::new_inline("()"),
-            }),
-            string: Arc::new(Type::UserDefined {
-                module: SmolStr::new_inline("std::prelude"),
-                name: SmolStr::new_inline("String"),
-            }),
-            uint64: Arc::new(Type::UserDefined {
-                module: SmolStr::new_inline("std::prelude"),
-                name: SmolStr::new_inline("Uint64"),
-            }),
+            arena,
+            types: CommonTypes {
+                unit: arena.intern_ty(TyKind::Unit),
+                uint64: arena.intern_ty(TyKind::Uint(UintTy::U64)),
+            },
         }
     }
 }
