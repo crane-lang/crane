@@ -1,10 +1,12 @@
 mod environment;
 mod error;
+mod ty;
 mod ty_context;
 mod r#type;
 
 pub use error::*;
 pub use r#type::*;
+pub use ty::*;
 pub use ty_context::*;
 
 use std::collections::HashMap;
