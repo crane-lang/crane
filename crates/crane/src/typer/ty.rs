@@ -2,11 +2,14 @@ use crate::interned::Interned;
 
 /// A type in the type system.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
-pub struct Ty<'ctx>(Interned<'ctx, TyKind<'ctx>>);
+pub struct Ty<'ctx>(pub Interned<'ctx, TyKind<'ctx>>);
 
 /// The kind of a type in the type system.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 pub enum TyKind<'ctx> {
+    /// The unit type (`()`).
+    Unit,
+
     /// An unsigned integer type.
     Uint(UintTy),
 
