@@ -15,6 +15,9 @@ pub enum TyKind<'ctx> {
 
     /// An algebraic data type (ADT).
     Adt(AdtDecl<'ctx>),
+
+    /// A function type.
+    Fn(FnSig<'ctx>),
 }
 
 /// An unsigned integer type.
@@ -29,3 +32,9 @@ pub struct AdtDecl<'ctx>(pub Interned<'ctx, AdtDeclData>);
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 pub struct AdtDeclData {}
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
+pub struct FnSig<'ctx> {
+    pub params: &'ctx Vec<Ty<'ctx>>,
+    pub return_ty: Ty<'ctx>,
+}
