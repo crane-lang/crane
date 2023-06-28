@@ -1,4 +1,3 @@
-mod environment;
 mod error;
 mod ty;
 mod ty_context;
