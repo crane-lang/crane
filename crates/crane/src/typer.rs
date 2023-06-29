@@ -50,7 +50,7 @@ struct ModuleItems {
 }
 
 pub struct Typer<'ctx> {
-    ctx: &'ctx TyContext<'ctx>,
+    ctx: &'ctx mut TyContext<'ctx>,
 
     modules: HashMap<TyPath, ModuleItems>,
     use_map: HashMap<TyPath, TyPath>,
@@ -63,7 +63,7 @@ pub struct Typer<'ctx> {
 }
 
 impl<'ctx> Typer<'ctx> {
-    pub fn new(ctx: &'ctx TyContext<'ctx>) -> Self {
+    pub fn new(ctx: &'ctx mut TyContext<'ctx>) -> Self {
         let unit_ty = Arc::new(Type::UserDefined {
             module: SmolStr::new_inline("std::prelude"),
             name: SmolStr::new_inline("()"),
@@ -126,6 +126,18 @@ impl<'ctx> Typer<'ctx> {
 
         let module = self.modules.entry(module_path).or_default();
         module.functions.insert(name, (params, return_ty));
+
+        let fn1 = self.ctx.interners.intern_fn(
+            vec![self.ctx.types.uint64, self.ctx.types.uint64],
+            self.ctx.types.unit,
+        );
+
+        let fn2 = self.ctx.interners.intern_fn(
+            vec![self.ctx.types.uint64, self.ctx.types.uint64],
+            self.ctx.types.unit,
+        );
+
+        dbg!(fn1, fn2, fn1 == fn2);
 
         Ok(())
     }
@@ -1028,9 +1040,9 @@ mod tests {
             };
 
             let arena = Arena::default();
-            let ty_context = TyContext::new(&arena);
+            let mut ty_context = TyContext::new(&arena);
 
-            let mut typer = Typer::new(&ty_context);
+            let mut typer = Typer::new(&mut ty_context);
 
             insta::assert_yaml_snapshot!(typer.type_check_package(package));
         })

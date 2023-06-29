@@ -1,3 +1,7 @@
+use std::borrow::Borrow;
+use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
+
 use typed_arena::Arena as TypedArena;
 
 use crate::interned::Interned;
@@ -10,17 +14,100 @@ pub struct Arena<'ctx> {
     pub ty_lists: TypedArena<Vec<Ty<'ctx>>>,
 }
 
-impl<'ctx> Arena<'ctx> {
-    pub fn intern_ty(&self, kind: TyKind<'ctx>) -> Ty {
-        Ty(Interned::new_unchecked(self.tys.alloc(kind)))
+struct InternedInSet<'ctx, T: ?Sized>(&'ctx T);
+
+impl<'ctx, T: 'ctx + ?Sized> Clone for InternedInSet<'ctx, T> {
+    fn clone(&self) -> Self {
+        Self(self.0)
+    }
+}
+
+impl<'ctx, T: 'ctx + ?Sized> Copy for InternedInSet<'ctx, T> {}
+
+impl<'ctx> Borrow<TyKind<'ctx>> for InternedInSet<'ctx, TyKind<'ctx>> {
+    fn borrow(&self) -> &TyKind<'ctx> {
+        &self.0
+    }
+}
+
+impl<'ctx> PartialEq for InternedInSet<'ctx, TyKind<'ctx>> {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl<'ctx> Eq for InternedInSet<'ctx, TyKind<'ctx>> {}
+
+impl<'ctx> Hash for InternedInSet<'ctx, TyKind<'ctx>> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.0.hash(state);
+    }
+}
+
+impl<'ctx> Borrow<Vec<Ty<'ctx>>> for InternedInSet<'ctx, Vec<Ty<'ctx>>> {
+    fn borrow(&self) -> &Vec<Ty<'ctx>> {
+        &self.0
+    }
+}
+
+impl<'ctx> PartialEq for InternedInSet<'ctx, Vec<Ty<'ctx>>> {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl<'ctx> Eq for InternedInSet<'ctx, Vec<Ty<'ctx>>> {}
+
+impl<'ctx> Hash for InternedInSet<'ctx, Vec<Ty<'ctx>>> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.0.hash(state);
+    }
+}
+
+type InternedSet<'ctx, T> = HashMap<InternedInSet<'ctx, T>, ()>;
+
+pub struct Interners<'ctx> {
+    arena: &'ctx Arena<'ctx>,
+
+    ty: InternedSet<'ctx, TyKind<'ctx>>,
+    ty_list: InternedSet<'ctx, Vec<Ty<'ctx>>>,
+}
+
+impl<'ctx> Interners<'ctx> {
+    pub fn new(arena: &'ctx Arena<'ctx>) -> Self {
+        Self {
+            arena,
+            ty: Default::default(),
+            ty_list: Default::default(),
+        }
     }
 
-    pub fn intern_fn(&'ctx self, params: Vec<Ty<'ctx>>, return_ty: Ty<'ctx>) -> Ty<'ctx> {
-        let params = self.ty_lists.alloc(params);
-
+    pub fn intern_ty(&mut self, kind: TyKind<'ctx>) -> Ty<'ctx> {
         Ty(Interned::new_unchecked(
-            self.tys.alloc(TyKind::Fn(FnSig { params, return_ty })),
+            &match self.ty.get_key_value(&kind) {
+                Some((key, _)) => *key,
+                None => {
+                    let value = InternedInSet(self.arena.tys.alloc(kind));
+                    self.ty.insert(value, ());
+                    value
+                }
+            }
+            .0,
         ))
+    }
+
+    pub fn intern_fn(&mut self, params: Vec<Ty<'ctx>>, return_ty: Ty<'ctx>) -> Ty<'ctx> {
+        let params = &match self.ty_list.get_key_value(&params) {
+            Some((key, _)) => *key,
+            None => {
+                let value = InternedInSet(self.arena.ty_lists.alloc(params));
+                self.ty_list.insert(value, ());
+                value
+            }
+        }
+        .0;
+
+        self.intern_ty(TyKind::Fn(FnSig { params, return_ty }))
     }
 }
 
@@ -31,17 +118,23 @@ pub struct CommonTypes<'ctx> {
 
 pub struct TyContext<'ctx> {
     pub arena: &'ctx Arena<'ctx>,
+    pub interners: Interners<'ctx>,
     pub types: CommonTypes<'ctx>,
 }
 
 impl<'ctx> TyContext<'ctx> {
     pub fn new(arena: &'ctx Arena<'ctx>) -> Self {
+        let mut interners = Interners::new(arena);
+
+        let types = CommonTypes {
+            unit: interners.intern_ty(TyKind::Unit),
+            uint64: interners.intern_ty(TyKind::Uint(UintTy::U64)),
+        };
+
         Self {
             arena,
-            types: CommonTypes {
-                unit: arena.intern_ty(TyKind::Unit),
-                uint64: arena.intern_ty(TyKind::Uint(UintTy::U64)),
-            },
+            interners,
+            types,
         }
     }
 }
