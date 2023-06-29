@@ -1,5 +1,5 @@
 use std::borrow::Borrow;
-use std::collections::HashMap;
+use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
 
 use typed_arena::Arena as TypedArena;
@@ -64,7 +64,7 @@ impl<'ctx> Hash for InternedInSet<'ctx, Vec<Ty<'ctx>>> {
     }
 }
 
-type InternedSet<'ctx, T> = HashMap<InternedInSet<'ctx, T>, ()>;
+type InternedSet<'ctx, T> = HashSet<InternedInSet<'ctx, T>>;
 
 pub struct Interners<'ctx> {
     arena: &'ctx Arena<'ctx>,
@@ -84,11 +84,11 @@ impl<'ctx> Interners<'ctx> {
 
     pub fn intern_ty(&mut self, kind: TyKind<'ctx>) -> Ty<'ctx> {
         Ty(Interned::new_unchecked(
-            &match self.ty.get_key_value(&kind) {
-                Some((key, _)) => *key,
+            &match self.ty.get(&kind) {
+                Some(value) => *value,
                 None => {
                     let value = InternedInSet(self.arena.tys.alloc(kind));
-                    self.ty.insert(value, ());
+                    self.ty.insert(value);
                     value
                 }
             }
@@ -97,11 +97,11 @@ impl<'ctx> Interners<'ctx> {
     }
 
     pub fn intern_fn(&mut self, params: Vec<Ty<'ctx>>, return_ty: Ty<'ctx>) -> Ty<'ctx> {
-        let params = &match self.ty_list.get_key_value(&params) {
-            Some((key, _)) => *key,
+        let params = &match self.ty_list.get(&params) {
+            Some(value) => *value,
             None => {
                 let value = InternedInSet(self.arena.ty_lists.alloc(params));
-                self.ty_list.insert(value, ());
+                self.ty_list.insert(value);
                 value
             }
         }
