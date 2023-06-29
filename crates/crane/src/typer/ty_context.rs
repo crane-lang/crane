@@ -14,6 +14,7 @@ pub struct Arena<'ctx> {
     pub ty_lists: TypedArena<Vec<Ty<'ctx>>>,
 }
 
+/// A value interned in an [`InternedSet`].
 struct InternedInSet<'ctx, T: ?Sized>(&'ctx T);
 
 impl<'ctx, T: 'ctx + ?Sized> Clone for InternedInSet<'ctx, T> {

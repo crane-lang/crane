@@ -127,18 +127,6 @@ impl<'ctx> Typer<'ctx> {
         let module = self.modules.entry(module_path).or_default();
         module.functions.insert(name, (params, return_ty));
 
-        let fn1 = self.ctx.interners.intern_fn(
-            vec![self.ctx.types.uint64, self.ctx.types.uint64],
-            self.ctx.types.unit,
-        );
-
-        let fn2 = self.ctx.interners.intern_fn(
-            vec![self.ctx.types.uint64, self.ctx.types.uint64],
-            self.ctx.types.unit,
-        );
-
-        dbg!(fn1, fn2, fn1 == fn2);
-
         Ok(())
     }
 
