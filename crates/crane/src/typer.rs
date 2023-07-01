@@ -20,12 +20,12 @@ use crate::ast::{
     TyVariantData, UnionDecl, UseTree, UseTreeKind, VariantData, DUMMY_SPAN,
 };
 
-fn ty_to_string(ty: &Type) -> String {
+fn ty_to_string(ty: &TyKind) -> String {
     match ty {
-        Type::UserDefined { module, name } => {
+        TyKind::UserDefined { module, name } => {
             format!("{}::{}", module, name)
         }
-        Type::Fn { args, return_ty } => format!(
+        TyKind::Fn { args, return_ty } => format!(
             "Fn({}) -> {}",
             args.iter()
                 .map(|ty| ty_to_string(ty))
@@ -40,7 +40,7 @@ pub type TypeCheckResult<T> = Result<T, TypeError>;
 
 #[derive(Default)]
 struct ModuleItems {
-    pub functions: HashMap<Ident, (ThinVec<TyFnParam>, Arc<Type>)>,
+    pub functions: HashMap<Ident, (ThinVec<TyFnParam>, Arc<TyKind>)>,
     pub structs: HashMap<Ident, TyStructDecl>,
     pub unions: HashMap<Ident, TyUnionDecl>,
 }
@@ -48,27 +48,27 @@ struct ModuleItems {
 pub struct Typer {
     modules: HashMap<TyPath, ModuleItems>,
     use_map: HashMap<TyPath, TyPath>,
-    scopes: Vec<HashMap<TyPath, Arc<Type>>>,
+    scopes: Vec<HashMap<TyPath, Arc<TyKind>>>,
 
     // Types.
-    unit_ty: Arc<Type>,
-    string_ty: Arc<Type>,
-    uint64_ty: Arc<Type>,
+    unit_ty: Arc<TyKind>,
+    string_ty: Arc<TyKind>,
+    uint64_ty: Arc<TyKind>,
 }
 
 impl Typer {
     pub fn new() -> Self {
-        let unit_ty = Arc::new(Type::UserDefined {
+        let unit_ty = Arc::new(TyKind::UserDefined {
             module: SmolStr::new_inline("std::prelude"),
             name: SmolStr::new_inline("()"),
         });
 
-        let string_ty = Arc::new(Type::UserDefined {
+        let string_ty = Arc::new(TyKind::UserDefined {
             module: SmolStr::new_inline("std::prelude"),
             name: SmolStr::new_inline("String"),
         });
 
-        let uint64_ty = Arc::new(Type::UserDefined {
+        let uint64_ty = Arc::new(TyKind::UserDefined {
             module: SmolStr::new_inline("std::prelude"),
             name: SmolStr::new_inline("Uint64"),
         });
@@ -105,7 +105,7 @@ impl Typer {
         module_path: TyPath,
         name: Ident,
         params: ThinVec<TyFnParam>,
-        return_ty: Arc<Type>,
+        return_ty: Arc<TyKind>,
     ) -> TypeCheckResult<()> {
         if name.name != name.name.to_snake_case() {
             return Err(TypeError {
@@ -126,7 +126,7 @@ impl Typer {
     fn ensure_function_exists(
         &self,
         path: &TyPath,
-    ) -> TypeCheckResult<(&ThinVec<TyFnParam>, Arc<Type>)> {
+    ) -> TypeCheckResult<(&ThinVec<TyFnParam>, Arc<TyKind>)> {
         let (TyPathSegment { ident: name }, module_path_segments) =
             path.segments.split_last().unwrap();
 
@@ -487,12 +487,12 @@ impl Typer {
         Ok(TyModule { items: typed_items })
     }
 
-    fn infer_ty(&mut self, ty: Ty) -> TypeCheckResult<Arc<Type>> {
+    fn infer_ty(&mut self, ty: Ty) -> TypeCheckResult<Arc<TyKind>> {
         Ok(match ty.kind {
             ast::TyKind::Path(path) => {
                 let (PathSegment { ident }, _) = path.segments.split_last().unwrap();
 
-                Arc::new(Type::UserDefined {
+                Arc::new(TyKind::UserDefined {
                     module: "std::prelude".into(),
                     name: ident.to_string().into(),
                 })
@@ -500,7 +500,7 @@ impl Typer {
             ast::TyKind::Fn(fn_ty) => {
                 let (params, return_ty) = self.infer_function_decl(&fn_ty.decl)?;
 
-                Arc::new(Type::Fn {
+                Arc::new(TyKind::Fn {
                     args: params.iter().map(|param| param.ty.clone()).collect(),
                     return_ty,
                 })
@@ -662,7 +662,7 @@ impl Typer {
     fn infer_function_decl(
         &mut self,
         function_decl: &FnDecl,
-    ) -> TypeCheckResult<(ThinVec<TyFnParam>, Arc<Type>)> {
+    ) -> TypeCheckResult<(ThinVec<TyFnParam>, Arc<TyKind>)> {
         let params = self.infer_function_params(&function_decl.params)?;
 
         let return_ty = match function_decl.return_ty {
@@ -776,7 +776,7 @@ impl Typer {
     fn infer_local(&mut self, local: Local) -> TypeCheckResult<TyLocal> {
         let ty = match local.kind.init() {
             Some(init) => self.infer_expr(init.clone())?.ty,
-            None => Arc::new(Type::UserDefined {
+            None => Arc::new(TyKind::UserDefined {
                 module: "?".into(),
                 name: "?".into(),
             }),
@@ -840,7 +840,7 @@ impl Typer {
                     let function = self.ensure_function_exists(&path).ok();
 
                     function.map(|(params, return_ty)| {
-                        Arc::new(Type::Fn {
+                        Arc::new(TyKind::Fn {
                             args: params.iter().map(|param| param.ty.clone()).collect(),
                             return_ty,
                         })
@@ -850,7 +850,7 @@ impl Typer {
                 Ok(TyExpr {
                     kind: TyExprKind::Variable(path),
                     ty: ty.unwrap_or_else(|| {
-                        Arc::new(Type::UserDefined {
+                        Arc::new(TyKind::UserDefined {
                             module: "?".into(),
                             name: "?".into(),
                         })
@@ -882,7 +882,7 @@ impl Typer {
                     .last()
                     .and_then(|scope| scope.get(&callee_path))
                     .and_then(|ty| match &*ty.clone() {
-                        Type::Fn { args, return_ty } => Some((
+                        TyKind::Fn { args, return_ty } => Some((
                             args.iter()
                                 .map(|ty| TyFnParam {
                                     name: Ident {

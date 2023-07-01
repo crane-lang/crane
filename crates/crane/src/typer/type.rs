@@ -5,7 +5,7 @@ use smol_str::SmolStr;
 use thin_vec::ThinVec;
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
-pub enum Type {
+pub enum TyKind {
     /// A user-defined type.
     UserDefined {
         /// The module in which the type resides.
@@ -17,8 +17,8 @@ pub enum Type {
 
     /// A function type.
     Fn {
-        args: ThinVec<Arc<Type>>,
-        return_ty: Arc<Type>,
+        args: ThinVec<Arc<TyKind>>,
+        return_ty: Arc<TyKind>,
     },
 }
 
@@ -31,6 +31,6 @@ mod tests {
     fn test_type_size() {
         use std::mem::size_of;
 
-        insta::assert_snapshot!(size_of::<Type>().to_string(), @"48");
+        insta::assert_snapshot!(size_of::<TyKind>().to_string(), @"48");
     }
 }
