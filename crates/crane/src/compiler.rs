@@ -9,7 +9,7 @@ use crate::ast::{Module, Package, SourceSpan};
 use crate::backend::native::NativeBackend;
 use crate::lexer::Lexer;
 use crate::parser::{ParseErrorKind, Parser};
-use crate::typer::{Arena, TyContext, TypeErrorKind, Typer};
+use crate::typer::{TypeErrorKind, Typer};
 
 /// The input to the compiler.
 pub enum Input {
@@ -56,10 +56,7 @@ impl Compiler {
 
         match parser.parse() {
             Ok(items) => {
-                let arena = Arena::default();
-                let mut ty_context = TyContext::new(&arena);
-
-                let mut typer = Typer::new(&mut ty_context);
+                let mut typer = Typer::new();
 
                 let module = Module { items };
 

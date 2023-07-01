@@ -1,7 +1,6 @@
 mod ast;
 mod backend;
 mod compiler;
-mod interned;
 mod lexer;
 mod parser;
 mod typer;

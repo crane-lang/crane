@@ -1,12 +1,8 @@
 mod error;
-mod ty;
-mod ty_context;
 mod r#type;
 
 pub use error::*;
 pub use r#type::*;
-pub use ty::*;
-pub use ty_context::*;
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -49,9 +45,7 @@ struct ModuleItems {
     pub unions: HashMap<Ident, TyUnionDecl>,
 }
 
-pub struct Typer<'ctx> {
-    ctx: &'ctx mut TyContext<'ctx>,
-
+pub struct Typer {
     modules: HashMap<TyPath, ModuleItems>,
     use_map: HashMap<TyPath, TyPath>,
     scopes: Vec<HashMap<TyPath, Arc<Type>>>,
@@ -62,8 +56,8 @@ pub struct Typer<'ctx> {
     uint64_ty: Arc<Type>,
 }
 
-impl<'ctx> Typer<'ctx> {
-    pub fn new(ctx: &'ctx mut TyContext<'ctx>) -> Self {
+impl Typer {
+    pub fn new() -> Self {
         let unit_ty = Arc::new(Type::UserDefined {
             module: SmolStr::new_inline("std::prelude"),
             name: SmolStr::new_inline("()"),
@@ -80,7 +74,6 @@ impl<'ctx> Typer<'ctx> {
         });
 
         Self {
-            ctx,
             modules: HashMap::new(),
             use_map: HashMap::new(),
             scopes: Vec::new(),
@@ -1027,10 +1020,7 @@ mod tests {
                 modules: thin_vec![module],
             };
 
-            let arena = Arena::default();
-            let mut ty_context = TyContext::new(&arena);
-
-            let mut typer = Typer::new(&mut ty_context);
+            let mut typer = Typer::new();
 
             insta::assert_yaml_snapshot!(typer.type_check_package(package));
         })
