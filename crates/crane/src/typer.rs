@@ -12,12 +12,12 @@ use smol_str::SmolStr;
 use thin_vec::{thin_vec, ThinVec};
 
 use crate::ast::{
-    Expr, ExprKind, Fn, FnDecl, FnParam, FnReturnTy, Ident, InlineModuleDecl, Item, ItemKind,
+    self, Expr, ExprKind, Fn, FnDecl, FnParam, FnReturnTy, Ident, InlineModuleDecl, Item, ItemKind,
     Literal, LiteralKind, Local, LocalKind, Module, ModuleDecl, Package, PathSegment, Span, Stmt,
     StmtKind, StructDecl, Ty, TyExpr, TyExprKind, TyFieldDecl, TyFn, TyFnParam, TyIntegerLiteral,
-    TyItem, TyItemKind, TyKind, TyLiteral, TyLiteralKind, TyLocal, TyLocalKind, TyModule,
-    TyPackage, TyPath, TyPathSegment, TyStmt, TyStmtKind, TyStructDecl, TyUint, TyUnionDecl,
-    TyVariant, TyVariantData, UnionDecl, UseTree, UseTreeKind, VariantData, DUMMY_SPAN,
+    TyItem, TyItemKind, TyLiteral, TyLiteralKind, TyLocal, TyLocalKind, TyModule, TyPackage,
+    TyPath, TyPathSegment, TyStmt, TyStmtKind, TyStructDecl, TyUint, TyUnionDecl, TyVariant,
+    TyVariantData, UnionDecl, UseTree, UseTreeKind, VariantData, DUMMY_SPAN,
 };
 
 fn ty_to_string(ty: &Type) -> String {
@@ -489,7 +489,7 @@ impl Typer {
 
     fn infer_ty(&mut self, ty: Ty) -> TypeCheckResult<Arc<Type>> {
         Ok(match ty.kind {
-            TyKind::Path(path) => {
+            ast::TyKind::Path(path) => {
                 let (PathSegment { ident }, _) = path.segments.split_last().unwrap();
 
                 Arc::new(Type::UserDefined {
@@ -497,7 +497,7 @@ impl Typer {
                     name: ident.to_string().into(),
                 })
             }
-            TyKind::Fn(fn_ty) => {
+            ast::TyKind::Fn(fn_ty) => {
                 let (params, return_ty) = self.infer_function_decl(&fn_ty.decl)?;
 
                 Arc::new(Type::Fn {
@@ -743,13 +743,13 @@ impl Typer {
                     .map(|field| TyFieldDecl {
                         name: field.name.clone(),
                         ty: match &field.ty.kind {
-                            TyKind::Path(path) => {
+                            ast::TyKind::Path(path) => {
                                 let (PathSegment { ident }, _) =
                                     path.segments.split_last().unwrap();
 
                                 ident.clone()
                             }
-                            TyKind::Fn(fn_ty) => {
+                            ast::TyKind::Fn(fn_ty) => {
                                 todo!()
                             }
                         },
