@@ -20,7 +20,7 @@ use crate::ast::{
     TyExpr, TyExprKind, TyFnParam, TyIntegerLiteral, TyItem, TyItemKind, TyLiteralKind,
     TyLocalKind, TyModule, TyPackage, TyPath, TyPathSegment, TyStmtKind, TyUint,
 };
-use crate::typer::{Ty, TyKind};
+use crate::typer::{Ty, TyKind, UintTy};
 
 pub struct NativeBackend<'ctx> {
     context: &'ctx Context,
@@ -371,6 +371,8 @@ impl<'ctx> NativeBackend<'ctx> {
 
     fn to_llvm_type(&self, ty: Ty) -> AnyTypeEnum<'ctx> {
         match &*ty {
+            TyKind::Unit => self.context.void_type().as_any_type_enum(),
+            TyKind::Uint(UintTy::U64) => self.context.i64_type().as_any_type_enum(),
             TyKind::Fn {
                 args: params,
                 return_ty,
@@ -394,7 +396,6 @@ impl<'ctx> NativeBackend<'ctx> {
                     .i8_type()
                     .ptr_type(AddressSpace::default())
                     .as_any_type_enum(),
-                ("std::prelude", "Uint64") => self.context.i64_type().as_any_type_enum(),
                 (module, name) => {
                     panic!("Unknown function parameter type: {}::{}", module, name)
                 }
@@ -417,14 +418,10 @@ impl<'ctx> NativeBackend<'ctx> {
                     .collect::<Vec<_>>();
 
                 let fn_type = match &*fun.return_ty {
+                    TyKind::Unit => self.context.void_type().fn_type(&params, false),
+                    TyKind::Uint(UintTy::U64) => self.context.i64_type().fn_type(&params, false),
                     TyKind::UserDefined { module, name } => {
                         match (module.as_str(), name.as_str()) {
-                            ("std::prelude", "()") => {
-                                self.context.void_type().fn_type(&params, false)
-                            }
-                            ("std::prelude", "Uint64") => {
-                                self.context.i64_type().fn_type(&params, false)
-                            }
                             ("std::prelude", "String") => self
                                 .context
                                 .i8_type()
@@ -473,12 +470,10 @@ impl<'ctx> NativeBackend<'ctx> {
                             });
 
                             let ty = match &*ty.clone() {
+                                TyKind::Unit => todo!(),
+                                TyKind::Uint(UintTy::U64) =>  self.context.i64_type().as_basic_type_enum(),
                                 TyKind::UserDefined { module, name } => {
                                     match (module.as_str(), name.as_str()) {
-                                        ("std::prelude", "()") => todo!(),
-                                        ("std::prelude", "Uint64") => {
-                                            self.context.i64_type().as_basic_type_enum()
-                                        }
                                         ("std::prelude", "String") => self
                                             .context
                                             .i8_type()

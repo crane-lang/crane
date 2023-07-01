@@ -26,6 +26,15 @@ impl Ty {
 /// The kind of a [`Ty`].
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum TyKind {
+    /// The unit type (`()`).
+    Unit,
+
+    /// An unsigned integer type.
+    Uint(UintTy),
+
+    /// A function type.
+    Fn { args: ThinVec<Ty>, return_ty: Ty },
+
     /// A user-defined type.
     UserDefined {
         /// The module in which the type resides.
@@ -34,9 +43,13 @@ pub enum TyKind {
         /// The name of the type.
         name: SmolStr,
     },
+}
 
-    /// A function type.
-    Fn { args: ThinVec<Ty>, return_ty: Ty },
+/// An unsigned integer type.
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+pub enum UintTy {
+    /// A 64-bit unsigned integer.
+    U64,
 }
 
 #[cfg(test)]

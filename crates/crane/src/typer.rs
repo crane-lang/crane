@@ -21,6 +21,8 @@ use crate::ast::{
 
 fn ty_to_string(ty: Ty) -> String {
     match &*ty {
+        TyKind::Unit => "()".to_string(),
+        TyKind::Uint(UintTy::U64) => "Uint64".to_string(),
         TyKind::UserDefined { module, name } => {
             format!("{}::{}", module, name)
         }
@@ -51,25 +53,18 @@ pub struct Typer {
 
     // Types.
     unit_ty: Ty,
-    string_ty: Ty,
     uint64_ty: Ty,
+    string_ty: Ty,
 }
 
 impl Typer {
     pub fn new() -> Self {
-        let unit_ty = Ty::new(TyKind::UserDefined {
-            module: SmolStr::new_inline("std::prelude"),
-            name: SmolStr::new_inline("()"),
-        });
+        let unit_ty = Ty::new(TyKind::Unit);
+        let uint64_ty = Ty::new(TyKind::Uint(UintTy::U64));
 
         let string_ty = Ty::new(TyKind::UserDefined {
             module: SmolStr::new_inline("std::prelude"),
             name: SmolStr::new_inline("String"),
-        });
-
-        let uint64_ty = Ty::new(TyKind::UserDefined {
-            module: SmolStr::new_inline("std::prelude"),
-            name: SmolStr::new_inline("Uint64"),
         });
 
         Self {
@@ -77,8 +72,8 @@ impl Typer {
             use_map: HashMap::new(),
             scopes: Vec::new(),
             unit_ty,
-            string_ty,
             uint64_ty,
+            string_ty,
         }
     }
 
