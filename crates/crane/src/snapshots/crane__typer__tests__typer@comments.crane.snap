@@ -15,10 +15,7 @@ Ok:
         - kind:
             Fn:
               params: []
-              return_ty:
-                UserDefined:
-                  module: "std::prelude"
-                  name: ()
+              return_ty: Unit
               body:
                 - kind:
                     Expr:
@@ -55,10 +52,7 @@ Ok:
                                   - UserDefined:
                                       module: "std::prelude"
                                       name: String
-                                return_ty:
-                                  UserDefined:
-                                    module: "std::prelude"
-                                    name: ()
+                                return_ty: Unit
                           args:
                             - kind:
                                 Call:
@@ -95,10 +89,7 @@ Ok:
                       span:
                         start: 38
                         end: 45
-                      ty:
-                        UserDefined:
-                          module: "std::prelude"
-                          name: ()
+                      ty: Unit
                   span:
                     start: 38
                     end: 45

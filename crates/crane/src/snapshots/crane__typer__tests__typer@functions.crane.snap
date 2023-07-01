@@ -15,10 +15,7 @@ Ok:
         - kind:
             Fn:
               params: []
-              return_ty:
-                UserDefined:
-                  module: "std::prelude"
-                  name: ()
+              return_ty: Unit
               body:
                 - kind:
                     Expr:
@@ -42,18 +39,12 @@ Ok:
                             ty:
                               Fn:
                                 args: []
-                                return_ty:
-                                  UserDefined:
-                                    module: "std::prelude"
-                                    name: ()
+                                return_ty: Unit
                           args: []
                       span:
                         start: 42
                         end: 51
-                      ty:
-                        UserDefined:
-                          module: "std::prelude"
-                          name: ()
+                      ty: Unit
                   span:
                     start: 42
                     end: 51
@@ -79,18 +70,12 @@ Ok:
                             ty:
                               Fn:
                                 args: []
-                                return_ty:
-                                  UserDefined:
-                                    module: "std::prelude"
-                                    name: ()
+                                return_ty: Unit
                           args: []
                       span:
                         start: 58
                         end: 69
-                      ty:
-                        UserDefined:
-                          module: "std::prelude"
-                          name: ()
+                      ty: Unit
                   span:
                     start: 58
                     end: 69
@@ -112,10 +97,7 @@ Ok:
         - kind:
             Fn:
               params: []
-              return_ty:
-                UserDefined:
-                  module: "std::prelude"
-                  name: ()
+              return_ty: Unit
               body:
                 - kind:
                     Expr:
@@ -152,10 +134,7 @@ Ok:
                                   - UserDefined:
                                       module: "std::prelude"
                                       name: String
-                                return_ty:
-                                  UserDefined:
-                                    module: "std::prelude"
-                                    name: ()
+                                return_ty: Unit
                           args:
                             - kind:
                                 Literal:
@@ -174,10 +153,7 @@ Ok:
                       span:
                         start: 96
                         end: 103
-                      ty:
-                        UserDefined:
-                          module: "std::prelude"
-                          name: ()
+                      ty: Unit
                   span:
                     start: 96
                     end: 103
@@ -199,10 +175,7 @@ Ok:
         - kind:
             Fn:
               params: []
-              return_ty:
-                UserDefined:
-                  module: "std::prelude"
-                  name: ()
+              return_ty: Unit
               body:
                 - kind:
                     Expr:
@@ -239,10 +212,7 @@ Ok:
                                   - UserDefined:
                                       module: "std::prelude"
                                       name: String
-                                return_ty:
-                                  UserDefined:
-                                    module: "std::prelude"
-                                    name: ()
+                                return_ty: Unit
                           args:
                             - kind:
                                 Literal:
@@ -261,10 +231,7 @@ Ok:
                       span:
                         start: 139
                         end: 146
-                      ty:
-                        UserDefined:
-                          module: "std::prelude"
-                          name: ()
+                      ty: Unit
                   span:
                     start: 139
                     end: 146
