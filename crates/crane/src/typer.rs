@@ -14,7 +14,7 @@ use thin_vec::{thin_vec, ThinVec};
 use crate::ast::{
     self, Expr, ExprKind, Fn, FnDecl, FnParam, FnReturnTy, Ident, InlineModuleDecl, Item, ItemKind,
     Literal, LiteralKind, Local, LocalKind, Module, ModuleDecl, Package, PathSegment, Span, Stmt,
-    StmtKind, StructDecl, Ty, TyExpr, TyExprKind, TyFieldDecl, TyFn, TyFnParam, TyIntegerLiteral,
+    StmtKind, StructDecl, TyExpr, TyExprKind, TyFieldDecl, TyFn, TyFnParam, TyIntegerLiteral,
     TyItem, TyItemKind, TyLiteral, TyLiteralKind, TyLocal, TyLocalKind, TyModule, TyPackage,
     TyPath, TyPathSegment, TyStmt, TyStmtKind, TyStructDecl, TyUint, TyUnionDecl, TyVariant,
     TyVariantData, UnionDecl, UseTree, UseTreeKind, VariantData, DUMMY_SPAN,
@@ -487,7 +487,7 @@ impl Typer {
         Ok(TyModule { items: typed_items })
     }
 
-    fn infer_ty(&mut self, ty: Ty) -> TypeCheckResult<Arc<TyKind>> {
+    fn infer_ty(&mut self, ty: ast::Ty) -> TypeCheckResult<Arc<TyKind>> {
         Ok(match ty.kind {
             ast::TyKind::Path(path) => {
                 let (PathSegment { ident }, _) = path.segments.split_last().unwrap();
