@@ -471,7 +471,9 @@ impl<'ctx> NativeBackend<'ctx> {
 
                             let ty = match &*ty.clone() {
                                 TyKind::Unit => todo!(),
-                                TyKind::Uint(UintTy::U64) =>  self.context.i64_type().as_basic_type_enum(),
+                                TyKind::Uint(UintTy::U64) => {
+                                    self.context.i64_type().as_basic_type_enum()
+                                }
                                 TyKind::UserDefined { module, name } => {
                                     match (module.as_str(), name.as_str()) {
                                         ("std::prelude", "String") => self
