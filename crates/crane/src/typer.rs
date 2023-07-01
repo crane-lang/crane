@@ -50,7 +50,7 @@ struct ModuleItems {
 }
 
 pub struct Typer<'ctx> {
-    ctx: &'ctx mut TyContext<'ctx>,
+    ctx: &'ctx TyContext<'ctx>,
 
     modules: HashMap<TyPath, ModuleItems>,
     use_map: HashMap<TyPath, TyPath>,
@@ -63,7 +63,7 @@ pub struct Typer<'ctx> {
 }
 
 impl<'ctx> Typer<'ctx> {
-    pub fn new(ctx: &'ctx mut TyContext<'ctx>) -> Self {
+    pub fn new(ctx: &'ctx TyContext<'ctx>) -> Self {
         let unit_ty = Arc::new(Type::UserDefined {
             module: SmolStr::new_inline("std::prelude"),
             name: SmolStr::new_inline("()"),
@@ -1028,9 +1028,9 @@ mod tests {
             };
 
             let arena = Arena::default();
-            let mut ty_context = TyContext::new(&arena);
+            let ty_context = TyContext::new(&arena);
 
-            let mut typer = Typer::new(&mut ty_context);
+            let mut typer = Typer::new(&ty_context);
 
             insta::assert_yaml_snapshot!(typer.type_check_package(package));
         })

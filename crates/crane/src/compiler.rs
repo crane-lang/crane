@@ -57,9 +57,9 @@ impl Compiler {
         match parser.parse() {
             Ok(items) => {
                 let arena = Arena::default();
-                let mut ty_context = TyContext::new(&arena);
+                let ty_context = TyContext::new(&arena);
 
-                let mut typer = Typer::new(&mut ty_context);
+                let mut typer = Typer::new(&ty_context);
 
                 let module = Module { items };
 
