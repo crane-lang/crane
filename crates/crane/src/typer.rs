@@ -5,7 +5,6 @@ pub use error::*;
 pub use ty::*;
 
 use std::collections::HashMap;
-use std::sync::Arc;
 
 use heck::{ToPascalCase, ToSnakeCase};
 use smol_str::SmolStr;
@@ -20,18 +19,18 @@ use crate::ast::{
     TyVariantData, UnionDecl, UseTree, UseTreeKind, VariantData, DUMMY_SPAN,
 };
 
-fn ty_to_string(ty: &TyKind) -> String {
-    match ty {
+fn ty_to_string(ty: Ty) -> String {
+    match &*ty {
         TyKind::UserDefined { module, name } => {
             format!("{}::{}", module, name)
         }
         TyKind::Fn { args, return_ty } => format!(
             "Fn({}) -> {}",
-            args.iter()
-                .map(|ty| ty_to_string(ty))
+            args.into_iter()
+                .map(|ty| ty_to_string(ty.clone()))
                 .collect::<Vec<_>>()
                 .join(", "),
-            ty_to_string(return_ty)
+            ty_to_string(return_ty.clone())
         ),
     }
 }
@@ -40,7 +39,7 @@ pub type TypeCheckResult<T> = Result<T, TypeError>;
 
 #[derive(Default)]
 struct ModuleItems {
-    pub functions: HashMap<Ident, (ThinVec<TyFnParam>, Arc<TyKind>)>,
+    pub functions: HashMap<Ident, (ThinVec<TyFnParam>, Ty)>,
     pub structs: HashMap<Ident, TyStructDecl>,
     pub unions: HashMap<Ident, TyUnionDecl>,
 }
@@ -48,27 +47,27 @@ struct ModuleItems {
 pub struct Typer {
     modules: HashMap<TyPath, ModuleItems>,
     use_map: HashMap<TyPath, TyPath>,
-    scopes: Vec<HashMap<TyPath, Arc<TyKind>>>,
+    scopes: Vec<HashMap<TyPath, Ty>>,
 
     // Types.
-    unit_ty: Arc<TyKind>,
-    string_ty: Arc<TyKind>,
-    uint64_ty: Arc<TyKind>,
+    unit_ty: Ty,
+    string_ty: Ty,
+    uint64_ty: Ty,
 }
 
 impl Typer {
     pub fn new() -> Self {
-        let unit_ty = Arc::new(TyKind::UserDefined {
+        let unit_ty = Ty::new(TyKind::UserDefined {
             module: SmolStr::new_inline("std::prelude"),
             name: SmolStr::new_inline("()"),
         });
 
-        let string_ty = Arc::new(TyKind::UserDefined {
+        let string_ty = Ty::new(TyKind::UserDefined {
             module: SmolStr::new_inline("std::prelude"),
             name: SmolStr::new_inline("String"),
         });
 
-        let uint64_ty = Arc::new(TyKind::UserDefined {
+        let uint64_ty = Ty::new(TyKind::UserDefined {
             module: SmolStr::new_inline("std::prelude"),
             name: SmolStr::new_inline("Uint64"),
         });
@@ -105,7 +104,7 @@ impl Typer {
         module_path: TyPath,
         name: Ident,
         params: ThinVec<TyFnParam>,
-        return_ty: Arc<TyKind>,
+        return_ty: Ty,
     ) -> TypeCheckResult<()> {
         if name.name != name.name.to_snake_case() {
             return Err(TypeError {
@@ -123,10 +122,7 @@ impl Typer {
         Ok(())
     }
 
-    fn ensure_function_exists(
-        &self,
-        path: &TyPath,
-    ) -> TypeCheckResult<(&ThinVec<TyFnParam>, Arc<TyKind>)> {
+    fn ensure_function_exists(&self, path: &TyPath) -> TypeCheckResult<(&ThinVec<TyFnParam>, Ty)> {
         let (TyPathSegment { ident: name }, module_path_segments) =
             path.segments.split_last().unwrap();
 
@@ -487,12 +483,12 @@ impl Typer {
         Ok(TyModule { items: typed_items })
     }
 
-    fn infer_ty(&mut self, ty: ast::Ty) -> TypeCheckResult<Arc<TyKind>> {
+    fn infer_ty(&mut self, ty: ast::Ty) -> TypeCheckResult<Ty> {
         Ok(match ty.kind {
             ast::TyKind::Path(path) => {
                 let (PathSegment { ident }, _) = path.segments.split_last().unwrap();
 
-                Arc::new(TyKind::UserDefined {
+                Ty::new(TyKind::UserDefined {
                     module: "std::prelude".into(),
                     name: ident.to_string().into(),
                 })
@@ -500,7 +496,7 @@ impl Typer {
             ast::TyKind::Fn(fn_ty) => {
                 let (params, return_ty) = self.infer_function_decl(&fn_ty.decl)?;
 
-                Arc::new(TyKind::Fn {
+                Ty::new(TyKind::Fn {
                     args: params.iter().map(|param| param.ty.clone()).collect(),
                     return_ty,
                 })
@@ -639,8 +635,8 @@ impl Typer {
                 return Err(TypeError {
                     kind: TypeErrorKind::Error(format!(
                         "Expected `{path}` to return {} but got {}",
-                        ty_to_string(&return_ty),
-                        ty_to_string(&ty)
+                        ty_to_string(return_ty),
+                        ty_to_string(ty.clone())
                     )),
                     span: last_stmt.span,
                 });
@@ -662,7 +658,7 @@ impl Typer {
     fn infer_function_decl(
         &mut self,
         function_decl: &FnDecl,
-    ) -> TypeCheckResult<(ThinVec<TyFnParam>, Arc<TyKind>)> {
+    ) -> TypeCheckResult<(ThinVec<TyFnParam>, Ty)> {
         let params = self.infer_function_params(&function_decl.params)?;
 
         let return_ty = match function_decl.return_ty {
@@ -776,7 +772,7 @@ impl Typer {
     fn infer_local(&mut self, local: Local) -> TypeCheckResult<TyLocal> {
         let ty = match local.kind.init() {
             Some(init) => self.infer_expr(init.clone())?.ty,
-            None => Arc::new(TyKind::UserDefined {
+            None => Ty::new(TyKind::UserDefined {
                 module: "?".into(),
                 name: "?".into(),
             }),
@@ -840,7 +836,7 @@ impl Typer {
                     let function = self.ensure_function_exists(&path).ok();
 
                     function.map(|(params, return_ty)| {
-                        Arc::new(TyKind::Fn {
+                        Ty::new(TyKind::Fn {
                             args: params.iter().map(|param| param.ty.clone()).collect(),
                             return_ty,
                         })
@@ -850,7 +846,7 @@ impl Typer {
                 Ok(TyExpr {
                     kind: TyExprKind::Variable(path),
                     ty: ty.unwrap_or_else(|| {
-                        Arc::new(TyKind::UserDefined {
+                        Ty::new(TyKind::UserDefined {
                             module: "?".into(),
                             name: "?".into(),
                         })
@@ -926,8 +922,8 @@ impl Typer {
                         return Err(TypeError {
                             kind: TypeErrorKind::Error(format!(
                                 "Expected `{}` but received `{}`",
-                                ty_to_string(&param.ty),
-                                ty_to_string(&arg.ty)
+                                ty_to_string(param.ty),
+                                ty_to_string(arg.ty.clone())
                             )),
                             span: arg.span,
                         });
