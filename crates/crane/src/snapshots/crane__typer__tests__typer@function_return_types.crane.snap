@@ -27,10 +27,7 @@ Ok:
         - kind:
             Fn:
               params: []
-              return_ty:
-                UserDefined:
-                  module: "std::prelude"
-                  name: ()
+              return_ty: Unit
               body:
                 - kind:
                     Expr:
@@ -67,10 +64,7 @@ Ok:
                                   - UserDefined:
                                       module: "std::prelude"
                                       name: String
-                                return_ty:
-                                  UserDefined:
-                                    module: "std::prelude"
-                                    name: ()
+                                return_ty: Unit
                           args:
                             - kind:
                                 Call:
@@ -102,9 +96,7 @@ Ok:
                                     ty:
                                       Fn:
                                         args:
-                                          - UserDefined:
-                                              module: "std::prelude"
-                                              name: Uint64
+                                          - Uint: U64
                                         return_ty:
                                           UserDefined:
                                             module: "std::prelude"
@@ -130,13 +122,9 @@ Ok:
                                             ty:
                                               Fn:
                                                 args:
-                                                  - UserDefined:
-                                                      module: "std::prelude"
-                                                      name: Uint64
+                                                  - Uint: U64
                                                 return_ty:
-                                                  UserDefined:
-                                                    module: "std::prelude"
-                                                    name: Uint64
+                                                  Uint: U64
                                           args:
                                             - kind:
                                                 Literal:
@@ -152,16 +140,12 @@ Ok:
                                                 start: 117
                                                 end: 118
                                               ty:
-                                                UserDefined:
-                                                  module: "std::prelude"
-                                                  name: Uint64
+                                                Uint: U64
                                       span:
                                         start: 110
                                         end: 116
                                       ty:
-                                        UserDefined:
-                                          module: "std::prelude"
-                                          name: Uint64
+                                        Uint: U64
                               span:
                                 start: 96
                                 end: 109
@@ -172,10 +156,7 @@ Ok:
                       span:
                         start: 88
                         end: 95
-                      ty:
-                        UserDefined:
-                          module: "std::prelude"
-                          name: ()
+                      ty: Unit
                   span:
                     start: 88
                     end: 95
@@ -203,16 +184,12 @@ Ok:
                       start: 135
                       end: 136
                   ty:
-                    UserDefined:
-                      module: "std::prelude"
-                      name: Uint64
+                    Uint: U64
                   span:
                     start: 135
                     end: 136
               return_ty:
-                UserDefined:
-                  module: "std::prelude"
-                  name: Uint64
+                Uint: U64
               body:
                 - kind:
                     Expr:
@@ -246,16 +223,10 @@ Ok:
                             ty:
                               Fn:
                                 args:
-                                  - UserDefined:
-                                      module: "std::prelude"
-                                      name: Uint64
-                                  - UserDefined:
-                                      module: "std::prelude"
-                                      name: Uint64
+                                  - Uint: U64
+                                  - Uint: U64
                                 return_ty:
-                                  UserDefined:
-                                    module: "std::prelude"
-                                    name: Uint64
+                                  Uint: U64
                           args:
                             - kind:
                                 Variable:
@@ -272,9 +243,7 @@ Ok:
                                 start: 170
                                 end: 171
                               ty:
-                                UserDefined:
-                                  module: "std::prelude"
-                                  name: Uint64
+                                Uint: U64
                             - kind:
                                 Literal:
                                   kind:
@@ -289,16 +258,12 @@ Ok:
                                 start: 173
                                 end: 175
                               ty:
-                                UserDefined:
-                                  module: "std::prelude"
-                                  name: Uint64
+                                Uint: U64
                       span:
                         start: 162
                         end: 169
                       ty:
-                        UserDefined:
-                          module: "std::prelude"
-                          name: Uint64
+                        Uint: U64
                   span:
                     start: 162
                     end: 169
