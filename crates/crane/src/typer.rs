@@ -483,10 +483,13 @@ impl Typer {
             ast::TyKind::Path(path) => {
                 let (PathSegment { ident }, _) = path.segments.split_last().unwrap();
 
-                Ty::new(TyKind::UserDefined {
-                    module: "std::prelude".into(),
-                    name: ident.to_string().into(),
-                })
+                match ident.name.as_str() {
+                    "Uint64" => self.uint64_ty.clone(),
+                    _ => Ty::new(TyKind::UserDefined {
+                        module: "std::prelude".into(),
+                        name: ident.to_string().into(),
+                    }),
+                }
             }
             ast::TyKind::Fn(fn_ty) => {
                 let (params, return_ty) = self.infer_function_decl(&fn_ty.decl)?;
