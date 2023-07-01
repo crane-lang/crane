@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::process::Command;
-use std::sync::Arc;
 
 use inkwell::builder::Builder;
 use inkwell::context::Context;
@@ -21,7 +20,7 @@ use crate::ast::{
     TyExpr, TyExprKind, TyFnParam, TyIntegerLiteral, TyItem, TyItemKind, TyLiteralKind,
     TyLocalKind, TyModule, TyPackage, TyPath, TyPathSegment, TyStmtKind, TyUint,
 };
-use crate::typer::Type;
+use crate::typer::{Ty, TyKind};
 
 pub struct NativeBackend<'ctx> {
     context: &'ctx Context,
@@ -370,9 +369,9 @@ impl<'ctx> NativeBackend<'ctx> {
         }
     }
 
-    fn to_llvm_type(&self, ty: Arc<Type>) -> AnyTypeEnum<'ctx> {
+    fn to_llvm_type(&self, ty: Ty) -> AnyTypeEnum<'ctx> {
         match &*ty {
-            Type::Fn {
+            TyKind::Fn {
                 args: params,
                 return_ty,
             } => {
@@ -389,7 +388,7 @@ impl<'ctx> NativeBackend<'ctx> {
                     _ => panic!(""),
                 })
             }
-            Type::UserDefined { module, name } => match (module.as_ref(), name.as_ref()) {
+            TyKind::UserDefined { module, name } => match (module.as_ref(), name.as_ref()) {
                 ("std::prelude", "String") => self
                     .context
                     .i8_type()
@@ -418,19 +417,23 @@ impl<'ctx> NativeBackend<'ctx> {
                     .collect::<Vec<_>>();
 
                 let fn_type = match &*fun.return_ty {
-                    Type::UserDefined { module, name } => match (module.as_str(), name.as_str()) {
-                        ("std::prelude", "()") => self.context.void_type().fn_type(&params, false),
-                        ("std::prelude", "Uint64") => {
-                            self.context.i64_type().fn_type(&params, false)
+                    TyKind::UserDefined { module, name } => {
+                        match (module.as_str(), name.as_str()) {
+                            ("std::prelude", "()") => {
+                                self.context.void_type().fn_type(&params, false)
+                            }
+                            ("std::prelude", "Uint64") => {
+                                self.context.i64_type().fn_type(&params, false)
+                            }
+                            ("std::prelude", "String") => self
+                                .context
+                                .i8_type()
+                                .ptr_type(AddressSpace::default())
+                                .fn_type(&params, false),
+                            (module, name) => panic!("Unknown type {}::{}", module, name),
                         }
-                        ("std::prelude", "String") => self
-                            .context
-                            .i8_type()
-                            .ptr_type(AddressSpace::default())
-                            .fn_type(&params, false),
-                        (module, name) => panic!("Unknown type {}::{}", module, name),
-                    },
-                    Type::Fn {
+                    }
+                    TyKind::Fn {
                         args: _,
                         return_ty: _,
                     } => todo!(),
@@ -470,7 +473,7 @@ impl<'ctx> NativeBackend<'ctx> {
                             });
 
                             let ty = match &*ty.clone() {
-                                Type::UserDefined { module, name } => {
+                                TyKind::UserDefined { module, name } => {
                                     match (module.as_str(), name.as_str()) {
                                         ("std::prelude", "()") => todo!(),
                                         ("std::prelude", "Uint64") => {
@@ -486,7 +489,7 @@ impl<'ctx> NativeBackend<'ctx> {
                                         }
                                     }
                                 }
-                                Type::Fn {
+                                TyKind::Fn {
                                     args: _,
                                     return_ty: _,
                                 } => todo!(),

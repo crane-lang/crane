@@ -1,12 +1,11 @@
 use std::hash::{Hash, Hasher};
-use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 use smol_str::SmolStr;
 use thin_vec::ThinVec;
 
 use crate::ast::{Ident, Span};
-use crate::typer::Type;
+use crate::typer::Ty;
 
 /// A path.
 #[derive(Debug, Eq, Clone, Serialize, Deserialize)]
@@ -96,7 +95,7 @@ pub enum TyExprKind {
 pub struct TyExpr {
     pub kind: TyExprKind,
     pub span: Span,
-    pub ty: Arc<Type>,
+    pub ty: Ty,
 }
 
 /// The kind of a [`TyStmt`].
@@ -127,7 +126,7 @@ pub enum TyLocalKind {
 pub struct TyLocal {
     pub kind: TyLocalKind,
     pub name: Ident,
-    pub ty: Option<Arc<Type>>,
+    pub ty: Option<Ty>,
     pub span: Span,
 }
 
@@ -135,7 +134,7 @@ pub struct TyLocal {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TyFn {
     pub params: ThinVec<TyFnParam>,
-    pub return_ty: Arc<Type>,
+    pub return_ty: Ty,
     pub body: ThinVec<TyStmt>,
 
     // HACK: Adding this to the node so we don't have to recompute the path in
@@ -147,7 +146,7 @@ pub struct TyFn {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TyFnParam {
     pub name: Ident,
-    pub ty: Arc<Type>,
+    pub ty: Ty,
     pub span: Span,
 }
 
