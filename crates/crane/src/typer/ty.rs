@@ -4,6 +4,11 @@ use serde::{Deserialize, Serialize};
 use smol_str::SmolStr;
 use thin_vec::ThinVec;
 
+/// A type in the type system.
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+pub struct Ty(Arc<TyKind>);
+
+/// The kind of a [`Ty`].
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum TyKind {
     /// A user-defined type.

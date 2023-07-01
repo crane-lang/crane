@@ -1,8 +1,8 @@
 mod error;
-mod r#type;
+mod ty;
 
 pub use error::*;
-pub use r#type::*;
+pub use ty::*;
 
 use std::collections::HashMap;
 use std::sync::Arc;
