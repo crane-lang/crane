@@ -21,6 +21,6 @@ The inclusion of features alone is not what makes a good language. Equally impor
 - No inheritance
 - No exceptions
 
-<sup>&dagger;</sup>Not yet implemented.
+<small><sup>&dagger;</sup>Not yet implemented.</small>
 
-For more information, see the [crane-lang.org](https://crane-lang.org/).
+For more information, check out [crane-lang.org](https://crane-lang.org/).
